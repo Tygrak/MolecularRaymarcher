@@ -1,43 +1,39 @@
 {
-    "name": "webgpu-seed",
-    "version": "0.1.0",
-    "description": "🔺 A simple hello triangle example introducing WebGPU.",
-    "main": "dist/main.js",
-    "scripts": {
-        "start": "npm i && npm run build && npm run dev",
-        "dev": "http-server",
-        "build": "cross-env NODE_ENV=production ts-node webpack.ts"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/alaingalvan/webgpu-seed.git"
-    },
-    "keywords": [
-        "webgpu",
-        "webgl",
-        "example",
-        "seed",
-        "types",
-        "typescript"
-    ],
-    "author": "Alain Galvan",
-    "license": "Unlicense",
-    "bugs": {
-        "url": "https://github.com/alaingalvan/webgpu-seed/issues"
-    },
-    "homepage": "https://github.com/alaingalvan/webgpu-seed#readme",
-    "devDependencies": {
-        "@types/node": "^17.0.x",
-        "@webgpu/types": "^0.1.18",
-        "clean-webpack-plugin": "^4.0.x",
-        "cross-env": "^7.0.x",
-        "http-server": "^14.1.x",
-        "ts-loader": "^9.3.x",
-        "ts-node": "^10.8.x",
-        "typescript": "^4.7.x",
-        "webpack": "^5.73.x"
-    },
-    "dependencies": {
-        "gl-matrix": "^3.4.3"
-    }
+  "name": "webgpu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "tsc",
+    "tscw": "tsc --watch",
+    "dev": "webpack --mode development",
+    "prod": "webpack --mode production",
+    "watch": "webpack --watch --mode production",
+    "deploy": "push-dir --dir=dist --branch=gh-pages --allow-unclean",
+    "devserver": "http-server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/jquery": "^3.5.5",
+    "@types/node": "14.14.20",
+    "@webgpu/types": "^0.1.21",
+    "3d-view-controls": "^2.2.2",
+    "css-loader": "^5.2.0",
+    "gl-matrix": "^3.3.0",
+    "jquery": "^3.6.0",
+    "jshint": "^2.12.0",
+    "path": "^0.12.7",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^8.1.0",
+    "ts-shader-loader": "^1.0.6",
+    "typescript": "^4.2.3",
+    "webpack-cli": "^4.6.0"
+  },
+  "devDependencies": {
+    "push-dir": "^0.4.1",
+    "webpack": "^5.74.0",
+    "http-server": "^14.1.x"
+  }
 }
