@@ -1,5 +1,5 @@
 const path = require("path");
-const bundleOutputDir = "./dist";
+const bundleOutputDir = "./public";
 
 module.exports = {
     entry: {
