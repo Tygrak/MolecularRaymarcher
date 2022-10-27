@@ -22521,57 +22521,63 @@ function toPX(str, element) {
 
 /***/ }),
 
-/***/ "./src/atoms.ts":
-/*!**********************!*\
-  !*** ./src/atoms.ts ***!
-  \**********************/
+/***/ "./src/atom.ts":
+/*!*********************!*\
+  !*** ./src/atom.ts ***!
+  \*********************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GetAtomColor = exports.LoadData = void 0;
+exports.Atom = void 0;
 const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
-const LoadData = (dataString) => {
-    let lines = dataString.split("\n");
-    let atoms = [];
-    let sums = { x: 0, y: 0, z: 0 };
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        let match = line.match(/ATOM +\d+ +\w+ +\w+ +\w+ +\d+ +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
-        if (match == null) {
-            continue;
+class Atom {
+    constructor(x, y, z, name, residueAtomName) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.name = name;
+        this.residueAtomName = residueAtomName;
+    }
+    GetColor() {
+        if (this.name == "C") {
+            return gl_matrix_1.vec3.fromValues(0.3, 0.8, 0.3);
         }
-        const atom = { x: parseFloat(match[1]), y: parseFloat(match[2]), z: parseFloat(match[3]), name: match[6] };
-        sums.x += atom.x;
-        sums.y += atom.y;
-        sums.z += atom.z;
-        atoms.push(atom);
+        else if (this.name == "N") {
+            return gl_matrix_1.vec3.fromValues(0.05, 0.05, 0.85);
+        }
+        else if (this.name == "O") {
+            return gl_matrix_1.vec3.fromValues(0.85, 0.05, 0.05);
+        }
+        else if (this.name == "S") {
+            return gl_matrix_1.vec3.fromValues(0.975, 0.975, 0.025);
+        }
+        return gl_matrix_1.vec3.fromValues(1, 0.1, 1);
     }
-    for (let i = 0; i < atoms.length; i++) {
-        atoms[i].x -= sums.x / atoms.length;
-        atoms[i].y -= sums.y / atoms.length;
-        atoms[i].z -= sums.z / atoms.length;
+}
+exports.Atom = Atom;
+
+
+/***/ }),
+
+/***/ "./src/chain.ts":
+/*!**********************!*\
+  !*** ./src/chain.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Chain = void 0;
+class Chain {
+    constructor(name, residues) {
+        this.name = name;
+        this.residues = residues;
     }
-    return atoms;
-};
-exports.LoadData = LoadData;
-const GetAtomColor = (atomName) => {
-    if (atomName == "C") {
-        return gl_matrix_1.vec3.fromValues(0.3, 0.8, 0.3);
-    }
-    else if (atomName == "N") {
-        return gl_matrix_1.vec3.fromValues(0.05, 0.05, 0.85);
-    }
-    else if (atomName == "O") {
-        return gl_matrix_1.vec3.fromValues(0.85, 0.05, 0.05);
-    }
-    else if (atomName == "S") {
-        return gl_matrix_1.vec3.fromValues(0.975, 0.975, 0.025);
-    }
-    return gl_matrix_1.vec3.fromValues(1, 0.1, 1);
-};
-exports.GetAtomColor = GetAtomColor;
+}
+exports.Chain = Chain;
 
 
 /***/ }),
@@ -22598,9 +22604,11 @@ exports.CheckWebGPU = exports.InitGPU = exports.CreateGPUBuffer = exports.Create
 const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
 const vertex_data_1 = __webpack_require__(/*! ./vertex_data */ "./src/vertex_data.ts");
 const test_data_1 = __webpack_require__(/*! ./test_data */ "./src/test_data.ts");
-const atoms_1 = __webpack_require__(/*! ./atoms */ "./src/atoms.ts");
+const loadData_1 = __webpack_require__(/*! ./loadData */ "./src/loadData.ts");
 const CreateMesh = () => {
-    let atoms = atoms_1.LoadData(test_data_1.Data1cqw);
+    const loaded = loadData_1.LoadData(test_data_1.Data1cqw);
+    const atoms = loaded.atoms;
+    console.log(loaded.chains);
     //const instanceMesh = CubeData();
     const instanceMesh = vertex_data_1.CreateSphereGeometry(1, 12, 6);
     let result = { positions: new Float32Array(instanceMesh.positions.length * atoms.length), colors: new Float32Array(instanceMesh.colors.length * atoms.length) };
@@ -22618,7 +22626,7 @@ const CreateMesh = () => {
                 positions[j] = positions[j] / 5 + atom.z;
             }
         }
-        let atomColor = atoms_1.GetAtomColor(atom.name);
+        let atomColor = atom.GetColor();
         let colors = new Float32Array(instanceMesh.colors);
         for (let j = 0; j < colors.length; j++) {
             colors[j] = atomColor[j % 3];
@@ -22758,6 +22766,83 @@ const CheckWebGPU = () => {
     return result;
 };
 exports.CheckWebGPU = CheckWebGPU;
+
+
+/***/ }),
+
+/***/ "./src/loadData.ts":
+/*!*************************!*\
+  !*** ./src/loadData.ts ***!
+  \*************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoadData = void 0;
+const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
+const atom_1 = __webpack_require__(/*! ./atom */ "./src/atom.ts");
+const chain_1 = __webpack_require__(/*! ./chain */ "./src/chain.ts");
+const residue_1 = __webpack_require__(/*! ./residue */ "./src/residue.ts");
+const LoadData = (dataString) => {
+    let lines = dataString.split("\n");
+    let atoms = [];
+    let sums = { x: 0, y: 0, z: 0 };
+    let chains = [];
+    let chain = new chain_1.Chain("-1", []);
+    let residue = new residue_1.Residue("", -1, []);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lineParseResult = ParseDataLine(line);
+        if (lineParseResult == null) {
+            continue;
+        }
+        if (residue.id != lineParseResult.residueId) {
+            if (residue.id != -1) {
+                if (chain.name != lineParseResult.chainName) {
+                    if (chain.name != "-1") {
+                        chains.push(chain);
+                    }
+                    chain = new chain_1.Chain(lineParseResult.chainName, []);
+                }
+                chain.residues.push(residue);
+            }
+            residue = new residue_1.Residue(lineParseResult.residueName, lineParseResult.residueId, []);
+        }
+        residue.atoms.push(lineParseResult.atom);
+        sums.x += lineParseResult.atom.x;
+        sums.y += lineParseResult.atom.y;
+        sums.z += lineParseResult.atom.z;
+        atoms.push(lineParseResult.atom);
+    }
+    if (residue.id != -1) {
+        chain.residues.push(residue);
+    }
+    if (chain.name != "-1") {
+        chains.push(chain);
+    }
+    for (let i = 0; i < atoms.length; i++) {
+        atoms[i].x -= sums.x / atoms.length;
+        atoms[i].y -= sums.y / atoms.length;
+        atoms[i].z -= sums.z / atoms.length;
+    }
+    return { atoms: atoms, chains: chains };
+};
+exports.LoadData = LoadData;
+const ParseDataLine = (line) => {
+    let match = line.match(/ATOM +\d+ +(\w+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
+    if (match == null) {
+        return null;
+    }
+    const residueAtomName = match[1];
+    const residueName = match[2];
+    const chainName = match[3];
+    const residueId = parseInt(match[4]);
+    const atomName = match[10];
+    const position = gl_matrix_1.vec3.fromValues(parseFloat(match[5]), parseFloat(match[6]), parseFloat(match[7]));
+    const atom = new atom_1.Atom(position[0], position[1], position[2], atomName, residueAtomName);
+    return { residueAtomName, residueName, chainName, residueId, atomName, position, atom };
+};
 
 
 /***/ }),
@@ -22932,6 +23017,28 @@ jquery_1.default('#id-radio input:radio').on('click', function () {
 window.addEventListener('resize', function () {
     Create3DObject(is_animation);
 });
+
+
+/***/ }),
+
+/***/ "./src/residue.ts":
+/*!************************!*\
+  !*** ./src/residue.ts ***!
+  \************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Residue = void 0;
+class Residue {
+    constructor(name, id, atoms) {
+        this.name = name;
+        this.id = id;
+        this.atoms = atoms;
+    }
+}
+exports.Residue = Residue;
 
 
 /***/ }),

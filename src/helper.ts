@@ -1,10 +1,12 @@
 import { vec2, vec3, mat4 } from 'gl-matrix';
 import { CreateSphereGeometry, CubeData } from './vertex_data';
 import { TestData, Data1cqw } from './test_data';
-import { GetAtomColor, LoadData } from './atoms';
+import { LoadData } from './loadData';
 
 export const CreateMesh = () => {
-    let atoms = LoadData(Data1cqw);
+    const loaded = LoadData(Data1cqw);
+    const atoms = loaded.atoms;
+    console.log(loaded.chains);
     //const instanceMesh = CubeData();
     const instanceMesh = CreateSphereGeometry(1, 12, 6);
     let result = {positions: new Float32Array(instanceMesh.positions.length*atoms.length), colors: new Float32Array(instanceMesh.colors.length*atoms.length)};
@@ -20,7 +22,7 @@ export const CreateMesh = () => {
                 positions[j] = positions[j]/5+atom.z;
             }
         }
-        let atomColor = GetAtomColor(atom.name);
+        let atomColor = atom.GetColor();
         let colors = new Float32Array(instanceMesh.colors);
         for (let j = 0; j < colors.length; j++) {
             colors[j] = atomColor[j%3];
@@ -127,7 +129,7 @@ export const InitGPU = async () => {
     const canvas = document.getElementById('canvas-webgpu') as HTMLCanvasElement;
     const adapter = await navigator.gpu?.requestAdapter();
     const device = await adapter?.requestDevice() as GPUDevice;
-    const context = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
+    const context = canvas.getContext('webgpu') as GPUCanvasContext;
 
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({

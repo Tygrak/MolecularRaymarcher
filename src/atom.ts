@@ -1,0 +1,30 @@
+import { vec3 } from "gl-matrix";
+
+export class Atom {
+    name: string;
+    residueAtomName: string;
+    x: number;
+    y: number;
+    z: number;
+
+    constructor (x: number, y: number, z: number, name: string, residueAtomName: string) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.name = name;
+        this.residueAtomName = residueAtomName;
+    }
+
+    public GetColor() {
+        if (this.name == "C") {
+            return vec3.fromValues(0.3, 0.8, 0.3);
+        } else if (this.name == "N") {
+            return vec3.fromValues(0.05, 0.05, 0.85);
+        } else if (this.name == "O") {
+            return vec3.fromValues(0.85, 0.05, 0.05);
+        } else if (this.name == "S") {
+            return vec3.fromValues(0.975, 0.975, 0.025);
+        }
+        return vec3.fromValues(1, 0.1, 1);
+    }
+}
