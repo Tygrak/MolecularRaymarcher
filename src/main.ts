@@ -1,7 +1,6 @@
 import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateAnimation, CreateMesh } from './helper';
 import shader from './shader.wgsl';
 import "./site.css";
-import { CubeData } from './vertex_data';
 import { vec3, mat4 } from 'gl-matrix';
 import $ from 'jquery';
 const createCamera = require('3d-view-controls');

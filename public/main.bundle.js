@@ -22561,6 +22561,86 @@ exports.Atom = Atom;
 
 /***/ }),
 
+/***/ "./src/atomDatabase.ts":
+/*!*****************************!*\
+  !*** ./src/atomDatabase.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetAtomType = exports.AtomTypes = exports.LoadAtomTypes = exports.AtomType = void 0;
+const atomTypesText = __webpack_require__(/*! ./data/atomTypes.xml */ "./src/data/atomTypes.xml");
+const atomCovalentRadiiText = __webpack_require__(/*! ./data/atomCovalentRadii.xml */ "./src/data/atomCovalentRadii.xml");
+class AtomType {
+    constructor(number, name, identifier) {
+        this.covalentRadius = 1;
+        this.name = name;
+        this.identifier = identifier;
+        this.number = number;
+    }
+}
+exports.AtomType = AtomType;
+function LoadAtomTypes() {
+    var _a;
+    let covalentRadii = LoadCovalentRadii();
+    let result = [];
+    let lines = atomTypesText.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        let match = line.match(/atom identifier="(\w+)" name="(\w+)" number="(\d+)"/);
+        if (match == null) {
+            continue;
+        }
+        let atomType = new AtomType(parseInt(match[3]), match[2], match[1]);
+        atomType.covalentRadius = (_a = covalentRadii.get(atomType.number)) !== null && _a !== void 0 ? _a : 1;
+        result.push(atomType);
+    }
+    return result;
+}
+exports.LoadAtomTypes = LoadAtomTypes;
+function LoadCovalentRadii() {
+    let result = new Map();
+    let lines = atomCovalentRadiiText.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        let match = line.match(/covalent id="(\d+)" radius="(\d+\.\d+)"/);
+        if (match == null) {
+            continue;
+        }
+        result.set(parseInt(match[1]), parseFloat(match[2]));
+    }
+    return result;
+}
+function MakeAtomTypesNumberMap(atomTypes) {
+    let result = new Map();
+    for (let i = 0; i < atomTypes.length; i++) {
+        const atomType = atomTypes[i];
+        result.set(atomType.number, atomType);
+    }
+    return result;
+}
+function MakeAtomTypesIdentifierMap(atomTypes) {
+    let result = new Map();
+    for (let i = 0; i < atomTypes.length; i++) {
+        const atomType = atomTypes[i];
+        result.set(atomType.identifier, atomType);
+    }
+    return result;
+}
+exports.AtomTypes = LoadAtomTypes();
+const AtomTypesNumberMap = MakeAtomTypesNumberMap(exports.AtomTypes);
+const AtomTypesIdentifierMap = MakeAtomTypesIdentifierMap(exports.AtomTypes);
+function GetAtomType(atom) {
+    var _a;
+    return (_a = AtomTypesIdentifierMap.get(atom.name)) !== null && _a !== void 0 ? _a : exports.AtomTypes[0];
+}
+exports.GetAtomType = GetAtomType;
+
+
+/***/ }),
+
 /***/ "./src/chain.ts":
 /*!**********************!*\
   !*** ./src/chain.ts ***!
@@ -22582,471 +22662,10 @@ exports.Chain = Chain;
 
 /***/ }),
 
-/***/ "./src/helper.ts":
-/*!***********************!*\
-  !*** ./src/helper.ts ***!
-  \***********************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CheckWebGPU = exports.InitGPU = exports.CreateGPUBuffer = exports.CreateGPUBufferUint = exports.CreateViewProjection = exports.CreateTransforms = exports.CreateAnimation = exports.CreateMesh = void 0;
-const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
-const vertex_data_1 = __webpack_require__(/*! ./vertex_data */ "./src/vertex_data.ts");
-const test_data_1 = __webpack_require__(/*! ./test_data */ "./src/test_data.ts");
-const loadData_1 = __webpack_require__(/*! ./loadData */ "./src/loadData.ts");
-const CreateMesh = () => {
-    const loaded = loadData_1.LoadData(test_data_1.Data1cqw);
-    const atoms = loaded.atoms;
-    console.log(loaded.chains);
-    //const instanceMesh = CubeData();
-    const instanceMesh = vertex_data_1.CreateSphereGeometry(1, 12, 6);
-    let result = { positions: new Float32Array(instanceMesh.positions.length * atoms.length), colors: new Float32Array(instanceMesh.colors.length * atoms.length) };
-    for (let i = 0; i < atoms.length; i++) {
-        const atom = atoms[i];
-        let positions = new Float32Array(instanceMesh.positions);
-        for (let j = 0; j < positions.length; j++) {
-            if (j % 3 == 0) {
-                positions[j] = positions[j] / 5 + atom.x;
-            }
-            else if (j % 3 == 1) {
-                positions[j] = positions[j] / 5 + atom.y;
-            }
-            else if (j % 3 == 2) {
-                positions[j] = positions[j] / 5 + atom.z;
-            }
-        }
-        let atomColor = atom.GetColor();
-        let colors = new Float32Array(instanceMesh.colors);
-        for (let j = 0; j < colors.length; j++) {
-            colors[j] = atomColor[j % 3];
-        }
-        result.positions.set(positions, instanceMesh.positions.length * i);
-        result.colors.set(colors, instanceMesh.colors.length * i);
-    }
-    console.log(result);
-    return result;
-};
-exports.CreateMesh = CreateMesh;
-const CreateAnimation = (draw, rotation = gl_matrix_1.vec3.fromValues(0, 0, 0), isAnimation = true) => {
-    function step() {
-        if (isAnimation) {
-            rotation[0] += 0.01;
-            rotation[1] += 0.01;
-            rotation[2] += 0.01;
-        }
-        else {
-            rotation = [0, 0, 0];
-        }
-        draw();
-        requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-};
-exports.CreateAnimation = CreateAnimation;
-const CreateTransforms = (modelMat, translation = [0, 0, 0], rotation = [0, 0, 0], scaling = [1, 1, 1]) => {
-    const rotateXMat = gl_matrix_1.mat4.create();
-    const rotateYMat = gl_matrix_1.mat4.create();
-    const rotateZMat = gl_matrix_1.mat4.create();
-    const translateMat = gl_matrix_1.mat4.create();
-    const scaleMat = gl_matrix_1.mat4.create();
-    //perform indivisual transformations
-    gl_matrix_1.mat4.fromTranslation(translateMat, translation);
-    gl_matrix_1.mat4.fromXRotation(rotateXMat, rotation[0]);
-    gl_matrix_1.mat4.fromYRotation(rotateYMat, rotation[1]);
-    gl_matrix_1.mat4.fromZRotation(rotateZMat, rotation[2]);
-    gl_matrix_1.mat4.fromScaling(scaleMat, scaling);
-    //combine all transformation matrices together to form a final transform matrix: modelMat
-    gl_matrix_1.mat4.multiply(modelMat, rotateXMat, scaleMat);
-    gl_matrix_1.mat4.multiply(modelMat, rotateYMat, modelMat);
-    gl_matrix_1.mat4.multiply(modelMat, rotateZMat, modelMat);
-    gl_matrix_1.mat4.multiply(modelMat, translateMat, modelMat);
-};
-exports.CreateTransforms = CreateTransforms;
-const CreateViewProjection = (aspectRatio = 1.0, cameraPosition = [2, 2, 4], lookDirection = [0, 0, 0], upDirection = [0, 1, 0]) => {
-    const viewMatrix = gl_matrix_1.mat4.create();
-    const projectionMatrix = gl_matrix_1.mat4.create();
-    const viewProjectionMatrix = gl_matrix_1.mat4.create();
-    gl_matrix_1.mat4.perspective(projectionMatrix, 2 * Math.PI / 5, aspectRatio, 0.1, 1000.0);
-    gl_matrix_1.mat4.lookAt(viewMatrix, cameraPosition, lookDirection, upDirection);
-    gl_matrix_1.mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
-    const cameraOption = {
-        eye: cameraPosition,
-        center: lookDirection,
-        zoomMax: 100,
-        zoomSpeed: 2
-    };
-    return {
-        viewMatrix,
-        projectionMatrix,
-        viewProjectionMatrix,
-        cameraOption
-    };
-};
-exports.CreateViewProjection = CreateViewProjection;
-const CreateGPUBufferUint = (device, data, usageFlag = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) => {
-    const buffer = device.createBuffer({
-        size: data.byteLength,
-        usage: usageFlag,
-        mappedAtCreation: true
-    });
-    new Uint32Array(buffer.getMappedRange()).set(data);
-    buffer.unmap();
-    return buffer;
-};
-exports.CreateGPUBufferUint = CreateGPUBufferUint;
-const CreateGPUBuffer = (device, data, usageFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST) => {
-    const buffer = device.createBuffer({
-        size: data.byteLength,
-        usage: usageFlag,
-        mappedAtCreation: true
-    });
-    new Float32Array(buffer.getMappedRange()).set(data);
-    buffer.unmap();
-    return buffer;
-};
-exports.CreateGPUBuffer = CreateGPUBuffer;
-const InitGPU = () => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const checkgpu = exports.CheckWebGPU();
-    if (checkgpu.includes('Your current browser does not support WebGPU!')) {
-        console.log(checkgpu);
-        throw ('Your current browser does not support WebGPU!');
-    }
-    const canvas = document.getElementById('canvas-webgpu');
-    const adapter = yield ((_a = navigator.gpu) === null || _a === void 0 ? void 0 : _a.requestAdapter());
-    const device = yield (adapter === null || adapter === void 0 ? void 0 : adapter.requestDevice());
-    const context = canvas.getContext('webgpu');
-    const format = navigator.gpu.getPreferredCanvasFormat();
-    context.configure({
-        device: device,
-        format: format,
-        alphaMode: 'opaque'
-    });
-    return { device, canvas, format, context };
-});
-exports.InitGPU = InitGPU;
-const CheckWebGPU = () => {
-    let result = 'Great, your current browser supports WebGPU!';
-    if (!navigator.gpu) {
-        result = `Your current browser does not support WebGPU! Make sure you are on a system 
-        with WebGPU enabled. Currently, WebGPU is supported in  
-        <a href="https://www.google.com/chrome/canary/">Chrome canary</a>
-        with the flag "enable-unsafe-webgpu" enabled. See the 
-        <a href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status"> 
-        Implementation Status</a> page for more details.   
-        You can also use your regular Chrome to try a pre-release version of WebGPU via
-        <a href="https://developer.chrome.com/origintrials/#/view_trial/118219490218475521">Origin Trial</a>.                
-        `;
-    }
-    const canvas = document.getElementById('canvas-webgpu');
-    if (canvas) {
-        const div = document.getElementsByClassName('item2')[0];
-        if (div) {
-            canvas.width = div.offsetWidth;
-            canvas.height = div.offsetHeight;
-            function windowResize() {
-                canvas.width = div.offsetWidth;
-                canvas.height = div.offsetHeight;
-            }
-            ;
-            window.addEventListener('resize', windowResize);
-        }
-    }
-    return result;
-};
-exports.CheckWebGPU = CheckWebGPU;
-
-
-/***/ }),
-
-/***/ "./src/loadData.ts":
-/*!*************************!*\
-  !*** ./src/loadData.ts ***!
-  \*************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LoadData = void 0;
-const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
-const atom_1 = __webpack_require__(/*! ./atom */ "./src/atom.ts");
-const chain_1 = __webpack_require__(/*! ./chain */ "./src/chain.ts");
-const residue_1 = __webpack_require__(/*! ./residue */ "./src/residue.ts");
-const LoadData = (dataString) => {
-    let lines = dataString.split("\n");
-    let atoms = [];
-    let sums = { x: 0, y: 0, z: 0 };
-    let chains = [];
-    let chain = new chain_1.Chain("-1", []);
-    let residue = new residue_1.Residue("", -1, []);
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const lineParseResult = ParseDataLine(line);
-        if (lineParseResult == null) {
-            continue;
-        }
-        if (residue.id != lineParseResult.residueId) {
-            if (residue.id != -1) {
-                if (chain.name != lineParseResult.chainName) {
-                    if (chain.name != "-1") {
-                        chains.push(chain);
-                    }
-                    chain = new chain_1.Chain(lineParseResult.chainName, []);
-                }
-                chain.residues.push(residue);
-            }
-            residue = new residue_1.Residue(lineParseResult.residueName, lineParseResult.residueId, []);
-        }
-        residue.atoms.push(lineParseResult.atom);
-        sums.x += lineParseResult.atom.x;
-        sums.y += lineParseResult.atom.y;
-        sums.z += lineParseResult.atom.z;
-        atoms.push(lineParseResult.atom);
-    }
-    if (residue.id != -1) {
-        chain.residues.push(residue);
-    }
-    if (chain.name != "-1") {
-        chains.push(chain);
-    }
-    for (let i = 0; i < atoms.length; i++) {
-        atoms[i].x -= sums.x / atoms.length;
-        atoms[i].y -= sums.y / atoms.length;
-        atoms[i].z -= sums.z / atoms.length;
-    }
-    return { atoms: atoms, chains: chains };
-};
-exports.LoadData = LoadData;
-const ParseDataLine = (line) => {
-    let match = line.match(/ATOM +\d+ +(\w+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
-    if (match == null) {
-        return null;
-    }
-    const residueAtomName = match[1];
-    const residueName = match[2];
-    const chainName = match[3];
-    const residueId = parseInt(match[4]);
-    const atomName = match[10];
-    const position = gl_matrix_1.vec3.fromValues(parseFloat(match[5]), parseFloat(match[6]), parseFloat(match[7]));
-    const atom = new atom_1.Atom(position[0], position[1], position[2], atomName, residueAtomName);
-    return { residueAtomName, residueName, chainName, residueId, atomName, position, atom };
-};
-
-
-/***/ }),
-
-/***/ "./src/main.ts":
-/*!*********************!*\
-  !*** ./src/main.ts ***!
-  \*********************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const helper_1 = __webpack_require__(/*! ./helper */ "./src/helper.ts");
-const shader_wgsl_1 = __importDefault(__webpack_require__(/*! ./shader.wgsl */ "./src/shader.wgsl"));
-__webpack_require__(/*! ./site.css */ "./src/site.css");
-const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
-const jquery_1 = __importDefault(__webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"));
-const createCamera = __webpack_require__(/*! 3d-view-controls */ "./node_modules/3d-view-controls/camera.js");
-const Create3DObject = (isAnimation = true) => __awaiter(void 0, void 0, void 0, function* () {
-    const gpu = yield helper_1.InitGPU();
-    const device = gpu.device;
-    // create vertex buffers
-    const cubeData = helper_1.CreateMesh();
-    const numberOfVertices = cubeData.positions.length / 3;
-    const vertexBuffer = helper_1.CreateGPUBuffer(device, cubeData.positions);
-    const colorBuffer = helper_1.CreateGPUBuffer(device, cubeData.colors);
-    let percentageShown = 1;
-    const pipeline = device.createRenderPipeline({
-        layout: 'auto',
-        vertex: {
-            module: device.createShaderModule({
-                code: shader_wgsl_1.default
-            }),
-            entryPoint: "vs_main",
-            buffers: [
-                {
-                    arrayStride: 4 * 3,
-                    attributes: [{
-                            shaderLocation: 0,
-                            format: "float32x3",
-                            offset: 0
-                        }]
-                },
-                {
-                    arrayStride: 4 * 3,
-                    attributes: [{
-                            shaderLocation: 1,
-                            format: "float32x3",
-                            offset: 0
-                        }]
-                }
-            ]
-        },
-        fragment: {
-            module: device.createShaderModule({
-                code: shader_wgsl_1.default
-            }),
-            entryPoint: "fs_main",
-            targets: [
-                {
-                    format: gpu.format
-                }
-            ]
-        },
-        primitive: {
-            topology: "triangle-list",
-        },
-        depthStencil: {
-            format: "depth24plus",
-            depthWriteEnabled: true,
-            depthCompare: "less"
-        }
-    });
-    // create uniform data
-    const modelMatrix = gl_matrix_1.mat4.create();
-    const mvpMatrix = gl_matrix_1.mat4.create();
-    let vMatrix = gl_matrix_1.mat4.create();
-    let vpMatrix = gl_matrix_1.mat4.create();
-    const vp = helper_1.CreateViewProjection(gpu.canvas.width / gpu.canvas.height, [0, 5, 45]);
-    vpMatrix = vp.viewProjectionMatrix;
-    // add rotation and camera:
-    let rotation = gl_matrix_1.vec3.fromValues(0, 0, 0);
-    var camera = createCamera(gpu.canvas, vp.cameraOption);
-    // create uniform buffer and layout
-    const uniformBuffer = device.createBuffer({
-        size: 64,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
-    const uniformBindGroup = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(0),
-        entries: [{
-                binding: 0,
-                resource: {
-                    buffer: uniformBuffer,
-                    offset: 0,
-                    size: 64
-                }
-            }]
-    });
-    let textureView = gpu.context.getCurrentTexture().createView();
-    const depthTexture = device.createTexture({
-        size: [gpu.canvas.width, gpu.canvas.height, 1],
-        format: "depth24plus",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT
-    });
-    const renderPassDescription = {
-        colorAttachments: [{
-                view: textureView,
-                clearValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 },
-                loadValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 },
-                loadOp: 'clear',
-                storeOp: 'store'
-            }],
-        depthStencilAttachment: {
-            view: depthTexture.createView(),
-            depthClearValue: 1.0,
-            depthLoadOp: 'clear',
-            depthStoreOp: "store",
-        }
-    };
-    function draw() {
-        if (!isAnimation) {
-            if (camera.tick()) {
-                const pMatrix = vp.projectionMatrix;
-                vMatrix = camera.matrix;
-                gl_matrix_1.mat4.multiply(vpMatrix, pMatrix, vMatrix);
-            }
-        }
-        helper_1.CreateTransforms(modelMatrix, [0, 0, 0], rotation);
-        gl_matrix_1.mat4.multiply(mvpMatrix, vpMatrix, modelMatrix);
-        device.queue.writeBuffer(uniformBuffer, 0, mvpMatrix);
-        textureView = gpu.context.getCurrentTexture().createView();
-        renderPassDescription.colorAttachments[0].view = textureView;
-        const commandEncoder = device.createCommandEncoder();
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescription);
-        let numberOfVerticesToDraw = Math.round(numberOfVertices * percentageShown) - Math.round(numberOfVertices * percentageShown) % 3;
-        renderPass.setPipeline(pipeline);
-        renderPass.setVertexBuffer(0, vertexBuffer);
-        renderPass.setVertexBuffer(1, colorBuffer);
-        renderPass.setBindGroup(0, uniformBindGroup);
-        //renderPass.draw(numberOfVertices);
-        renderPass.draw(numberOfVerticesToDraw);
-        renderPass.end();
-        device.queue.submit([commandEncoder.finish()]);
-    }
-    let sliderPercentageShown = document.getElementById("sliderPercentageShown");
-    sliderPercentageShown.oninput = (e) => {
-        percentageShown = parseFloat(sliderPercentageShown.value) / 100;
-    };
-    helper_1.CreateAnimation(draw, rotation, isAnimation);
-});
-let is_animation = false;
-Create3DObject(is_animation);
-jquery_1.default('#id-radio input:radio').on('click', function () {
-    let val = jquery_1.default('input[name="options"]:checked').val();
-    is_animation = val === 'animation' ? true : false;
-    Create3DObject(is_animation);
-});
-window.addEventListener('resize', function () {
-    Create3DObject(is_animation);
-});
-
-
-/***/ }),
-
-/***/ "./src/residue.ts":
-/*!************************!*\
-  !*** ./src/residue.ts ***!
-  \************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Residue = void 0;
-class Residue {
-    constructor(name, id, atoms) {
-        this.name = name;
-        this.id = id;
-        this.atoms = atoms;
-    }
-}
-exports.Residue = Residue;
-
-
-/***/ }),
-
-/***/ "./src/test_data.ts":
-/*!**************************!*\
-  !*** ./src/test_data.ts ***!
-  \**************************/
+/***/ "./src/data/test_data.ts":
+/*!*******************************!*\
+  !*** ./src/data/test_data.ts ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -26250,9 +25869,450 @@ END
 
 /***/ }),
 
-/***/ "./src/vertex_data.ts":
+/***/ "./src/helper.ts":
+/*!***********************!*\
+  !*** ./src/helper.ts ***!
+  \***********************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CheckWebGPU = exports.InitGPU = exports.CreateGPUBuffer = exports.CreateGPUBufferUint = exports.CreateViewProjection = exports.CreateTransforms = exports.CreateAnimation = exports.CreateMesh = void 0;
+const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
+const meshHelpers_1 = __webpack_require__(/*! ./meshHelpers */ "./src/meshHelpers.ts");
+const test_data_1 = __webpack_require__(/*! ./data/test_data */ "./src/data/test_data.ts");
+const loadData_1 = __webpack_require__(/*! ./loadData */ "./src/loadData.ts");
+const atomDatabase_1 = __webpack_require__(/*! ./atomDatabase */ "./src/atomDatabase.ts");
+const CreateMesh = () => {
+    const loaded = loadData_1.LoadData(test_data_1.Data1cqw);
+    const atoms = loaded.atoms;
+    console.log(loaded.chains);
+    //const instanceMesh = CubeData();
+    const instanceMesh = meshHelpers_1.CreateSphereGeometry(1, 12, 6);
+    let result = { positions: new Float32Array(instanceMesh.positions.length * atoms.length), colors: new Float32Array(instanceMesh.colors.length * atoms.length) };
+    for (let i = 0; i < atoms.length; i++) {
+        const atom = atoms[i];
+        let positions = new Float32Array(instanceMesh.positions);
+        for (let j = 0; j < positions.length; j++) {
+            if (j % 3 == 0) {
+                positions[j] = (positions[j] / 4) * atomDatabase_1.GetAtomType(atom).covalentRadius + atom.x;
+            }
+            else if (j % 3 == 1) {
+                positions[j] = (positions[j] / 4) * atomDatabase_1.GetAtomType(atom).covalentRadius + atom.y;
+            }
+            else if (j % 3 == 2) {
+                positions[j] = (positions[j] / 4) * atomDatabase_1.GetAtomType(atom).covalentRadius + atom.z;
+            }
+        }
+        let atomColor = atom.GetColor();
+        let colors = new Float32Array(instanceMesh.colors);
+        for (let j = 0; j < colors.length; j++) {
+            colors[j] = atomColor[j % 3];
+        }
+        result.positions.set(positions, instanceMesh.positions.length * i);
+        result.colors.set(colors, instanceMesh.colors.length * i);
+    }
+    console.log(atomDatabase_1.AtomTypes);
+    console.log(result);
+    return result;
+};
+exports.CreateMesh = CreateMesh;
+const CreateAnimation = (draw, rotation = gl_matrix_1.vec3.fromValues(0, 0, 0), isAnimation = true) => {
+    function step() {
+        if (isAnimation) {
+            rotation[0] += 0.01;
+            rotation[1] += 0.01;
+            rotation[2] += 0.01;
+        }
+        else {
+            rotation = [0, 0, 0];
+        }
+        draw();
+        requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+};
+exports.CreateAnimation = CreateAnimation;
+const CreateTransforms = (modelMat, translation = [0, 0, 0], rotation = [0, 0, 0], scaling = [1, 1, 1]) => {
+    const rotateXMat = gl_matrix_1.mat4.create();
+    const rotateYMat = gl_matrix_1.mat4.create();
+    const rotateZMat = gl_matrix_1.mat4.create();
+    const translateMat = gl_matrix_1.mat4.create();
+    const scaleMat = gl_matrix_1.mat4.create();
+    //perform indivisual transformations
+    gl_matrix_1.mat4.fromTranslation(translateMat, translation);
+    gl_matrix_1.mat4.fromXRotation(rotateXMat, rotation[0]);
+    gl_matrix_1.mat4.fromYRotation(rotateYMat, rotation[1]);
+    gl_matrix_1.mat4.fromZRotation(rotateZMat, rotation[2]);
+    gl_matrix_1.mat4.fromScaling(scaleMat, scaling);
+    //combine all transformation matrices together to form a final transform matrix: modelMat
+    gl_matrix_1.mat4.multiply(modelMat, rotateXMat, scaleMat);
+    gl_matrix_1.mat4.multiply(modelMat, rotateYMat, modelMat);
+    gl_matrix_1.mat4.multiply(modelMat, rotateZMat, modelMat);
+    gl_matrix_1.mat4.multiply(modelMat, translateMat, modelMat);
+};
+exports.CreateTransforms = CreateTransforms;
+const CreateViewProjection = (aspectRatio = 1.0, cameraPosition = [2, 2, 4], lookDirection = [0, 0, 0], upDirection = [0, 1, 0]) => {
+    const viewMatrix = gl_matrix_1.mat4.create();
+    const projectionMatrix = gl_matrix_1.mat4.create();
+    const viewProjectionMatrix = gl_matrix_1.mat4.create();
+    gl_matrix_1.mat4.perspective(projectionMatrix, 2 * Math.PI / 5, aspectRatio, 0.1, 1000.0);
+    gl_matrix_1.mat4.lookAt(viewMatrix, cameraPosition, lookDirection, upDirection);
+    gl_matrix_1.mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
+    const cameraOption = {
+        eye: cameraPosition,
+        center: lookDirection,
+        zoomMax: 100,
+        zoomSpeed: 2
+    };
+    return {
+        viewMatrix,
+        projectionMatrix,
+        viewProjectionMatrix,
+        cameraOption
+    };
+};
+exports.CreateViewProjection = CreateViewProjection;
+const CreateGPUBufferUint = (device, data, usageFlag = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) => {
+    const buffer = device.createBuffer({
+        size: data.byteLength,
+        usage: usageFlag,
+        mappedAtCreation: true
+    });
+    new Uint32Array(buffer.getMappedRange()).set(data);
+    buffer.unmap();
+    return buffer;
+};
+exports.CreateGPUBufferUint = CreateGPUBufferUint;
+const CreateGPUBuffer = (device, data, usageFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST) => {
+    const buffer = device.createBuffer({
+        size: data.byteLength,
+        usage: usageFlag,
+        mappedAtCreation: true
+    });
+    new Float32Array(buffer.getMappedRange()).set(data);
+    buffer.unmap();
+    return buffer;
+};
+exports.CreateGPUBuffer = CreateGPUBuffer;
+const InitGPU = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const checkgpu = exports.CheckWebGPU();
+    if (checkgpu.includes('Your current browser does not support WebGPU!')) {
+        console.log(checkgpu);
+        throw ('Your current browser does not support WebGPU!');
+    }
+    const canvas = document.getElementById('canvas-webgpu');
+    const adapter = yield ((_a = navigator.gpu) === null || _a === void 0 ? void 0 : _a.requestAdapter());
+    const device = yield (adapter === null || adapter === void 0 ? void 0 : adapter.requestDevice());
+    const context = canvas.getContext('webgpu');
+    const format = navigator.gpu.getPreferredCanvasFormat();
+    context.configure({
+        device: device,
+        format: format,
+        alphaMode: 'opaque'
+    });
+    return { device, canvas, format, context };
+});
+exports.InitGPU = InitGPU;
+const CheckWebGPU = () => {
+    let result = 'Great, your current browser supports WebGPU!';
+    if (!navigator.gpu) {
+        result = `Your current browser does not support WebGPU! Make sure you are on a system 
+        with WebGPU enabled. Currently, WebGPU is supported in  
+        <a href="https://www.google.com/chrome/canary/">Chrome canary</a>
+        with the flag "enable-unsafe-webgpu" enabled. See the 
+        <a href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status"> 
+        Implementation Status</a> page for more details.   
+        You can also use your regular Chrome to try a pre-release version of WebGPU via
+        <a href="https://developer.chrome.com/origintrials/#/view_trial/118219490218475521">Origin Trial</a>.                
+        `;
+    }
+    const canvas = document.getElementById('canvas-webgpu');
+    if (canvas) {
+        const div = document.getElementsByClassName('item2')[0];
+        if (div) {
+            canvas.width = div.offsetWidth;
+            canvas.height = div.offsetHeight;
+            function windowResize() {
+                canvas.width = div.offsetWidth;
+                canvas.height = div.offsetHeight;
+            }
+            ;
+            window.addEventListener('resize', windowResize);
+        }
+    }
+    return result;
+};
+exports.CheckWebGPU = CheckWebGPU;
+
+
+/***/ }),
+
+/***/ "./src/loadData.ts":
+/*!*************************!*\
+  !*** ./src/loadData.ts ***!
+  \*************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoadData = void 0;
+const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
+const atom_1 = __webpack_require__(/*! ./atom */ "./src/atom.ts");
+const chain_1 = __webpack_require__(/*! ./chain */ "./src/chain.ts");
+const residue_1 = __webpack_require__(/*! ./residue */ "./src/residue.ts");
+const LoadData = (dataString) => {
+    let lines = dataString.split("\n");
+    let atoms = [];
+    let sums = { x: 0, y: 0, z: 0 };
+    let chains = [];
+    let chain = new chain_1.Chain("-1", []);
+    let residue = new residue_1.Residue("", -1, []);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lineParseResult = ParseDataLine(line);
+        if (lineParseResult == null) {
+            continue;
+        }
+        if (residue.id != lineParseResult.residueId) {
+            if (residue.id != -1) {
+                if (chain.name != lineParseResult.chainName) {
+                    if (chain.name != "-1") {
+                        chains.push(chain);
+                    }
+                    chain = new chain_1.Chain(lineParseResult.chainName, []);
+                }
+                chain.residues.push(residue);
+            }
+            residue = new residue_1.Residue(lineParseResult.residueName, lineParseResult.residueId, []);
+        }
+        residue.atoms.push(lineParseResult.atom);
+        sums.x += lineParseResult.atom.x;
+        sums.y += lineParseResult.atom.y;
+        sums.z += lineParseResult.atom.z;
+        atoms.push(lineParseResult.atom);
+    }
+    if (residue.id != -1) {
+        chain.residues.push(residue);
+    }
+    if (chain.name != "-1") {
+        chains.push(chain);
+    }
+    for (let i = 0; i < atoms.length; i++) {
+        atoms[i].x -= sums.x / atoms.length;
+        atoms[i].y -= sums.y / atoms.length;
+        atoms[i].z -= sums.z / atoms.length;
+    }
+    return { atoms: atoms, chains: chains };
+};
+exports.LoadData = LoadData;
+const ParseDataLine = (line) => {
+    let match = line.match(/ATOM +\d+ +(\w+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
+    if (match == null) {
+        return null;
+    }
+    const residueAtomName = match[1];
+    const residueName = match[2];
+    const chainName = match[3];
+    const residueId = parseInt(match[4]);
+    const atomName = match[10];
+    const position = gl_matrix_1.vec3.fromValues(parseFloat(match[5]), parseFloat(match[6]), parseFloat(match[7]));
+    const atom = new atom_1.Atom(position[0], position[1], position[2], atomName, residueAtomName);
+    return { residueAtomName, residueName, chainName, residueId, atomName, position, atom };
+};
+
+
+/***/ }),
+
+/***/ "./src/main.ts":
+/*!*********************!*\
+  !*** ./src/main.ts ***!
+  \*********************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const helper_1 = __webpack_require__(/*! ./helper */ "./src/helper.ts");
+const shader_wgsl_1 = __importDefault(__webpack_require__(/*! ./shader.wgsl */ "./src/shader.wgsl"));
+__webpack_require__(/*! ./site.css */ "./src/site.css");
+const gl_matrix_1 = __webpack_require__(/*! gl-matrix */ "./node_modules/gl-matrix/esm/index.js");
+const jquery_1 = __importDefault(__webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"));
+const createCamera = __webpack_require__(/*! 3d-view-controls */ "./node_modules/3d-view-controls/camera.js");
+const Create3DObject = (isAnimation = true) => __awaiter(void 0, void 0, void 0, function* () {
+    const gpu = yield helper_1.InitGPU();
+    const device = gpu.device;
+    // create vertex buffers
+    const cubeData = helper_1.CreateMesh();
+    const numberOfVertices = cubeData.positions.length / 3;
+    const vertexBuffer = helper_1.CreateGPUBuffer(device, cubeData.positions);
+    const colorBuffer = helper_1.CreateGPUBuffer(device, cubeData.colors);
+    let percentageShown = 1;
+    const pipeline = device.createRenderPipeline({
+        layout: 'auto',
+        vertex: {
+            module: device.createShaderModule({
+                code: shader_wgsl_1.default
+            }),
+            entryPoint: "vs_main",
+            buffers: [
+                {
+                    arrayStride: 4 * 3,
+                    attributes: [{
+                            shaderLocation: 0,
+                            format: "float32x3",
+                            offset: 0
+                        }]
+                },
+                {
+                    arrayStride: 4 * 3,
+                    attributes: [{
+                            shaderLocation: 1,
+                            format: "float32x3",
+                            offset: 0
+                        }]
+                }
+            ]
+        },
+        fragment: {
+            module: device.createShaderModule({
+                code: shader_wgsl_1.default
+            }),
+            entryPoint: "fs_main",
+            targets: [
+                {
+                    format: gpu.format
+                }
+            ]
+        },
+        primitive: {
+            topology: "triangle-list",
+        },
+        depthStencil: {
+            format: "depth24plus",
+            depthWriteEnabled: true,
+            depthCompare: "less"
+        }
+    });
+    // create uniform data
+    const modelMatrix = gl_matrix_1.mat4.create();
+    const mvpMatrix = gl_matrix_1.mat4.create();
+    let vMatrix = gl_matrix_1.mat4.create();
+    let vpMatrix = gl_matrix_1.mat4.create();
+    const vp = helper_1.CreateViewProjection(gpu.canvas.width / gpu.canvas.height, [0, 5, 45]);
+    vpMatrix = vp.viewProjectionMatrix;
+    // add rotation and camera:
+    let rotation = gl_matrix_1.vec3.fromValues(0, 0, 0);
+    var camera = createCamera(gpu.canvas, vp.cameraOption);
+    // create uniform buffer and layout
+    const uniformBuffer = device.createBuffer({
+        size: 64,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+    const uniformBindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{
+                binding: 0,
+                resource: {
+                    buffer: uniformBuffer,
+                    offset: 0,
+                    size: 64
+                }
+            }]
+    });
+    let textureView = gpu.context.getCurrentTexture().createView();
+    const depthTexture = device.createTexture({
+        size: [gpu.canvas.width, gpu.canvas.height, 1],
+        format: "depth24plus",
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
+    const renderPassDescription = {
+        colorAttachments: [{
+                view: textureView,
+                clearValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 },
+                loadValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 },
+                loadOp: 'clear',
+                storeOp: 'store'
+            }],
+        depthStencilAttachment: {
+            view: depthTexture.createView(),
+            depthClearValue: 1.0,
+            depthLoadOp: 'clear',
+            depthStoreOp: "store",
+        }
+    };
+    function draw() {
+        if (!isAnimation) {
+            if (camera.tick()) {
+                const pMatrix = vp.projectionMatrix;
+                vMatrix = camera.matrix;
+                gl_matrix_1.mat4.multiply(vpMatrix, pMatrix, vMatrix);
+            }
+        }
+        helper_1.CreateTransforms(modelMatrix, [0, 0, 0], rotation);
+        gl_matrix_1.mat4.multiply(mvpMatrix, vpMatrix, modelMatrix);
+        device.queue.writeBuffer(uniformBuffer, 0, mvpMatrix);
+        textureView = gpu.context.getCurrentTexture().createView();
+        renderPassDescription.colorAttachments[0].view = textureView;
+        const commandEncoder = device.createCommandEncoder();
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescription);
+        let numberOfVerticesToDraw = Math.round(numberOfVertices * percentageShown) - Math.round(numberOfVertices * percentageShown) % 3;
+        renderPass.setPipeline(pipeline);
+        renderPass.setVertexBuffer(0, vertexBuffer);
+        renderPass.setVertexBuffer(1, colorBuffer);
+        renderPass.setBindGroup(0, uniformBindGroup);
+        //renderPass.draw(numberOfVertices);
+        renderPass.draw(numberOfVerticesToDraw);
+        renderPass.end();
+        device.queue.submit([commandEncoder.finish()]);
+    }
+    let sliderPercentageShown = document.getElementById("sliderPercentageShown");
+    sliderPercentageShown.oninput = (e) => {
+        percentageShown = parseFloat(sliderPercentageShown.value) / 100;
+    };
+    helper_1.CreateAnimation(draw, rotation, isAnimation);
+});
+let is_animation = false;
+Create3DObject(is_animation);
+jquery_1.default('#id-radio input:radio').on('click', function () {
+    let val = jquery_1.default('input[name="options"]:checked').val();
+    is_animation = val === 'animation' ? true : false;
+    Create3DObject(is_animation);
+});
+window.addEventListener('resize', function () {
+    Create3DObject(is_animation);
+});
+
+
+/***/ }),
+
+/***/ "./src/meshHelpers.ts":
 /*!****************************!*\
-  !*** ./src/vertex_data.ts ***!
+  !*** ./src/meshHelpers.ts ***!
   \****************************/
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -26424,6 +26484,28 @@ const CreateSphereGeometry = (radius, sectorCount, stackCount) => {
     return { positions: resultPositions, colors: new Float32Array(resultPositions.length).map((v) => 1) };
 };
 exports.CreateSphereGeometry = CreateSphereGeometry;
+
+
+/***/ }),
+
+/***/ "./src/residue.ts":
+/*!************************!*\
+  !*** ./src/residue.ts ***!
+  \************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Residue = void 0;
+class Residue {
+    constructor(name, id, atoms) {
+        this.name = name;
+        this.id = id;
+        this.atoms = atoms;
+    }
+}
+exports.Residue = Residue;
 
 
 /***/ }),
@@ -27022,6 +27104,28 @@ function createTurntableController(options) {
     theta,
     phi)
 }
+
+/***/ }),
+
+/***/ "./src/data/atomCovalentRadii.xml":
+/*!****************************************!*\
+  !*** ./src/data/atomCovalentRadii.xml ***!
+  \****************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n    Document   : elementCovalentRadii.xml\r\n    Description: List of known elements' covalent radii.\r\n-->\r\n<root>\r\n    <covalent id=\"1\" radius=\"0.23\"/>\r\n    <covalent id=\"2\" radius=\"1.50\"/>\r\n    <covalent id=\"3\" radius=\"1.28\"/>\r\n    <covalent id=\"4\" radius=\"0.96\"/>\r\n    <covalent id=\"5\" radius=\"0.83\"/>\r\n    <covalent id=\"6\" radius=\"0.68\"/>\r\n    <covalent id=\"7\" radius=\"0.68\"/>\r\n    <covalent id=\"8\" radius=\"0.68\"/>\r\n    <covalent id=\"9\" radius=\"0.64\"/>\r\n    <covalent id=\"10\" radius=\"1.50\"/>\r\n    <covalent id=\"11\" radius=\"1.66\"/>\r\n    <covalent id=\"12\" radius=\"1.41\"/>\r\n    <covalent id=\"13\" radius=\"1.21\"/>\r\n    <covalent id=\"14\" radius=\"1.20\"/>\r\n    <covalent id=\"15\" radius=\"1.05\"/>\r\n    <covalent id=\"16\" radius=\"1.02\"/>\r\n    <covalent id=\"17\" radius=\"0.99\"/>\r\n    <covalent id=\"18\" radius=\"1.51\"/>\r\n    <covalent id=\"19\" radius=\"2.03\"/>\r\n    <covalent id=\"20\" radius=\"1.76\"/>\r\n    <covalent id=\"21\" radius=\"1.70\"/>\r\n    <covalent id=\"22\" radius=\"1.60\"/>\r\n    <covalent id=\"23\" radius=\"1.53\"/>\r\n    <covalent id=\"24\" radius=\"1.39\"/>\r\n    <covalent id=\"25\" radius=\"1.61\"/>\r\n    <covalent id=\"26\" radius=\"1.52\"/>\r\n    <covalent id=\"27\" radius=\"1.26\"/>\r\n    <covalent id=\"28\" radius=\"1.24\"/>\r\n    <covalent id=\"29\" radius=\"1.32\"/>\r\n    <covalent id=\"30\" radius=\"1.22\"/>\r\n    <covalent id=\"31\" radius=\"1.22\"/>\r\n    <covalent id=\"32\" radius=\"1.17\"/>\r\n    <covalent id=\"33\" radius=\"1.21\"/>\r\n    <covalent id=\"34\" radius=\"1.22\"/>\r\n    <covalent id=\"35\" radius=\"1.21\"/>\r\n    <covalent id=\"36\" radius=\"1.50\"/>\r\n    <covalent id=\"37\" radius=\"2.20\"/>\r\n    <covalent id=\"38\" radius=\"1.95\"/>\r\n    <covalent id=\"39\" radius=\"1.90\"/>\r\n    <covalent id=\"40\" radius=\"1.75\"/>\r\n    <covalent id=\"41\" radius=\"1.64\"/>\r\n    <covalent id=\"42\" radius=\"1.54\"/>\r\n    <covalent id=\"43\" radius=\"1.47\"/>\r\n    <covalent id=\"44\" radius=\"1.46\"/>\r\n    <covalent id=\"45\" radius=\"1.45\"/>\r\n    <covalent id=\"46\" radius=\"1.39\"/>\r\n    <covalent id=\"47\" radius=\"1.45\"/>\r\n    <covalent id=\"48\" radius=\"1.44\"/>\r\n    <covalent id=\"49\" radius=\"1.42\"/>\r\n    <covalent id=\"50\" radius=\"1.39\"/>\r\n    <covalent id=\"51\" radius=\"1.39\"/>\r\n    <covalent id=\"52\" radius=\"1.47\"/>\r\n    <covalent id=\"53\" radius=\"1.40\"/>\r\n    <covalent id=\"54\" radius=\"1.50\"/>\r\n    <covalent id=\"55\" radius=\"2.44\"/>\r\n    <covalent id=\"56\" radius=\"2.15\"/>\r\n    <covalent id=\"57\" radius=\"2.07\"/>\r\n    <covalent id=\"58\" radius=\"2.04\"/>\r\n    <covalent id=\"59\" radius=\"2.03\"/>\r\n    <covalent id=\"60\" radius=\"2.01\"/>\r\n    <covalent id=\"61\" radius=\"1.99\"/>\r\n    <covalent id=\"62\" radius=\"1.98\"/>\r\n    <covalent id=\"63\" radius=\"1.98\"/>\r\n    <covalent id=\"64\" radius=\"1.96\"/>\r\n    <covalent id=\"65\" radius=\"1.94\"/>\r\n    <covalent id=\"66\" radius=\"1.92\"/>\r\n    <covalent id=\"67\" radius=\"1.92\"/>\r\n    <covalent id=\"68\" radius=\"1.89\"/>\r\n    <covalent id=\"69\" radius=\"1.90\"/>\r\n    <covalent id=\"70\" radius=\"1.87\"/>\r\n    <covalent id=\"71\" radius=\"1.87\"/>\r\n    <covalent id=\"72\" radius=\"1.75\"/>\r\n    <covalent id=\"73\" radius=\"1.70\"/>\r\n    <covalent id=\"74\" radius=\"1.62\"/>\r\n    <covalent id=\"75\" radius=\"1.51\"/>\r\n    <covalent id=\"76\" radius=\"1.44\"/>\r\n    <covalent id=\"77\" radius=\"1.41\"/>\r\n    <covalent id=\"78\" radius=\"1.36\"/>\r\n    <covalent id=\"79\" radius=\"1.50\"/>\r\n    <covalent id=\"80\" radius=\"1.32\"/>\r\n    <covalent id=\"81\" radius=\"1.45\"/>\r\n    <covalent id=\"82\" radius=\"1.46\"/>\r\n    <covalent id=\"83\" radius=\"1.48\"/>\r\n    <covalent id=\"84\" radius=\"1.40\"/>\r\n    <covalent id=\"85\" radius=\"1.21\"/>\r\n    <covalent id=\"86\" radius=\"1.50\"/>\r\n    <covalent id=\"87\" radius=\"2.60\"/>\r\n    <covalent id=\"88\" radius=\"2.21\"/>\r\n    <covalent id=\"89\" radius=\"2.15\"/>\r\n    <covalent id=\"90\" radius=\"2.06\"/>\r\n    <covalent id=\"91\" radius=\"2.00\"/>\r\n    <covalent id=\"92\" radius=\"1.96\"/>\r\n    <covalent id=\"93\" radius=\"1.90\"/>\r\n    <covalent id=\"94\" radius=\"1.87\"/>\r\n    <covalent id=\"95\" radius=\"1.80\"/>\r\n    <covalent id=\"96\" radius=\"1.69\"/>\r\n    <covalent id=\"97\" radius=\"1.54\"/>\r\n    <covalent id=\"98\" radius=\"1.83\"/>\r\n    <covalent id=\"99\" radius=\"1.50\"/>\r\n    <covalent id=\"100\" radius=\"1.50\"/>\r\n    <covalent id=\"101\" radius=\"1.50\"/>\r\n    <covalent id=\"102\" radius=\"1.50\"/>\r\n    <covalent id=\"103\" radius=\"1.50\"/>\r\n    <covalent id=\"104\" radius=\"1.50\"/>\r\n    <covalent id=\"105\" radius=\"1.50\"/>\r\n    <covalent id=\"106\" radius=\"1.50\"/>\r\n    <covalent id=\"107\" radius=\"1.50\"/>\r\n    <covalent id=\"108\" radius=\"1.50\"/>\r\n    <covalent id=\"109\" radius=\"1.50\"/>\r\n    <covalent id=\"110\" radius=\"1.50\"/>\r\n    <covalent id=\"111\" radius=\"1.50\"/>\r\n    <covalent id=\"112\" radius=\"1.50\"/>\r\n    <covalent id=\"113\" radius=\"0.23\"/>\r\n    <covalent id=\"114\" radius=\"0.68\"/>\r\n    <covalent id=\"115\" radius=\"0.23\"/>\r\n</root>\r\n";
+
+/***/ }),
+
+/***/ "./src/data/atomTypes.xml":
+/*!********************************!*\
+  !*** ./src/data/atomTypes.xml ***!
+  \********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n    Document   : elementTypes.xml\r\n    Description: List of known element types (periodic table of elements).\r\n-->\r\n<root>\r\n    <atom identifier=\"H\" name=\"Hydrogen\" number=\"1\" electronegativity=\"2.00\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"He\" name=\"Helium\" number=\"2\" electronegativity=\"0\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Li\" name=\"Lithium\" number=\"3\" electronegativity=\"0.98\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Be\" name=\"Beryllium\" number=\"4\" electronegativity=\"1.57\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"B\" name=\"Boron\" number=\"5\" electronegativity=\"2.04\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"C\" name=\"Carbon\" number=\"6\" electronegativity=\"2.55\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"N\" name=\"Nitrogen\" number=\"7\" electronegativity=\"3.04\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"O\" name=\"Oxygen\" number=\"8\" electronegativity=\"3.44\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"F\" name=\"Fluorine\" number=\"9\" electronegativity=\"3.98\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Ne\" name=\"Neon\" number=\"10\" electronegativity=\"0\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Na\" name=\"Sodium\" number=\"11\" electronegativity=\"0.93\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Mg\" name=\"Magnesium\" number=\"12\" electronegativity=\"1.31\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Al\" name=\"Aluminium\" number=\"13\" electronegativity=\"1.61\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Si\" name=\"Silicon\" number=\"14\" electronegativity=\"1.90\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"P\" name=\"Phosphorus\" number=\"15\" electronegativity=\"2.19\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"S\" name=\"Sulfur\" number=\"16\" electronegativity=\"2.58\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"Cl\" name=\"Chlorine\" number=\"17\" electronegativity=\"3.16\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Ar\" name=\"Argon\" number=\"18\" electronegativity=\"0\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"K\" name=\"Potassium\" number=\"19\" electronegativity=\"0.82\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Ca\" name=\"Calcium\" number=\"20\" electronegativity=\"1.00\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Sc\" name=\"Scandium\" number=\"21\" electronegativity=\"1.36\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ti\" name=\"Titanium\" number=\"22\" electronegativity=\"1.54\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"V\" name=\"Vanadium\" number=\"23\" electronegativity=\"1.63\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cr\" name=\"Chromium\" number=\"24\" electronegativity=\"1.66\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Mn\" name=\"Manganese\" number=\"25\" electronegativity=\"1.55\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Fe\" name=\"Iron\" number=\"26\" electronegativity=\"1.83\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Co\" name=\"Cobalt\" number=\"27\" electronegativity=\"1.88\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ni\" name=\"Nickel\" number=\"28\" electronegativity=\"1.91\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cu\" name=\"Copper\" number=\"29\" electronegativity=\"1.90\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Zn\" name=\"Zinc\" number=\"30\" electronegativity=\"1.65\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ga\" name=\"Gallium\" number=\"31\" electronegativity=\"1.81\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Ge\" name=\"Germanium\" number=\"32\" electronegativity=\"2.01\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"As\" name=\"Arsenic\" number=\"33\" electronegativity=\"2.18\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"Se\" name=\"Selenium\" number=\"34\" electronegativity=\"2.55\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"Br\" name=\"Bromine\" number=\"35\" electronegativity=\"2.96\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Kr\" name=\"Krypton\" number=\"36\" electronegativity=\"3.00\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Rb\" name=\"Rubidium\" number=\"37\" electronegativity=\"0.82\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Sr\" name=\"Strontium\" number=\"38\" electronegativity=\"0.95\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Y\" name=\"Yttrium\" number=\"39\" electronegativity=\"1.22\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Zr\" name=\"Zirconium\" number=\"40\" electronegativity=\"1.33\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Nb\" name=\"Niobium\" number=\"41\"  electronegativity=\"1.60\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Mo\" name=\"Molybdenum\" number=\"42\" electronegativity=\"2.16\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tc\" name=\"Technetium\" number=\"43\" electronegativity=\"1.90\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ru\" name=\"Ruthenium\" number=\"44\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Rh\" name=\"Rhodium\" number=\"45\" electronegativity=\"2.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pd\" name=\"Palladium\" number=\"46\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ag\" name=\"Silver\" number=\"47\" electronegativity=\"1.93\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cd\" name=\"Cadmium\" number=\"48\" electronegativity=\"1.69\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"In\" name=\"Indium\" number=\"49\" electronegativity=\"1.78\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Sn\" name=\"Tin\" number=\"50\" electronegativity=\"1.96\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"Sb\" name=\"Antimony\" number=\"51\" electronegativity=\"2.05\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"Te\" name=\"Tellurium\" number=\"52\" electronegativity=\"2.10\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"I\" name=\"Iodine\" number=\"53\" electronegativity=\"2.66\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Xe\" name=\"Xenon\" number=\"54\" electronegativity=\"2.60\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Cs\" name=\"Cesium\" number=\"55\" electronegativity=\"0.79\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Ba\" name=\"Barium\" number=\"56\" electronegativity=\"0.89\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"La\" name=\"Lanthanum\" number=\"57\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ce\" name=\"Cerium\" number=\"58\" electronegativity=\"1.12\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pr\" name=\"Praseodymium\" number=\"59\" electronegativity=\"1.13\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Nd\" name=\"Neodymium\" number=\"60\" electronegativity=\"1.14\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pm\" name=\"Promethium\" number=\"61\" electronegativity=\"1.13\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Sm\" name=\"Samarium\" number=\"62\" electronegativity=\"1.17\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Eu\" name=\"Europium\" number=\"63\" electronegativity=\"1.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Gd\" name=\"Gadolinium\" number=\"64\" electronegativity=\"1.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tb\" name=\"Terbium\" number=\"65\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Dy\" name=\"Dysprosium\" number=\"66\" electronegativity=\"1.22\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ho\" name=\"Holmium\" number=\"67\" electronegativity=\"1.23\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Er\" name=\"Erbium\" number=\"68\" electronegativity=\"1.24\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tm\" name=\"Thulium\" number=\"69\" electronegativity=\"1.25\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Yb\" name=\"Ytterbium\" number=\"70\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Lu\" name=\"Lutetium\" number=\"71\" electronegativity=\"1.27\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Hf\" name=\"Hafnium\" number=\"72\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ta\" name=\"Tantalum\" number=\"73\" electronegativity=\"1.50\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"W\" name=\"Tungsten\" number=\"74\" electronegativity=\"2.36\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Re\" name=\"Rhenium\" number=\"75\" electronegativity=\"1.90\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Os\" name=\"Osmium\" number=\"76\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ir\" name=\"Iridium\" number=\"77\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pt\" name=\"Platinum\" number=\"78\" electronegativity=\"2.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Au\" name=\"Gold\" number=\"79\" electronegativity=\"2.54\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Hg\" name=\"Mercury\" number=\"80\" electronegativity=\"2.00\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tl\" name=\"Thallium\" number=\"81\" electronegativity=\"1.62\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Pb\" name=\"Lead\" number=\"82\" electronegativity=\"2.33\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"Bi\" name=\"Bismuth\" number=\"83\" electronegativity=\"2.02\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"Po\" name=\"Polonium\" number=\"84\" electronegativity=\"2.00\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"At\" name=\"Astatine\" number=\"85\" electronegativity=\"2.20\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Rn\" name=\"Radon\" number=\"86\" electronegativity=\"2.20\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Fr\" name=\"Francium\" number=\"87\" electronegativity=\"0.70\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Ra\" name=\"Radium\" number=\"88\" electronegativity=\"0.90\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Ac\" name=\"Actinium\" number=\"89\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Th\" name=\"Thorium\" number=\"90\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pa\" name=\"Protactinium\" number=\"91\" electronegativity=\"1.50\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"U\" name=\"Uranium\" number=\"92\" electronegativity=\"1.38\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Np\" name=\"Neptunium\" number=\"93\" electronegativity=\"1.36\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pu\" name=\"Plutonium\" number=\"94\" electronegativity=\"1.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Am\" name=\"Americium\" number=\"95\" electronegativity=\"1.13\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cm\" name=\"Curium\" number=\"96\" electronegativity=\"1.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Bk\" name=\"Berkelium\" number=\"97\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cf\" name=\"Californium\" number=\"98\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Es\" name=\"Einsteinium\" number=\"99\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Fm\" name=\"Fermium\" number=\"100\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Md\" name=\"Mendelevium\" number=\"101\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"No\" name=\"Nobelium\" number=\"102\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Lr\" name=\"Lawrencium\" number=\"103\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Rf\" name=\"Rutherfordium\" number=\"104\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Db\" name=\"Dubnium\" number=\"105\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Sg\" name=\"Seaborgium\" number=\"106\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Bh\" name=\"Bohrium\" number=\"107\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Hs\" name=\"Hassium\" number=\"108\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Mt\" name=\"Meitnerium\" number=\"109\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ds\" name=\"Darmstadtium\" number=\"110\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Rg\" name=\"Roentgenium\" number=\"111\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cn\" name=\"Copernicium\" number=\"112\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"H (WAT)\" name=\"Hydrogen (Water)\" number=\"113\" electronegativity=\"2.00\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"O (WAT)\" name=\"Oxygen (Water)\" number=\"114\" electronegativity=\"3.44\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"D\" name=\"Hydrogen\" number=\"115\" electronegativity=\"2.00\" valenceElectrons=\"1\"/>\r\n</root>\r\n";
 
 /***/ })
 

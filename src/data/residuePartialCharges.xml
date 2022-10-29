@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : residuePartialCharges.xml
+    Description: Contains all partial charges of atoms of all residues generated
+        from CHARMM22 force field.
+-->
+<root>
+    <residue id="1" identifier="ALA">
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.27" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="HB3" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="2" identifier="ARG">
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.18" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="0.20" />
+        <atom name="HD1" charge="0.09" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="NE" charge="-0.70" />
+        <atom name="HE" charge="0.44" />
+        <atom name="CZ" charge="0.64" />
+        <atom name="NH1" charge="-0.80" />
+        <atom name="HH11" charge="0.46" />
+        <atom name="HH12" charge="0.46" />
+        <atom name="NH2" charge="-0.80" />
+        <atom name="HH21" charge="0.46" />
+        <atom name="HH22" charge="0.46" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="3" identifier="ASN">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="0.55" />
+        <atom name="OD1" charge="-0.55" />
+        <atom name="ND2" charge="-0.62" />
+        <atom name="HD21" charge="0.32" />
+        <atom name="HD22" charge="0.30" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="4" identifier="ASP">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.28" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="0.62" />
+        <atom name="OD1" charge="-0.76" />
+        <atom name="OD2" charge="-0.76" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="5" identifier="CYS">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.11" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="SG" charge="-0.23" />
+        <atom name="HG" charge="0.16" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="6" identifier="GLN">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.18" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="0.55" />
+        <atom name="OE1" charge="-0.55" />
+        <atom name="NE2" charge="-0.62" />
+        <atom name="HE21" charge="0.32" />
+        <atom name="HE22" charge="0.30" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51 " />
+    </residue>
+    <residue id="7" identifier="GLU">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.28" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="0.62" />
+        <atom name="OE1" charge="-0.76" />
+        <atom name="OE2" charge="-0.76" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="8" identifier="GLY">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="-0.02" />
+        <atom name="HA1" charge="0.09" />
+        <atom name="HA2" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="9" identifier="HIS">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.08" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="ND1" charge="-0.70" />
+        <atom name="CG" charge="0.22" />
+        <atom name="CE1" charge="0.25" />
+        <atom name="HE1" charge="0.13" />
+        <atom name="NE2" charge="-0.36" />
+        <atom name="HE2" charge="0.32" />
+        <atom name="CD2" charge="-0.05" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="10" identifier="ILE">   
+        <atom name="N" charge="-0.30" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.21" />
+        <atom name="HA" charge="0.10" />
+        <atom name="CB" charge="-0.09" />
+        <atom name="HB" charge="0.09" />
+        <atom name="CG2" charge="-0.27" />
+        <atom name="HG21" charge="0.09" />
+        <atom name="HG22" charge="0.09" />
+        <atom name="HG23" charge="0.09" />
+        <atom name="CG1" charge="-0.18" />
+        <atom name="HG11" charge="0.09" />
+        <atom name="HG12" charge="0.09" />
+        <atom name="CD1" charge="-0.27" />
+        <atom name="HD11" charge="0.09" />
+        <atom name="HD12" charge="0.09" />
+        <atom name="HD13" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="11" identifier="LEU">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.09" />
+        <atom name="HG" charge="0.09" />
+        <atom name="CD1" charge="-0.27" />
+        <atom name="HD11" charge="0.09" />
+        <atom name="HD12" charge="0.09" />
+        <atom name="HD13" charge="0.09" />
+        <atom name="CD2" charge="-0.27" />
+        <atom name="HD21" charge="0.09" />
+        <atom name="HD22" charge="0.09" />
+        <atom name="HD23" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="12" identifier="LYS">   
+        <atom name="N" charge="-0.47" />             
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.18" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="-0.18" />
+        <atom name="HD1" charge="0.09" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="CE" charge="0.21" />
+        <atom name="HE1" charge="0.05" />
+        <atom name="HE2" charge="0.05" />
+        <atom name="NZ" charge="-0.30" />
+        <atom name="HZ1" charge="0.33" />
+        <atom name="HZ2" charge="0.33" />
+        <atom name="HZ3" charge="0.33" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="13" identifier="MET">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.14" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="SD" charge="-0.09" />
+        <atom name="CE" charge="-0.22" />
+        <atom name="HE1" charge="0.09" />
+        <atom name="HE2" charge="0.09" />
+        <atom name="HE3" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="14" identifier="PHE">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="0.00" />
+        <atom name="CD1" charge="-0.115" />
+        <atom name="HD1" charge="0.115" />
+        <atom name="CE1" charge="-0.115" />
+        <atom name="HE1" charge="0.115" />
+        <atom name="CZ" charge="-0.115" />
+        <atom name="HZ" charge="0.115" />
+        <atom name="CD2" charge="-0.115" />
+        <atom name="HD2" charge="0.115" />
+        <atom name="CE2" charge="-0.115" />
+        <atom name="HE2" charge="0.115" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="15" identifier="PRO">   
+        <atom name="N" charge="-0.29" />
+        <atom name="CD" charge="0.00" />
+        <atom name="HD1" charge="0.09" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="CA" charge="0.02" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.18" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="16" identifier="SER">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="0.05" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="OG" charge="-0.66" />
+        <atom name="HG" charge="0.43" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="17" identifier="THR">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="0.14" />
+        <atom name="HB" charge="0.09" />
+        <atom name="OG1" charge="-0.66" />
+        <atom name="HG1" charge="0.43" />
+        <atom name="CG2" charge="-0.27" />
+        <atom name="HG21" charge="0.09" />
+        <atom name="HG22" charge="0.09" />
+        <atom name="HG23" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="18" identifier="TRP">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.03" />
+        <atom name="CD1" charge="0.035" />
+        <atom name="HD1" charge="0.115" />
+        <atom name="NE1" charge="-0.61" />
+        <atom name="HE1" charge="0.38" />
+        <atom name="CE2" charge="0.13" />
+        <atom name="CD2" charge="-0.02" />
+        <atom name="CE3" charge="-0.115" />
+        <atom name="HE3" charge="0.115" />
+        <atom name="CZ3" charge="-0.115" />
+        <atom name="HZ3" charge="0.115" />
+        <atom name="CZ2" charge="-0.115" />
+        <atom name="HZ2" charge="0.115" />
+        <atom name="CH2" charge="-0.115" />
+        <atom name="HH2" charge="0.115" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="19" identifier="TYR">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="0.00" />
+        <atom name="CD1" charge="-0.115" />
+        <atom name="HD1" charge="0.115" />
+        <atom name="CE1" charge="-0.115" />
+        <atom name="HE1" charge="0.115" />
+        <atom name="CZ" charge="0.11" />
+        <atom name="OH" charge="-0.54" />
+        <atom name="HH" charge="0.43" />
+        <atom name="CD2" charge="-0.115" />
+        <atom name="HD2" charge="0.115" />
+        <atom name="CE2" charge="-0.115" />
+        <atom name="HE2" charge="0.115" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="20" identifier="VAL">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.09" />
+        <atom name="HB" charge="0.09" />
+        <atom name="CG1" charge="-0.27" />
+        <atom name="HG11" charge="0.09" />
+        <atom name="HG12" charge="0.09" />
+        <atom name="HG13" charge="0.09" />
+        <atom name="CG2" charge="-0.27" />
+        <atom name="HG21" charge="0.09" />
+        <atom name="HG22" charge="0.09" />
+        <atom name="HG23" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="21" identifier="HID">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.09" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="ND1" charge="-0.36" />
+        <atom name="HD1" charge="0.32" />
+        <atom name="CG" charge="-0.05" />
+        <atom name="CE1" charge="0.25" />
+        <atom name="HE1" charge="0.13" />
+        <atom name="NE2" charge="-0.70" />
+        <atom name="CD2" charge="0.22" />
+        <atom name="HD2" charge="0.10" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="22" identifier="HIE">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.08" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="ND1" charge="-0.70" />
+        <atom name="CG" charge="0.22" />
+        <atom name="CE1" charge="0.25" />
+        <atom name="HE1" charge="0.13" />
+        <atom name="NE2" charge="-0.36" />
+        <atom name="HE2" charge="0.32" />
+        <atom name="CD2" charge="-0.05" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="23" identifier="HIP">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.05" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CD2" charge="0.19" />
+        <atom name="HD2" charge="0.13" />
+        <atom name="CG" charge="0.19" />
+        <atom name="NE2" charge="-0.51" />
+        <atom name="HE2" charge="0.44" />
+        <atom name="ND1" charge="-0.51" />
+        <atom name="HD1" charge="0.44" />
+        <atom name="CE1" charge="0.32" />
+        <atom name="HE1" charge="0.18" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="24" identifier="ASH">
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.21" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="0.75" />
+        <atom name="OD1" charge="-0.55" />
+        <atom name="OD2" charge="-0.61" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+        <atom name="HD2" charge="0.44" />
+    </residue>
+    <residue id="25" identifier="GLH">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.21" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="0.75" />
+        <atom name="OE1" charge="-0.55" />
+        <atom name="OE2" charge="-0.61" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+        <atom name="HE2" charge="0.44" />
+    </residue>
+    <residue id="26" identifier="LYN">   
+        <atom name="N" charge="-0.47" />             
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.18" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="-0.18" />
+        <atom name="HD1" charge="0.09" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="CE" charge="0.21" />
+        <atom name="HE1" charge="0.05" />
+        <atom name="HE2" charge="0.05" />
+        <atom name="NZ" charge="-0.30" />
+        <atom name="HZ1" charge="0.33" />
+        <atom name="HZ2" charge="0.33" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="27" identifier="CYX">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.11" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="SG" charge="-0.23" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <!--<residue id="28" identifier="TYZ">   
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="0.00" />
+        <atom name="CD1" charge="-0.115" />
+        <atom name="HD1" charge="0.115" />
+        <atom name="CE1" charge="-0.115" />
+        <atom name="HE1" charge="0.115" />
+        <atom name="CZ" charge="0.11" />
+        <atom name="OH" charge="-0.54" />
+        <atom name="CD2" charge="-0.115" />
+        <atom name="HD2" charge="0.115" />
+        <atom name="CE2" charge="-0.115" />
+        <atom name="HE2" charge="0.115" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    <residue id="29" identifier="ARZ">
+        <atom name="N" charge="-0.47" />
+        <atom name="HN" charge="0.31" />
+        <atom name="CA" charge="0.07" />
+        <atom name="HA" charge="0.09" />
+        <atom name="CB" charge="-0.18" />
+        <atom name="HB1" charge="0.09" />
+        <atom name="HB2" charge="0.09" />
+        <atom name="CG" charge="-0.18" />
+        <atom name="HG1" charge="0.09" />
+        <atom name="HG2" charge="0.09" />
+        <atom name="CD" charge="0.20" />
+        <atom name="HD1" charge="0.09" />
+        <atom name="HD2" charge="0.09" />
+        <atom name="NE" charge="-0.70" />
+        <atom name="HE" charge="0.44" />
+        <atom name="CZ" charge="0.64" />
+        <atom name="NH1" charge="-0.80" />
+        <atom name="HH11" charge="0.46" />
+        <atom name="HH12" charge="0.46" />
+        <atom name="NH2" charge="-0.80" />
+        <atom name="HH2" charge="0.46" />
+        <atom name="C" charge="0.51" />
+        <atom name="O" charge="-0.51" />
+    </residue>
+    -->
+    
+    <nterminus>
+        <atom name="N" charge="-0.30" />
+        <atom name="HN1" charge="0.33" />
+        <atom name="HN2" charge="0.33" />
+        <atom name="HN3" charge="0.33" />
+        <atom name="CA" charge="0.21" />
+        <atom name="HA" charge="0.10" />
+    </nterminus>
+    <cterminus>
+        <atom name="C" charge="0.34" />
+        <atom name="O" charge="-0.67" />
+        <atom name="OXT" charge="-0.67" />
+    </cterminus>
+</root>

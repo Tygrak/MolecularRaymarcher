@@ -1,7 +1,8 @@
 import { vec2, vec3, mat4 } from 'gl-matrix';
-import { CreateSphereGeometry, CubeData } from './vertex_data';
-import { TestData, Data1cqw } from './test_data';
+import { CreateSphereGeometry, CubeData } from './meshHelpers';
+import { TestData, Data1cqw } from './data/test_data';
 import { LoadData } from './loadData';
+import { AtomTypes, GetAtomType } from './atomDatabase';
 
 export const CreateMesh = () => {
     const loaded = LoadData(Data1cqw);
@@ -15,11 +16,11 @@ export const CreateMesh = () => {
         let positions = new Float32Array(instanceMesh.positions);
         for (let j = 0; j < positions.length; j++) {
             if (j%3 == 0) {
-                positions[j] = positions[j]/5+atom.x;
+                positions[j] = (positions[j]/4)*GetAtomType(atom).covalentRadius+atom.x;
             } else if (j%3 == 1) {
-                positions[j] = positions[j]/5+atom.y;
+                positions[j] = (positions[j]/4)*GetAtomType(atom).covalentRadius+atom.y;
             } else if (j%3 == 2) {
-                positions[j] = positions[j]/5+atom.z;
+                positions[j] = (positions[j]/4)*GetAtomType(atom).covalentRadius+atom.z;
             }
         }
         let atomColor = atom.GetColor();
@@ -30,6 +31,7 @@ export const CreateMesh = () => {
         result.positions.set(positions, instanceMesh.positions.length*i);
         result.colors.set(colors, instanceMesh.colors.length*i);
     }
+    console.log(AtomTypes);
     console.log(result);
     return result;
 }

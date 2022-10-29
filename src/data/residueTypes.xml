@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : residueTypes.xml
+    Description: List of known residues (amino acids, nucleobases, solvents and lignads).
+-->
+<root>
+    <residue id="1" type="aa_20" identifier="ALA" shortcut="A" name="Alanine" hydropathy="1.8" hydrophobicity="0.02" donors="" acceptors=""/>
+    <residue id="2" type="aa_20" identifier="ARG" shortcut="R" name="Arginine" hydropathy="-4.5" hydrophobicity="-0.42" donors="NE,NH1,NH2" acceptors="" charge="+"/>
+    <residue id="3" type="aa_20" identifier="ASN" shortcut="N" name="Asparagine" hydropathy="-3.5" hydrophobicity="-0.77" donors="ND2" acceptors="OD1"/>
+    <residue id="4" type="aa_20" identifier="ASP" shortcut="D" name="Aspartic Acid" hydropathy="-3.5" hydrophobicity="-1.04" donors="" acceptors="OD1,OD2" charge="-"/>
+    <!-- Aspartic acid with neutral charge -->
+    <residue id="35" type="aa_ext" identifier="ASH" shortcut="D" name="Aspartic Acid" hydropathy="-3.5" hydrophobicity="-1.04" donors="" acceptors="OD1,OD2"/>
+    <residue id="5" type="aa_20" identifier="CYS" shortcut="C" name="Cysteine" hydropathy="2.5" hydrophobicity="0.77" donors="" acceptors=""/>
+    <residue id="36" type="aa_20" identifier="CYX" shortcut="C" name="Cysteine" hydropathy="2.5" hydrophobicity="0.77" donors="" acceptors=""/>
+    <residue id="6" type="aa_20" identifier="GLU" shortcut="E" name="Glutamic Acid" hydropathy="-3.5" hydrophobicity="-1.14" donors="" acceptors="OE1,OE2" charge="-"/>
+    <!-- Glutamic acid with neutral charge -->
+    <residue id="34" type="aa_ext" identifier="GLH" shortcut="E" name="Glutamic Acid" hydropathy="-3.5" hydrophobicity="-1.14" donors="" acceptors=""/>
+    <residue id="7" type="aa_20" identifier="GLN" shortcut="Q" name="Glutamine" hydropathy="-3.5" hydrophobicity="-1.10" donors="NE2" acceptors="OE1"/>
+    <residue id="8" type="aa_20" identifier="GLY" shortcut="G" name="Glycine" hydropathy="-0.4" hydrophobicity="-0.80" donors="" acceptors=""/>
+    <!-- Histidine and it's variants -->
+    <residue id="9" type="aa_20" identifier="HIS" shortcut="H" name="Histidine" hydropathy="-3.2" hydrophobicity="0.26" donors="ND1,NE2" acceptors="ND1,NE2" charge="+"/>
+    <residue id="29" type="aa_ext" identifier="HIE" shortcut="H" name="Histidine" hydropathy="-3.2" hydrophobicity="0.26" donors="ND1,NE2" acceptors="ND1,NE2"/>
+    <residue id="30" type="aa_ext" identifier="HID" shortcut="H" name="Histidine" hydropathy="-3.2" hydrophobicity="0.26" donors="ND1,NE2" acceptors="ND1,NE2"/>
+    <residue id="31" type="aa_ext" identifier="HIP" shortcut="H" name="Histidine" hydropathy="-3.2" hydrophobicity="0.26" donors="ND1,NE2" acceptors="ND1,NE2" charge="+"/>
+    <!-- -->
+    <residue id="10" type="aa_20" identifier="ILE" shortcut="I" name="Isoleucine" hydropathy="4.5" hydrophobicity="1.81" donors="" acceptors=""/>
+    <residue id="11" type="aa_20" identifier="LEU" shortcut="L" name="Leucine" hydropathy="3.8" hydrophobicity="1.14" donors="" acceptors=""/>
+    <residue id="12" type="aa_20" identifier="LYS" shortcut="K" name="Lysine" hydropathy="-3.9" hydrophobicity="-0.41" donors="NZ" acceptors="" charge="+"/>
+    <!-- Lysine with neutral charge -->
+    <residue id="37" type="aa_ext" identifier="LYN" shortcut="K" name="Lysine" hydropathy="-3.9" hydrophobicity="-0.41" donors="NZ" acceptors=""/>
+    <residue id="13" type="aa_20" identifier="MET" shortcut="M" name="Methionine" hydropathy="1.9" hydrophobicity="1.00" donors="" acceptors=""/>
+    <residue id="14" type="aa_20" identifier="PHE" shortcut="F" name="Phenylalanine" hydropathy="2.8" hydrophobicity="1.35" donors="" acceptors=""/>
+    <residue id="15" type="aa_20" identifier="PRO" shortcut="P" name="Proline" hydropathy="-1.6" hydrophobicity="-0.09" donors="" acceptors=""/>
+    <residue id="16" type="aa_20" identifier="SER" shortcut="S" name="Serine" hydropathy="-0.8" hydrophobicity="-0.97" donors="OG" acceptors="OG"/>
+    <residue id="17" type="aa_20" identifier="THR" shortcut="T" name="Threonine" hydropathy="-0.7" hydrophobicity="-0.77" donors="OG1" acceptors="OG1"/>
+    <residue id="18" type="aa_20" identifier="TRP" shortcut="W" name="Tryptophan" hydropathy="-0.9" hydrophobicity="1.71" donors="NE1" acceptors=""/>
+    <residue id="19" type="aa_20" identifier="TYR" shortcut="Y" name="Tyrosine" hydropathy="-1.3" hydrophobicity="1.11" donors="OH" acceptors="OH"/>
+    <!--<residue id="38" identifier="TYZ" shortcut="Y" name="Tyrosine"/>-->
+    <residue id="20" type="aa_20" identifier="VAL" shortcut="V" name="Valine" hydropathy="4.2" hydrophobicity="1.13" donors="" acceptors=""/>
+    <!-- Long nucleobases, WARNING: duplicate shortcuts -->
+    <residue id="21" type="nb" identifier="URI" shortcut="U" name="Uracil" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="22" type="nb" identifier="ADE" shortcut="A" name="Adenine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="23" type="nb" identifier="CYT" shortcut="C" name="Cytosine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="24" type="nb" identifier="GUA" shortcut="G" name="Guanine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="25" type="nb" identifier="THY" shortcut="T" name="Thymine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <!-- Water residues -->
+    <residue id="26" type="sol" identifier="HOH" shortcut="HOH" name="Water" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="27" type="sol" identifier="WAT" shortcut="HOH" name="Water" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="28" type="sol" identifier="H2O" shortcut="HOH" name="Water" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="43" type="sol" identifier="SOL" shortcut="SOL" name="Solvent" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="44" type="sol" identifier="TIP3" shortcut="TIP3" name="Water" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <!-- Ligands -->
+    <residue id="32" type="lig" identifier="DCL" shortcut="DCL" name="Ligand" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="33" type="lig" identifier="CL" shortcut="CL" name="Ligand" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <!-- Short nucleobases -->
+    <residue id="38" type="nb" identifier="A" shortcut="A" name="Adenine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="39" type="nb" identifier="C" shortcut="C" name="Cytosine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="40" type="nb" identifier="G" shortcut="G" name="Guanine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="41" type="nb" identifier="T" shortcut="T" name="Thymine" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+    <residue id="42" type="nb" identifier="U" shortcut="U" name="Uracil" hydropathy="0" hydrophobicity="0" donors="" acceptors=""/>
+</root>

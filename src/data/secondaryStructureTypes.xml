@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : secondaryStructuresTypes.xml
+    Description: List of known secondary structures.
+-->
+<root>
+    <ss name="Helix" id ="1"/>
+    <ss name="Sheet" id ="2"/>
+    <ss name="Coil" id ="3"/>
+    <ss name="Undefined" id="4"/>
+</root>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : dihedralChiAngles
+    Description: List of chi angles count for each residue type.
+-->
+<root>
+    <chi residue="ALA" count="0" />
+    <chi residue="ARG" count="5" />
+    <chi residue="ASN" count="2" />
+    <chi residue="ASP" count="2" />
+    <chi residue="CPR" count="2" />
+    <chi residue="CYD" count="1" />
+    <chi residue="CYH" count="1" />
+    <chi residue="CYS" count="1" />
+    <chi residue="GLN" count="3" />
+    <chi residue="GLU" count="3" />
+    <chi residue="GLY" count="0" />
+    <chi residue="HIS" count="2" />
+    <chi residue="ILE" count="2" />
+    <chi residue="LEU" count="2" />
+    <chi residue="LYS" count="4" />
+    <chi residue="MET" count="3" />
+    <chi residue="PHE" count="2" />
+    <chi residue="PRO" count="2" />
+    <chi residue="SER" count="1" />
+    <chi residue="THR" count="1" />
+    <chi residue="TPR" count="2" />
+    <chi residue="TRP" count="2" />
+    <chi residue="TYR" count="2" />
+    <chi residue="VAL" count="1" />
+</root>

@@ -28,6 +28,10 @@ module.exports = {
             { 
                 test: /\.(wgsl|glsl|vs|fs)$/,
                 loader: 'ts-shader-loader'
+            },
+            {
+                test: /\.xml$/i,
+                type: 'asset/source',
             }
         ]
     }
