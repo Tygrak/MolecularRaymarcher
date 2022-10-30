@@ -32,6 +32,10 @@ module.exports = {
             {
                 test: /\.xml$/i,
                 type: 'asset/source',
+            },
+            {
+                test: /\.pdb$/i,
+                type: 'asset/source',
             }
         ]
     }

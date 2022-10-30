@@ -1,3 +1,6 @@
+import { vec3 } from "gl-matrix";
+import { Atom } from "./atom";
+
 export function CubeData() {
     const positions = new Float32Array([
         // front
@@ -105,8 +108,140 @@ export function CubeData() {
     };
 }
 
-export function CreateBondGeometry() {
+export function CreateBondGeometry(a: Atom, b: Atom, radius: number, arity: number) {
+    const dir = vec3.subtract(vec3.create(), a.GetPosition(), b.GetPosition());
+    const ortho1 = ArbitraryOrthogonalVector(dir);
+    const ortho2 = vec3.cross(vec3.create(), dir, ortho1);
+    let resultPositions;
+    if (arity == 2) {
+        const p1 = vec3.fromValues(
+            a.x+ortho1[0]*radius+ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            a.y+ortho1[1]*radius+ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            a.z+ortho1[2]*radius+ortho2[2]*radius+ortho1[2]*radius*2.1);
+        const p2 = vec3.fromValues(
+            a.x+ortho1[0]*radius-ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            a.y+ortho1[1]*radius-ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            a.z+ortho1[2]*radius-ortho2[2]*radius+ortho1[2]*radius*2.1);
+        const p3 = vec3.fromValues(
+            a.x-ortho1[0]*radius+ortho1[0]*radius*2.1, 
+            a.y-ortho1[1]*radius+ortho1[1]*radius*2.1, 
+            a.z-ortho1[2]*radius+ortho1[2]*radius*2.1);
+        const p4 = vec3.fromValues(
+            b.x+ortho1[0]*radius+ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            b.y+ortho1[1]*radius+ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            b.z+ortho1[2]*radius+ortho2[2]*radius+ortho1[2]*radius*2.1);
+        const p5 = vec3.fromValues(
+            b.x+ortho1[0]*radius-ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            b.y+ortho1[1]*radius-ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            b.z+ortho1[2]*radius-ortho2[2]*radius+ortho1[2]*radius*2.1);
+        const p6 = vec3.fromValues(
+            b.x-ortho1[0]*radius+ortho1[0]*radius*2.1, 
+            b.y-ortho1[1]*radius+ortho1[1]*radius*2.1, 
+            b.z-ortho1[2]*radius+ortho1[2]*radius*2.1);
+        const p7 = vec3.fromValues(
+            a.x+ortho1[0]*radius+ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            a.y+ortho1[1]*radius+ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            a.z+ortho1[2]*radius+ortho2[2]*radius-ortho1[2]*radius*2.1);
+        const p8 = vec3.fromValues(
+            a.x+ortho1[0]*radius-ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            a.y+ortho1[1]*radius-ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            a.z+ortho1[2]*radius-ortho2[2]*radius-ortho1[2]*radius*2.1);
+        const p9 = vec3.fromValues(
+            a.x-ortho1[0]*radius-ortho1[0]*radius*2.1, 
+            a.y-ortho1[1]*radius-ortho1[1]*radius*2.1, 
+            a.z-ortho1[2]*radius-ortho1[2]*radius*2.1);
+        const p10 = vec3.fromValues(
+            b.x+ortho1[0]*radius+ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            b.y+ortho1[1]*radius+ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            b.z+ortho1[2]*radius+ortho2[2]*radius-ortho1[2]*radius*2.1);
+        const p11 = vec3.fromValues(
+            b.x+ortho1[0]*radius-ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            b.y+ortho1[1]*radius-ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            b.z+ortho1[2]*radius-ortho2[2]*radius-ortho1[2]*radius*2.1);
+        const p12 = vec3.fromValues(
+            b.x-ortho1[0]*radius-ortho1[0]*radius*2.1, 
+            b.y-ortho1[1]*radius-ortho1[1]*radius*2.1, 
+            b.z-ortho1[2]*radius-ortho1[2]*radius*2.1);
+        resultPositions = new Float32Array([
+            ...p1, ...p4, ...p6,
+            ...p1, ...p6, ...p4,
+            ...p1, ...p6, ...p3,
+            ...p1, ...p3, ...p6,
+            
+            ...p1, ...p4, ...p5,
+            ...p1, ...p5, ...p4,
+            ...p1, ...p2, ...p5,
+            ...p1, ...p5, ...p2,
+            
+            ...p2, ...p5, ...p6,
+            ...p2, ...p6, ...p5,
+            ...p2, ...p3, ...p6,
+            ...p2, ...p6, ...p3,
+            
+            ...p7, ...p10, ...p12,
+            ...p7, ...p12, ...p10,
+            ...p7, ...p12, ...p9,
+            ...p7, ...p9, ...p12,
+            
+            ...p7, ...p10, ...p11,
+            ...p7, ...p11, ...p10,
+            ...p7, ...p8, ...p11,
+            ...p7, ...p11, ...p8,
+            
+            ...p8, ...p11, ...p12,
+            ...p8, ...p12, ...p11,
+            ...p8, ...p9, ...p12,
+            ...p8, ...p12, ...p9,
+        ]);
+    } else {
+        const p1 = vec3.fromValues(
+            a.x+ortho1[0]*radius+ortho2[0]*radius, 
+            a.y+ortho1[1]*radius+ortho2[1]*radius, 
+            a.z+ortho1[2]*radius+ortho2[2]*radius);
+        const p2 = vec3.fromValues(
+            a.x+ortho1[0]*radius-ortho2[0]*radius, 
+            a.y+ortho1[1]*radius-ortho2[1]*radius, 
+            a.z+ortho1[2]*radius-ortho2[2]*radius);
+        const p3 = vec3.fromValues(
+            a.x-ortho1[0]*radius, 
+            a.y-ortho1[1]*radius, 
+            a.z-ortho1[2]*radius);
+        const p4 = vec3.fromValues(
+            b.x+ortho1[0]*radius+ortho2[0]*radius, 
+            b.y+ortho1[1]*radius+ortho2[1]*radius, 
+            b.z+ortho1[2]*radius+ortho2[2]*radius);
+        const p5 = vec3.fromValues(
+            b.x+ortho1[0]*radius-ortho2[0]*radius, 
+            b.y+ortho1[1]*radius-ortho2[1]*radius, 
+            b.z+ortho1[2]*radius-ortho2[2]*radius);
+        const p6 = vec3.fromValues(
+            b.x-ortho1[0]*radius, 
+            b.y-ortho1[1]*radius, 
+            b.z-ortho1[2]*radius);
+        resultPositions = new Float32Array([
+            ...p1, ...p4, ...p6,
+            ...p1, ...p6, ...p4,
+            ...p1, ...p6, ...p3,
+            ...p1, ...p3, ...p6,
+            
+            ...p1, ...p4, ...p5,
+            ...p1, ...p5, ...p4,
+            ...p1, ...p2, ...p5,
+            ...p1, ...p5, ...p2,
+            
+            ...p2, ...p5, ...p6,
+            ...p2, ...p6, ...p5,
+            ...p2, ...p3, ...p6,
+            ...p2, ...p6, ...p3,
+        ]);
+    }
+    return {positions: resultPositions, colors: new Float32Array(resultPositions.length).map((v) => 1)};
+}
 
+export function ArbitraryOrthogonalVector(v: vec3) {
+    let arbitraryNonParallelVec = v[0] != 1.0 ? vec3.fromValues(1.0, 0.0, 0.0) : vec3.fromValues(0.0, 1.0, 0.0);
+    let orthogonal = vec3.cross(vec3.create(), v, arbitraryNonParallelVec);
+    return vec3.normalize(orthogonal, orthogonal);
 }
 
 // https://www.songho.ca/opengl/gl_sphere.html

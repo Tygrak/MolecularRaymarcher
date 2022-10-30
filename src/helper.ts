@@ -1,16 +1,18 @@
 import { vec2, vec3, mat4 } from 'gl-matrix';
-import { CreateSphereGeometry, CubeData } from './meshHelpers';
-import { TestData, Data1cqw } from './data/test_data';
+import { CreateBondGeometry, CreateSphereGeometry, CubeData } from './meshHelpers';
 import { LoadData } from './loadData';
 import { GetAtomType } from './atomDatabase';
 
-export function CreateMesh() {
-    const loaded = LoadData(Data1cqw);
+export function CreateStructureMesh() {
+    let t0 = performance.now();
+    const dataText = require('./data/1cqw.pdb');
+    const loaded = LoadData(dataText);
+    let t1 = performance.now();
     const atoms = loaded.atoms;
     console.log(loaded.chains);
     //const instanceMesh = CubeData();
     const instanceMesh = CreateSphereGeometry(1, 12, 6);
-    let result = {positions: new Float32Array(instanceMesh.positions.length*atoms.length), colors: new Float32Array(instanceMesh.colors.length*atoms.length)};
+    let resultAtoms = {positions: new Float32Array(instanceMesh.positions.length*atoms.length), colors: new Float32Array(instanceMesh.colors.length*atoms.length)};
     for (let i = 0; i < atoms.length; i++) {
         const atom = atoms[i];
         let positions = new Float32Array(instanceMesh.positions);
@@ -28,11 +30,28 @@ export function CreateMesh() {
         for (let j = 0; j < colors.length; j++) {
             colors[j] = atomColor[j%3];
         }
-        result.positions.set(positions, instanceMesh.positions.length*i);
-        result.colors.set(colors, instanceMesh.colors.length*i);
+        resultAtoms.positions.set(positions, instanceMesh.positions.length*i);
+        resultAtoms.colors.set(colors, instanceMesh.colors.length*i);
     }
-    console.log(result);
-    return result;
+    let t2 = performance.now();
+    let bondsPositions = [];
+    for (let i = 0; i < loaded.chains.length; i++) {
+        const bondsMap = loaded.chains[i].bonds;
+        const bondsKeys = loaded.chains[i].bondsKeys;
+        for (let j = 0; j < bondsKeys.length; j++) {
+            const bond = bondsKeys[j];
+            bondsPositions.push(...CreateBondGeometry(bond.a, bond.b, 0.03, bondsMap.get(bond)!.arity).positions);
+        }
+    }
+    let resultBondsPositions = new Float32Array(bondsPositions);
+    let resultBonds = {positions: resultBondsPositions, colors: new Float32Array(resultBondsPositions.length).map((v) => 0.5)};
+    let t3 = performance.now();
+    console.log("Loading data: " + (t1-t0) + "ms");
+    console.log("Creating atoms mesh: " + (t2-t1) + "ms");
+    console.log("Creating bond mesh: " + (t3-t2) + "ms");
+    console.log("Creating structure mesh: " + (t3-t0) + "ms (total)");
+    console.log({atoms: resultAtoms, bonds: resultBonds});
+    return {atoms: resultAtoms, bonds: resultBonds};
 }
 
 export function CreateAnimation(draw:any, rotation:vec3 = vec3.fromValues(0,0,0), isAnimation = true ) {

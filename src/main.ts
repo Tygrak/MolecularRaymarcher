@@ -1,4 +1,4 @@
-import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateAnimation, CreateMesh } from './helper';
+import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateAnimation, CreateStructureMesh } from './helper';
 import shader from './shader.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
@@ -11,10 +11,16 @@ const Create3DObject = async (isAnimation = true) => {
     const device = gpu.device;
 
     // create vertex buffers
-    const cubeData = CreateMesh();
-    const numberOfVertices = cubeData.positions.length / 3;
-    const vertexBuffer = CreateGPUBuffer(device, cubeData.positions);
-    const colorBuffer = CreateGPUBuffer(device, cubeData.colors);
+    const structureMeshData = CreateStructureMesh();
+    const atomsMeshData = structureMeshData.atoms;
+    const atomsNumberOfVertices = atomsMeshData.positions.length / 3;
+    const atomsVertexBuffer = CreateGPUBuffer(device, atomsMeshData.positions);
+    const atomsColorBuffer = CreateGPUBuffer(device, atomsMeshData.colors);
+    
+    const bondsMeshData = structureMeshData.bonds;
+    const bondsNumberOfVertices = bondsMeshData.positions.length / 3;
+    const bondsVertexBuffer = CreateGPUBuffer(device, bondsMeshData.positions);
+    const bondsColorBuffer = CreateGPUBuffer(device, bondsMeshData.colors);
 
     let percentageShown = 1;
  
@@ -134,14 +140,24 @@ const Create3DObject = async (isAnimation = true) => {
         const commandEncoder = device.createCommandEncoder();
         const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
 
-        let numberOfVerticesToDraw = Math.round(numberOfVertices*percentageShown)-Math.round(numberOfVertices*percentageShown)%3;
 
         renderPass.setPipeline(pipeline);
-        renderPass.setVertexBuffer(0, vertexBuffer);
-        renderPass.setVertexBuffer(1, colorBuffer);
-        renderPass.setBindGroup(0, uniformBindGroup);
-        //renderPass.draw(numberOfVertices);
-        renderPass.draw(numberOfVerticesToDraw);
+        {
+            let numberOfVerticesToDraw = Math.round(atomsNumberOfVertices*percentageShown)-Math.round(atomsNumberOfVertices*percentageShown)%3;
+            renderPass.setVertexBuffer(0, atomsVertexBuffer);
+            renderPass.setVertexBuffer(1, atomsColorBuffer);
+            renderPass.setBindGroup(0, uniformBindGroup);
+            //renderPass.draw(atomsNumberOfVertices);
+            renderPass.draw(numberOfVerticesToDraw);
+        }
+        {
+            let numberOfVerticesToDraw = Math.round(bondsNumberOfVertices*percentageShown)-Math.round(bondsNumberOfVertices*percentageShown)%3;
+            renderPass.setVertexBuffer(0, bondsVertexBuffer);
+            renderPass.setVertexBuffer(1, bondsColorBuffer);
+            renderPass.setBindGroup(0, uniformBindGroup);
+            //renderPass.draw(bondsNumberOfVertices);
+            renderPass.draw(numberOfVerticesToDraw);
+        }
         renderPass.end();
 
         device.queue.submit([commandEncoder.finish()]);

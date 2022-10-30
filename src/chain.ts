@@ -7,6 +7,7 @@ export class Chain {
     name: string;
     residues: Residue[];
     bonds: Map<{a:Atom, b:Atom}, {arity: number, residue: Residue}> = new Map();
+    bondsKeys: {a:Atom, b:Atom}[] = [];
 
     constructor (name: string, residues: Residue[]) {
         this.name = name;
@@ -21,6 +22,7 @@ export class Chain {
         this.ComputeBondsBetweenProteinResidues();
         this.ComputeBondsBetweenNucleicAcidResidues();
         this.DetermineBondsArity();
+        this.bondsKeys = Array.from(this.bonds.keys());
     }
 
     // The lower bound for the test of bond length (not a precise number).
