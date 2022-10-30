@@ -1,4 +1,4 @@
-export const CubeData = () =>{
+export function CubeData() {
     const positions = new Float32Array([
         // front
         -1, -1,  1,  
@@ -105,8 +105,12 @@ export const CubeData = () =>{
     };
 }
 
+export function CreateBondGeometry() {
+
+}
+
 // https://www.songho.ca/opengl/gl_sphere.html
-export const CreateSphereGeometry = (radius: number, sectorCount: number, stackCount: number) => {
+export function CreateSphereGeometry(radius: number, sectorCount: number, stackCount: number) {
     let x, y, z, xy;                              // vertex position
     let nx, ny, nz, lengthInv = 1.0 / radius;     // vertex normal
     let s, t;                                     // vertex texCoord

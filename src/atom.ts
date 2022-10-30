@@ -15,6 +15,10 @@ export class Atom {
         this.residueAtomName = residueAtomName;
     }
 
+    public GetPosition() {
+        return vec3.fromValues(this.x, this.y, this.z);
+    }
+
     public GetColor() {
         if (this.name == "C") {
             return vec3.fromValues(0.3, 0.8, 0.3);

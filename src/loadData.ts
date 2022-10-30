@@ -16,8 +16,8 @@ export const LoadData = (dataString: string) => {
         if (lineParseResult == null) {
             continue;
         }
-        if (residue.id != lineParseResult.residueId) {
-            if (residue.id != -1) {
+        if (residue.sequenceNumber != lineParseResult.residueId) {
+            if (residue.sequenceNumber != -1) {
                 if (chain.name != lineParseResult.chainName) {
                     if (chain.name != "-1") {
                         chains.push(chain);
@@ -35,7 +35,7 @@ export const LoadData = (dataString: string) => {
         atoms.push(lineParseResult.atom);
     }
 
-    if (residue.id != -1) {
+    if (residue.sequenceNumber != -1) {
         chain.residues.push(residue);
     }
     if (chain.name != "-1") {
@@ -47,11 +47,15 @@ export const LoadData = (dataString: string) => {
         atoms[i].y -= sums.y/atoms.length;
         atoms[i].z -= sums.z/atoms.length;
     }
+    for (let i = 0; i < chains.length; i++) {
+        const chain = chains[i];
+        chain.ComputeBonds();
+    }
     return {atoms: atoms, chains: chains};
 }
 
 const ParseDataLine = (line: string) => {
-    let match = line.match(/ATOM +\d+ +(\w+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
+    let match = line.match(/ATOM +\d+ +([\w']+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
     if (match == null) {
         return null;
     }

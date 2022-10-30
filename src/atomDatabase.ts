@@ -65,7 +65,7 @@ function MakeAtomTypesIdentifierMap(atomTypes : AtomType[]) {
     return result;
 }
 
-export const AtomTypes = LoadAtomTypes();
+const AtomTypes = LoadAtomTypes();
 const AtomTypesNumberMap = MakeAtomTypesNumberMap(AtomTypes);
 const AtomTypesIdentifierMap = MakeAtomTypesIdentifierMap(AtomTypes);
 

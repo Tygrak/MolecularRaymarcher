@@ -22540,6 +22540,9 @@ class Atom {
         this.name = name;
         this.residueAtomName = residueAtomName;
     }
+    GetPosition() {
+        return gl_matrix_1.vec3.fromValues(this.x, this.y, this.z);
+    }
     GetColor() {
         if (this.name == "C") {
             return gl_matrix_1.vec3.fromValues(0.3, 0.8, 0.3);
@@ -22570,7 +22573,7 @@ exports.Atom = Atom;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GetAtomType = exports.AtomTypes = exports.LoadAtomTypes = exports.AtomType = void 0;
+exports.GetAtomType = exports.LoadAtomTypes = exports.AtomType = void 0;
 const atomTypesText = __webpack_require__(/*! ./data/atomTypes.xml */ "./src/data/atomTypes.xml");
 const atomCovalentRadiiText = __webpack_require__(/*! ./data/atomCovalentRadii.xml */ "./src/data/atomCovalentRadii.xml");
 class AtomType {
@@ -22629,12 +22632,12 @@ function MakeAtomTypesIdentifierMap(atomTypes) {
     }
     return result;
 }
-exports.AtomTypes = LoadAtomTypes();
-const AtomTypesNumberMap = MakeAtomTypesNumberMap(exports.AtomTypes);
-const AtomTypesIdentifierMap = MakeAtomTypesIdentifierMap(exports.AtomTypes);
+const AtomTypes = LoadAtomTypes();
+const AtomTypesNumberMap = MakeAtomTypesNumberMap(AtomTypes);
+const AtomTypesIdentifierMap = MakeAtomTypesIdentifierMap(AtomTypes);
 function GetAtomType(atom) {
     var _a;
-    return (_a = AtomTypesIdentifierMap.get(atom.name)) !== null && _a !== void 0 ? _a : exports.AtomTypes[0];
+    return (_a = AtomTypesIdentifierMap.get(atom.name)) !== null && _a !== void 0 ? _a : AtomTypes[0];
 }
 exports.GetAtomType = GetAtomType;
 
@@ -22645,19 +22648,117 @@ exports.GetAtomType = GetAtomType;
 /*!**********************!*\
   !*** ./src/chain.ts ***!
   \**********************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Chain = void 0;
+const atomDatabase_1 = __webpack_require__(/*! ./atomDatabase */ "./src/atomDatabase.ts");
+const residueDatabase_1 = __webpack_require__(/*! ./residueDatabase */ "./src/residueDatabase.ts");
 class Chain {
     constructor(name, residues) {
+        this.bonds = new Map();
         this.name = name;
         this.residues = residues;
     }
+    ComputeBonds() {
+        this.bonds = new Map();
+        for (let i = 0; i < this.residues.length; i++) {
+            this.ComputeBondsInsideResidue(this.residues[i]);
+        }
+        this.ComputeBondsBetweenProteinResidues();
+        this.ComputeBondsBetweenNucleicAcidResidues();
+        this.DetermineBondsArity();
+    }
+    ComputeBondsInsideResidue(residue) {
+        let firstAtom, secondAtom;
+        for (let i = 0; i < residue.atoms.length; i++) {
+            firstAtom = residue.atoms[i];
+            for (let j = i + 1; j < residue.atoms.length; j++) {
+                secondAtom = residue.atoms[j];
+                // if bond between the atoms doesn't already exists, it is added according to the computation result. The bond between two hydrogens is prohibited.
+                if (!this.IsAtomPairBonded(firstAtom, secondAtom) && (firstAtom.name != "H" || secondAtom.name != "H")) {
+                    if (this.IsAtomsDistanceWithinTolerance(firstAtom, secondAtom)) {
+                        this.bonds.set({ a: firstAtom, b: secondAtom }, { arity: 1, residue: residue });
+                    }
+                }
+            }
+        }
+    }
+    ComputeBondsBetweenProteinResidues() {
+        let toCheck = [];
+        for (let i = 0; i < this.residues.length; i++) {
+            let residueType = residueDatabase_1.GetResidueType(this.residues[i]);
+            if (residueType.type != residueDatabase_1.ResidueTypeEnum.Ligand && residueType.type != residueDatabase_1.ResidueTypeEnum.Solvent) {
+                toCheck.push(this.residues[i]);
+            }
+        }
+        for (let i = 0; i < toCheck.length - 1; i++) {
+            const resFirst = toCheck[i];
+            const resSecond = toCheck[i + 1];
+            const firstAtom = resFirst.FindAtom("C");
+            const secondAtom = resSecond.FindAtom("N");
+            if (firstAtom != null && secondAtom != null && !this.IsAtomPairBonded(firstAtom, secondAtom)) {
+                if (this.IsAtomsDistanceWithinTolerance(firstAtom, secondAtom)) {
+                    this.bonds.set({ a: firstAtom, b: secondAtom }, { arity: 1, residue: resFirst });
+                }
+            }
+        }
+    }
+    ComputeBondsBetweenNucleicAcidResidues() {
+        let toCheck = [];
+        for (let i = 0; i < this.residues.length; i++) {
+            let residueType = residueDatabase_1.GetResidueType(this.residues[i]);
+            if (residueType.type != residueDatabase_1.ResidueTypeEnum.Solvent) {
+                toCheck.push(this.residues[i]);
+            }
+        }
+        for (let i = 0; i < toCheck.length - 1; i++) {
+            const resFirst = toCheck[i];
+            const resSecond = toCheck[i + 1];
+            //todo:
+            // if ((resSecond.sequenceNumber == (resFirst.sequenceNumber + 1)) || ((resSecond.sequenceNumber == (resFirst.sequenceNumber) && (resSecond.getInsertionCode() == (resFirst.getInsertionCode() + 1))))) {
+            if (resSecond.sequenceNumber == (resFirst.sequenceNumber + 1)) {
+                const firstAtom = resFirst.FindAtom("O3'");
+                const secondAtom = resSecond.FindAtom("P");
+                if (firstAtom != null && secondAtom != null && !this.IsAtomPairBonded(firstAtom, secondAtom)) {
+                    if (this.IsAtomsDistanceWithinTolerance(firstAtom, secondAtom)) {
+                        this.bonds.set({ a: firstAtom, b: secondAtom }, { arity: 1, residue: resFirst });
+                    }
+                }
+            }
+        }
+    }
+    DetermineBondsArity() {
+        const keys = Array.from(this.bonds.keys());
+        for (let i = 0; i < keys.length; i++) {
+            const bond = keys[i];
+            const bondProperties = this.bonds.get(bond);
+            const residueType = residueDatabase_1.GetResidueType(bondProperties.residue);
+            if (residueType.type == residueDatabase_1.ResidueTypeEnum.AminoAcidBase20 || residueType.type == residueDatabase_1.ResidueTypeEnum.AminoAcidExtra) {
+                this.bonds.set(bond, { arity: residueType.GetAtomPairBondArity(bond.a, bond.b), residue: bondProperties.residue });
+            }
+        }
+    }
+    IsAtomsDistanceWithinTolerance(a, b) {
+        const x = a.x - b.x;
+        const y = a.y - b.y;
+        const z = a.z - b.z;
+        const distSq = x * x + y * y + z * z;
+        const tolerance = atomDatabase_1.GetAtomType(a).covalentRadius + atomDatabase_1.GetAtomType(b).covalentRadius + Chain.TOLERANCE_MAX;
+        return distSq > (Chain.TOLERANCE_MIN * Chain.TOLERANCE_MIN) && distSq < (tolerance * tolerance);
+    }
+    IsAtomPairBonded(a, b) {
+        var _a, _b;
+        return ((_a = this.bonds.get({ a: a, b: b })) !== null && _a !== void 0 ? _a : { residue: null, arity: 0 }).arity >= 1 || ((_b = this.bonds.get({ a: b, b: a })) !== null && _b !== void 0 ? _b : { residue: null, arity: 0 }).arity >= 1;
+    }
 }
 exports.Chain = Chain;
+// The lower bound for the test of bond length (not a precise number).
+Chain.TOLERANCE_MIN = 0.4;
+// The upper bound for the test of bond length (not a precise number).
+Chain.TOLERANCE_MAX = 0.56;
 
 
 /***/ }),
@@ -25893,7 +25994,7 @@ const meshHelpers_1 = __webpack_require__(/*! ./meshHelpers */ "./src/meshHelper
 const test_data_1 = __webpack_require__(/*! ./data/test_data */ "./src/data/test_data.ts");
 const loadData_1 = __webpack_require__(/*! ./loadData */ "./src/loadData.ts");
 const atomDatabase_1 = __webpack_require__(/*! ./atomDatabase */ "./src/atomDatabase.ts");
-const CreateMesh = () => {
+function CreateMesh() {
     const loaded = loadData_1.LoadData(test_data_1.Data1cqw);
     const atoms = loaded.atoms;
     console.log(loaded.chains);
@@ -25922,12 +26023,11 @@ const CreateMesh = () => {
         result.positions.set(positions, instanceMesh.positions.length * i);
         result.colors.set(colors, instanceMesh.colors.length * i);
     }
-    console.log(atomDatabase_1.AtomTypes);
     console.log(result);
     return result;
-};
+}
 exports.CreateMesh = CreateMesh;
-const CreateAnimation = (draw, rotation = gl_matrix_1.vec3.fromValues(0, 0, 0), isAnimation = true) => {
+function CreateAnimation(draw, rotation = gl_matrix_1.vec3.fromValues(0, 0, 0), isAnimation = true) {
     function step() {
         if (isAnimation) {
             rotation[0] += 0.01;
@@ -25941,9 +26041,9 @@ const CreateAnimation = (draw, rotation = gl_matrix_1.vec3.fromValues(0, 0, 0), 
         requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
-};
+}
 exports.CreateAnimation = CreateAnimation;
-const CreateTransforms = (modelMat, translation = [0, 0, 0], rotation = [0, 0, 0], scaling = [1, 1, 1]) => {
+function CreateTransforms(modelMat, translation = [0, 0, 0], rotation = [0, 0, 0], scaling = [1, 1, 1]) {
     const rotateXMat = gl_matrix_1.mat4.create();
     const rotateYMat = gl_matrix_1.mat4.create();
     const rotateZMat = gl_matrix_1.mat4.create();
@@ -25960,9 +26060,10 @@ const CreateTransforms = (modelMat, translation = [0, 0, 0], rotation = [0, 0, 0
     gl_matrix_1.mat4.multiply(modelMat, rotateYMat, modelMat);
     gl_matrix_1.mat4.multiply(modelMat, rotateZMat, modelMat);
     gl_matrix_1.mat4.multiply(modelMat, translateMat, modelMat);
-};
+}
 exports.CreateTransforms = CreateTransforms;
-const CreateViewProjection = (aspectRatio = 1.0, cameraPosition = [2, 2, 4], lookDirection = [0, 0, 0], upDirection = [0, 1, 0]) => {
+;
+function CreateViewProjection(aspectRatio = 1.0, cameraPosition = [2, 2, 4], lookDirection = [0, 0, 0], upDirection = [0, 1, 0]) {
     const viewMatrix = gl_matrix_1.mat4.create();
     const projectionMatrix = gl_matrix_1.mat4.create();
     const viewProjectionMatrix = gl_matrix_1.mat4.create();
@@ -25981,9 +26082,10 @@ const CreateViewProjection = (aspectRatio = 1.0, cameraPosition = [2, 2, 4], loo
         viewProjectionMatrix,
         cameraOption
     };
-};
+}
 exports.CreateViewProjection = CreateViewProjection;
-const CreateGPUBufferUint = (device, data, usageFlag = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) => {
+;
+function CreateGPUBufferUint(device, data, usageFlag = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) {
     const buffer = device.createBuffer({
         size: data.byteLength,
         usage: usageFlag,
@@ -25992,8 +26094,9 @@ const CreateGPUBufferUint = (device, data, usageFlag = GPUBufferUsage.INDEX | GP
     new Uint32Array(buffer.getMappedRange()).set(data);
     buffer.unmap();
     return buffer;
-};
+}
 exports.CreateGPUBufferUint = CreateGPUBufferUint;
+;
 const CreateGPUBuffer = (device, data, usageFlag = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST) => {
     const buffer = device.createBuffer({
         size: data.byteLength,
@@ -26005,27 +26108,30 @@ const CreateGPUBuffer = (device, data, usageFlag = GPUBufferUsage.VERTEX | GPUBu
     return buffer;
 };
 exports.CreateGPUBuffer = CreateGPUBuffer;
-const InitGPU = () => __awaiter(void 0, void 0, void 0, function* () {
+function InitGPU() {
     var _a;
-    const checkgpu = exports.CheckWebGPU();
-    if (checkgpu.includes('Your current browser does not support WebGPU!')) {
-        console.log(checkgpu);
-        throw ('Your current browser does not support WebGPU!');
-    }
-    const canvas = document.getElementById('canvas-webgpu');
-    const adapter = yield ((_a = navigator.gpu) === null || _a === void 0 ? void 0 : _a.requestAdapter());
-    const device = yield (adapter === null || adapter === void 0 ? void 0 : adapter.requestDevice());
-    const context = canvas.getContext('webgpu');
-    const format = navigator.gpu.getPreferredCanvasFormat();
-    context.configure({
-        device: device,
-        format: format,
-        alphaMode: 'opaque'
+    return __awaiter(this, void 0, void 0, function* () {
+        const checkgpu = CheckWebGPU();
+        if (checkgpu.includes('Your current browser does not support WebGPU!')) {
+            console.log(checkgpu);
+            throw ('Your current browser does not support WebGPU!');
+        }
+        const canvas = document.getElementById('canvas-webgpu');
+        const adapter = yield ((_a = navigator.gpu) === null || _a === void 0 ? void 0 : _a.requestAdapter());
+        const device = yield (adapter === null || adapter === void 0 ? void 0 : adapter.requestDevice());
+        const context = canvas.getContext('webgpu');
+        const format = navigator.gpu.getPreferredCanvasFormat();
+        context.configure({
+            device: device,
+            format: format,
+            alphaMode: 'opaque'
+        });
+        return { device, canvas, format, context };
     });
-    return { device, canvas, format, context };
-});
+}
 exports.InitGPU = InitGPU;
-const CheckWebGPU = () => {
+;
+function CheckWebGPU() {
     let result = 'Great, your current browser supports WebGPU!';
     if (!navigator.gpu) {
         result = `Your current browser does not support WebGPU! Make sure you are on a system 
@@ -26053,7 +26159,7 @@ const CheckWebGPU = () => {
         }
     }
     return result;
-};
+}
 exports.CheckWebGPU = CheckWebGPU;
 
 
@@ -26086,8 +26192,8 @@ const LoadData = (dataString) => {
         if (lineParseResult == null) {
             continue;
         }
-        if (residue.id != lineParseResult.residueId) {
-            if (residue.id != -1) {
+        if (residue.sequenceNumber != lineParseResult.residueId) {
+            if (residue.sequenceNumber != -1) {
                 if (chain.name != lineParseResult.chainName) {
                     if (chain.name != "-1") {
                         chains.push(chain);
@@ -26104,7 +26210,7 @@ const LoadData = (dataString) => {
         sums.z += lineParseResult.atom.z;
         atoms.push(lineParseResult.atom);
     }
-    if (residue.id != -1) {
+    if (residue.sequenceNumber != -1) {
         chain.residues.push(residue);
     }
     if (chain.name != "-1") {
@@ -26115,11 +26221,15 @@ const LoadData = (dataString) => {
         atoms[i].y -= sums.y / atoms.length;
         atoms[i].z -= sums.z / atoms.length;
     }
+    for (let i = 0; i < chains.length; i++) {
+        const chain = chains[i];
+        chain.ComputeBonds();
+    }
     return { atoms: atoms, chains: chains };
 };
 exports.LoadData = LoadData;
 const ParseDataLine = (line) => {
-    let match = line.match(/ATOM +\d+ +(\w+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
+    let match = line.match(/ATOM +\d+ +([\w']+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
     if (match == null) {
         return null;
     }
@@ -26319,8 +26429,8 @@ window.addEventListener('resize', function () {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CreateSphereGeometry = exports.CubeData = void 0;
-const CubeData = () => {
+exports.CreateSphereGeometry = exports.CreateBondGeometry = exports.CubeData = void 0;
+function CubeData() {
     const positions = new Float32Array([
         // front
         -1, -1, 1,
@@ -26413,10 +26523,13 @@ const CubeData = () => {
         positions,
         colors
     };
-};
+}
 exports.CubeData = CubeData;
+function CreateBondGeometry() {
+}
+exports.CreateBondGeometry = CreateBondGeometry;
 // https://www.songho.ca/opengl/gl_sphere.html
-const CreateSphereGeometry = (radius, sectorCount, stackCount) => {
+function CreateSphereGeometry(radius, sectorCount, stackCount) {
     let x, y, z, xy; // vertex position
     let nx, ny, nz, lengthInv = 1.0 / radius; // vertex normal
     let s, t; // vertex texCoord
@@ -26482,7 +26595,7 @@ const CreateSphereGeometry = (radius, sectorCount, stackCount) => {
         resultPositions[i * 3 + 2] = vertices[index * 3 + 2];
     }
     return { positions: resultPositions, colors: new Float32Array(resultPositions.length).map((v) => 1) };
-};
+}
 exports.CreateSphereGeometry = CreateSphereGeometry;
 
 
@@ -26499,13 +26612,129 @@ exports.CreateSphereGeometry = CreateSphereGeometry;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Residue = void 0;
 class Residue {
-    constructor(name, id, atoms) {
+    constructor(name, sequenceNumber, atoms) {
         this.name = name;
-        this.id = id;
+        this.sequenceNumber = sequenceNumber;
         this.atoms = atoms;
+    }
+    FindAtom(residueAtomName) {
+        return this.atoms.find((a) => a.residueAtomName == residueAtomName);
     }
 }
 exports.Residue = Residue;
+
+
+/***/ }),
+
+/***/ "./src/residueDatabase.ts":
+/*!********************************!*\
+  !*** ./src/residueDatabase.ts ***!
+  \********************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetResidueType = exports.LoadResidueTypes = exports.ResidueType = exports.ResidueTypeEnum = void 0;
+const residueTypesText = __webpack_require__(/*! ./data/residueTypes.xml */ "./src/data/residueTypes.xml");
+const aminoAcidBondsText = __webpack_require__(/*! ./data/aminoAcidBonds.xml */ "./src/data/aminoAcidBonds.xml");
+var ResidueTypeEnum;
+(function (ResidueTypeEnum) {
+    ResidueTypeEnum[ResidueTypeEnum["AminoAcidBase20"] = 0] = "AminoAcidBase20";
+    ResidueTypeEnum[ResidueTypeEnum["AminoAcidExtra"] = 1] = "AminoAcidExtra";
+    ResidueTypeEnum[ResidueTypeEnum["Nucleobase"] = 2] = "Nucleobase";
+    ResidueTypeEnum[ResidueTypeEnum["Solvent"] = 3] = "Solvent";
+    ResidueTypeEnum[ResidueTypeEnum["Ligand"] = 4] = "Ligand";
+})(ResidueTypeEnum = exports.ResidueTypeEnum || (exports.ResidueTypeEnum = {}));
+class ResidueType {
+    constructor(id, type, identifier, name, bonds) {
+        this.id = id;
+        this.type = this.GetEnumTypeFromType(type);
+        this.identifier = identifier;
+        this.name = name;
+        this.bonds = bonds;
+    }
+    GetEnumTypeFromType(type) {
+        if (type == "aa_20") {
+            return ResidueTypeEnum.AminoAcidBase20;
+        }
+        else if (type == "aa_ext") {
+            return ResidueTypeEnum.AminoAcidExtra;
+        }
+        else if (type == "nb") {
+            return ResidueTypeEnum.Nucleobase;
+        }
+        else if (type == "sol") {
+            return ResidueTypeEnum.Solvent;
+        }
+        else if (type == "lig") {
+            return ResidueTypeEnum.Ligand;
+        }
+        else {
+            return ResidueTypeEnum.Ligand;
+        }
+    }
+    GetAtomPairBondArity(a, b) {
+        var _a;
+        const bond = this.bonds.find((bond) => (bond.a == a.residueAtomName && bond.b == b.residueAtomName) || (bond.a == b.residueAtomName && bond.b == a.residueAtomName));
+        return (_a = bond === null || bond === void 0 ? void 0 : bond.arity) !== null && _a !== void 0 ? _a : 1;
+    }
+}
+exports.ResidueType = ResidueType;
+function LoadResidueTypes() {
+    var _a;
+    let aminoAcidBonds = LoadAminoAcidBonds();
+    console.log(aminoAcidBonds);
+    let result = [];
+    let lines = residueTypesText.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        let match = line.match(/<residue id="(\d+)" type="(\S+)" identifier="(\w+)" shortcut="\w+" name="([\w ]+)"/);
+        if (match == null) {
+            continue;
+        }
+        const id = parseInt(match[1]);
+        let residueType = new ResidueType(id, match[2], match[3], match[4], ((_a = aminoAcidBonds.get(id)) !== null && _a !== void 0 ? _a : []));
+        result.push(residueType);
+    }
+    console.log(result);
+    return result;
+}
+exports.LoadResidueTypes = LoadResidueTypes;
+function LoadAminoAcidBonds() {
+    let result = new Map();
+    let aminoAcids = [...aminoAcidBondsText.matchAll(/<aminoAcid id="(\d+)">([\W\w\n]+?)<\/aminoAcid>/g)];
+    for (let i = 0; i < aminoAcids.length; i++) {
+        let bondsResults = [];
+        const id = parseInt(aminoAcids[i][1]);
+        const bonds = aminoAcids[i][2];
+        const bondsMatches = [...bonds.matchAll(/<bond arity="(\d+)">([\W\w\n]+?)<\/bond>/g)];
+        for (let j = 0; j < bondsMatches.length; j++) {
+            const bond = bondsMatches[j];
+            const bondAtoms = bond[2];
+            const bondArity = parseInt(bond[1]);
+            let bondedAtoms = [...bondAtoms.matchAll(/<atom name="([\w\d]+)" \/>/g)];
+            bondsResults.push({ arity: bondArity, a: bondedAtoms[0][1], b: bondedAtoms[1][1] });
+        }
+        result.set(id, bondsResults);
+    }
+    return result;
+}
+function MakeResidueTypesNameMap(residueTypes) {
+    let result = new Map();
+    for (let i = 0; i < residueTypes.length; i++) {
+        const residueType = residueTypes[i];
+        result.set(residueType.name, residueType);
+    }
+    return result;
+}
+const ResidueTypes = LoadResidueTypes();
+const ResidueTypesNameMap = MakeResidueTypesNameMap(ResidueTypes);
+function GetResidueType(residue) {
+    var _a;
+    return (_a = ResidueTypesNameMap.get(residue.name)) !== null && _a !== void 0 ? _a : ResidueTypes[0];
+}
+exports.GetResidueType = GetResidueType;
 
 
 /***/ }),
@@ -27107,6 +27336,17 @@ function createTurntableController(options) {
 
 /***/ }),
 
+/***/ "./src/data/aminoAcidBonds.xml":
+/*!*************************************!*\
+  !*** ./src/data/aminoAcidBonds.xml ***!
+  \*************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n    Document   : aminoAcidBonds.xml\r\n    Description: List of multiple bonds in known amino acid residues.\r\n-->\r\n<root>\r\n    <aminoAcid id=\"1\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"2\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CZ\" />\r\n            <atom name=\"NH2\" />\r\n        </bond>       \r\n    </aminoAcid>\r\n\r\n    <aminoAcid id=\"3\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"OD1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"4\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"OD1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"5\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"6\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CD\" />\r\n            <atom name=\"OE1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"7\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CD\" />\r\n            <atom name=\"OE1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"8\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Histidine (HIS) - HIE tautomer -->\r\n    <aminoAcid id=\"9\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"ND1\" />\r\n            <atom name=\"CE1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n\r\n    <aminoAcid id=\"10\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"11\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"12\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"13\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"14\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD1\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CD2\" />\r\n            <atom name=\"CE2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CE1\" />\r\n            <atom name=\"CZ\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"15\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"16\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"17\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"18\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD1\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CD2\" />\r\n            <atom name=\"CE2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CE3\" />\r\n            <atom name=\"CZ3\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CZ2\" />\r\n            <atom name=\"CH2\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"19\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD1\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CD2\" />\r\n            <atom name=\"CE2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CE1\" />\r\n            <atom name=\"CZ\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <aminoAcid id=\"20\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Uracil (URI) -->\r\n    <aminoAcid id=\"21\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"O2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"O4\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C5\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Uracil (U) -->\r\n    <aminoAcid id=\"42\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"O2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"O4\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C5\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Adenine (ADE) -->\r\n    <aminoAcid id=\"22\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"N7\" />\r\n            <atom name=\"C8\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"C5\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"N1\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"N3\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Adenine (A) -->\r\n    <aminoAcid id=\"38\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"N7\" />\r\n            <atom name=\"C8\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"C5\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"N1\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"N3\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Cytosine (CYT) -->\r\n    <aminoAcid id=\"23\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"O2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"N3\" />\r\n            <atom name=\"C4\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C5\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Cytosine (C) -->\r\n    <aminoAcid id=\"39\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"O2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"N3\" />\r\n            <atom name=\"C4\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C5\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Guanine (GUA) -->\r\n    <aminoAcid id=\"24\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"N3\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"C5\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C6\" />\r\n            <atom name=\"O6\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"N7\" />\r\n            <atom name=\"C8\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Guanine (G) -->\r\n    <aminoAcid id=\"40\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"N3\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"C5\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C6\" />\r\n            <atom name=\"O6\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"N7\" />\r\n            <atom name=\"C8\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Thymine (THY) -->\r\n    <aminoAcid id=\"25\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"O2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"O4\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C5\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Thymine (T) -->\r\n    <aminoAcid id=\"41\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C2\" />\r\n            <atom name=\"O2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C4\" />\r\n            <atom name=\"O4\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"C5\" />\r\n            <atom name=\"C6\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Hystidine (HIE) -->\r\n    <aminoAcid id=\"29\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"ND1\" />\r\n            <atom name=\"CE1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Hystidine (HID) -->\r\n    <aminoAcid id=\"30\" >\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD2\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CE1\" />\r\n            <atom name=\"NE2\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Hystidine (HIP) -->\r\n    <aminoAcid id=\"31\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"CD2\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Glutamic Acid (GLH) -->\r\n    <aminoAcid id=\"34\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CD\" />\r\n            <atom name=\"OE1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Aspartic Acid (ASH) -->\r\n    <aminoAcid id=\"35\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n        <bond arity=\"2\">\r\n            <atom name=\"CG\" />\r\n            <atom name=\"OD1\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Cysteine (CYX) -->\r\n    <aminoAcid id=\"36\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n    \r\n    <!-- Lysine (LYN) -->\r\n    <aminoAcid id=\"37\">\r\n        <bond arity=\"2\">\r\n            <atom name=\"C\" />\r\n            <atom name=\"O\" />\r\n        </bond>\r\n    </aminoAcid>\r\n</root>\r\n";
+
+/***/ }),
+
 /***/ "./src/data/atomCovalentRadii.xml":
 /*!****************************************!*\
   !*** ./src/data/atomCovalentRadii.xml ***!
@@ -27126,6 +27366,17 @@ module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n    Docu
 
 "use strict";
 module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n    Document   : elementTypes.xml\r\n    Description: List of known element types (periodic table of elements).\r\n-->\r\n<root>\r\n    <atom identifier=\"H\" name=\"Hydrogen\" number=\"1\" electronegativity=\"2.00\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"He\" name=\"Helium\" number=\"2\" electronegativity=\"0\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Li\" name=\"Lithium\" number=\"3\" electronegativity=\"0.98\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Be\" name=\"Beryllium\" number=\"4\" electronegativity=\"1.57\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"B\" name=\"Boron\" number=\"5\" electronegativity=\"2.04\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"C\" name=\"Carbon\" number=\"6\" electronegativity=\"2.55\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"N\" name=\"Nitrogen\" number=\"7\" electronegativity=\"3.04\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"O\" name=\"Oxygen\" number=\"8\" electronegativity=\"3.44\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"F\" name=\"Fluorine\" number=\"9\" electronegativity=\"3.98\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Ne\" name=\"Neon\" number=\"10\" electronegativity=\"0\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Na\" name=\"Sodium\" number=\"11\" electronegativity=\"0.93\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Mg\" name=\"Magnesium\" number=\"12\" electronegativity=\"1.31\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Al\" name=\"Aluminium\" number=\"13\" electronegativity=\"1.61\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Si\" name=\"Silicon\" number=\"14\" electronegativity=\"1.90\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"P\" name=\"Phosphorus\" number=\"15\" electronegativity=\"2.19\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"S\" name=\"Sulfur\" number=\"16\" electronegativity=\"2.58\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"Cl\" name=\"Chlorine\" number=\"17\" electronegativity=\"3.16\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Ar\" name=\"Argon\" number=\"18\" electronegativity=\"0\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"K\" name=\"Potassium\" number=\"19\" electronegativity=\"0.82\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Ca\" name=\"Calcium\" number=\"20\" electronegativity=\"1.00\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Sc\" name=\"Scandium\" number=\"21\" electronegativity=\"1.36\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ti\" name=\"Titanium\" number=\"22\" electronegativity=\"1.54\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"V\" name=\"Vanadium\" number=\"23\" electronegativity=\"1.63\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cr\" name=\"Chromium\" number=\"24\" electronegativity=\"1.66\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Mn\" name=\"Manganese\" number=\"25\" electronegativity=\"1.55\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Fe\" name=\"Iron\" number=\"26\" electronegativity=\"1.83\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Co\" name=\"Cobalt\" number=\"27\" electronegativity=\"1.88\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ni\" name=\"Nickel\" number=\"28\" electronegativity=\"1.91\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cu\" name=\"Copper\" number=\"29\" electronegativity=\"1.90\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Zn\" name=\"Zinc\" number=\"30\" electronegativity=\"1.65\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ga\" name=\"Gallium\" number=\"31\" electronegativity=\"1.81\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Ge\" name=\"Germanium\" number=\"32\" electronegativity=\"2.01\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"As\" name=\"Arsenic\" number=\"33\" electronegativity=\"2.18\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"Se\" name=\"Selenium\" number=\"34\" electronegativity=\"2.55\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"Br\" name=\"Bromine\" number=\"35\" electronegativity=\"2.96\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Kr\" name=\"Krypton\" number=\"36\" electronegativity=\"3.00\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Rb\" name=\"Rubidium\" number=\"37\" electronegativity=\"0.82\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Sr\" name=\"Strontium\" number=\"38\" electronegativity=\"0.95\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Y\" name=\"Yttrium\" number=\"39\" electronegativity=\"1.22\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Zr\" name=\"Zirconium\" number=\"40\" electronegativity=\"1.33\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Nb\" name=\"Niobium\" number=\"41\"  electronegativity=\"1.60\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Mo\" name=\"Molybdenum\" number=\"42\" electronegativity=\"2.16\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tc\" name=\"Technetium\" number=\"43\" electronegativity=\"1.90\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ru\" name=\"Ruthenium\" number=\"44\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Rh\" name=\"Rhodium\" number=\"45\" electronegativity=\"2.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pd\" name=\"Palladium\" number=\"46\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ag\" name=\"Silver\" number=\"47\" electronegativity=\"1.93\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cd\" name=\"Cadmium\" number=\"48\" electronegativity=\"1.69\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"In\" name=\"Indium\" number=\"49\" electronegativity=\"1.78\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Sn\" name=\"Tin\" number=\"50\" electronegativity=\"1.96\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"Sb\" name=\"Antimony\" number=\"51\" electronegativity=\"2.05\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"Te\" name=\"Tellurium\" number=\"52\" electronegativity=\"2.10\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"I\" name=\"Iodine\" number=\"53\" electronegativity=\"2.66\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Xe\" name=\"Xenon\" number=\"54\" electronegativity=\"2.60\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Cs\" name=\"Cesium\" number=\"55\" electronegativity=\"0.79\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Ba\" name=\"Barium\" number=\"56\" electronegativity=\"0.89\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"La\" name=\"Lanthanum\" number=\"57\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ce\" name=\"Cerium\" number=\"58\" electronegativity=\"1.12\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pr\" name=\"Praseodymium\" number=\"59\" electronegativity=\"1.13\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Nd\" name=\"Neodymium\" number=\"60\" electronegativity=\"1.14\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pm\" name=\"Promethium\" number=\"61\" electronegativity=\"1.13\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Sm\" name=\"Samarium\" number=\"62\" electronegativity=\"1.17\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Eu\" name=\"Europium\" number=\"63\" electronegativity=\"1.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Gd\" name=\"Gadolinium\" number=\"64\" electronegativity=\"1.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tb\" name=\"Terbium\" number=\"65\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Dy\" name=\"Dysprosium\" number=\"66\" electronegativity=\"1.22\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ho\" name=\"Holmium\" number=\"67\" electronegativity=\"1.23\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Er\" name=\"Erbium\" number=\"68\" electronegativity=\"1.24\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tm\" name=\"Thulium\" number=\"69\" electronegativity=\"1.25\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Yb\" name=\"Ytterbium\" number=\"70\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Lu\" name=\"Lutetium\" number=\"71\" electronegativity=\"1.27\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Hf\" name=\"Hafnium\" number=\"72\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ta\" name=\"Tantalum\" number=\"73\" electronegativity=\"1.50\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"W\" name=\"Tungsten\" number=\"74\" electronegativity=\"2.36\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Re\" name=\"Rhenium\" number=\"75\" electronegativity=\"1.90\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Os\" name=\"Osmium\" number=\"76\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ir\" name=\"Iridium\" number=\"77\" electronegativity=\"2.20\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pt\" name=\"Platinum\" number=\"78\" electronegativity=\"2.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Au\" name=\"Gold\" number=\"79\" electronegativity=\"2.54\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Hg\" name=\"Mercury\" number=\"80\" electronegativity=\"2.00\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Tl\" name=\"Thallium\" number=\"81\" electronegativity=\"1.62\" valenceElectrons=\"3\"/>\r\n    <atom identifier=\"Pb\" name=\"Lead\" number=\"82\" electronegativity=\"2.33\" valenceElectrons=\"4\"/>\r\n    <atom identifier=\"Bi\" name=\"Bismuth\" number=\"83\" electronegativity=\"2.02\" valenceElectrons=\"5\"/>\r\n    <atom identifier=\"Po\" name=\"Polonium\" number=\"84\" electronegativity=\"2.00\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"At\" name=\"Astatine\" number=\"85\" electronegativity=\"2.20\" valenceElectrons=\"7\"/>\r\n    <atom identifier=\"Rn\" name=\"Radon\" number=\"86\" electronegativity=\"2.20\" valenceElectrons=\"8\"/>\r\n    <atom identifier=\"Fr\" name=\"Francium\" number=\"87\" electronegativity=\"0.70\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"Ra\" name=\"Radium\" number=\"88\" electronegativity=\"0.90\" valenceElectrons=\"2\"/>\r\n    <atom identifier=\"Ac\" name=\"Actinium\" number=\"89\" electronegativity=\"1.10\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Th\" name=\"Thorium\" number=\"90\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pa\" name=\"Protactinium\" number=\"91\" electronegativity=\"1.50\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"U\" name=\"Uranium\" number=\"92\" electronegativity=\"1.38\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Np\" name=\"Neptunium\" number=\"93\" electronegativity=\"1.36\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Pu\" name=\"Plutonium\" number=\"94\" electronegativity=\"1.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Am\" name=\"Americium\" number=\"95\" electronegativity=\"1.13\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cm\" name=\"Curium\" number=\"96\" electronegativity=\"1.28\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Bk\" name=\"Berkelium\" number=\"97\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cf\" name=\"Californium\" number=\"98\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Es\" name=\"Einsteinium\" number=\"99\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Fm\" name=\"Fermium\" number=\"100\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Md\" name=\"Mendelevium\" number=\"101\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"No\" name=\"Nobelium\" number=\"102\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Lr\" name=\"Lawrencium\" number=\"103\" electronegativity=\"1.30\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Rf\" name=\"Rutherfordium\" number=\"104\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Db\" name=\"Dubnium\" number=\"105\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Sg\" name=\"Seaborgium\" number=\"106\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Bh\" name=\"Bohrium\" number=\"107\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Hs\" name=\"Hassium\" number=\"108\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Mt\" name=\"Meitnerium\" number=\"109\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Ds\" name=\"Darmstadtium\" number=\"110\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Rg\" name=\"Roentgenium\" number=\"111\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"Cn\" name=\"Copernicium\" number=\"112\" electronegativity=\"0\" valenceElectrons=\"0\"/>\r\n    <atom identifier=\"H (WAT)\" name=\"Hydrogen (Water)\" number=\"113\" electronegativity=\"2.00\" valenceElectrons=\"1\"/>\r\n    <atom identifier=\"O (WAT)\" name=\"Oxygen (Water)\" number=\"114\" electronegativity=\"3.44\" valenceElectrons=\"6\"/>\r\n    <atom identifier=\"D\" name=\"Hydrogen\" number=\"115\" electronegativity=\"2.00\" valenceElectrons=\"1\"/>\r\n</root>\r\n";
+
+/***/ }),
+
+/***/ "./src/data/residueTypes.xml":
+/*!***********************************!*\
+  !*** ./src/data/residueTypes.xml ***!
+  \***********************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n    Document   : residueTypes.xml\r\n    Description: List of known residues (amino acids, nucleobases, solvents and lignads).\r\n-->\r\n<root>\r\n    <residue id=\"1\" type=\"aa_20\" identifier=\"ALA\" shortcut=\"A\" name=\"Alanine\" hydropathy=\"1.8\" hydrophobicity=\"0.02\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"2\" type=\"aa_20\" identifier=\"ARG\" shortcut=\"R\" name=\"Arginine\" hydropathy=\"-4.5\" hydrophobicity=\"-0.42\" donors=\"NE,NH1,NH2\" acceptors=\"\" charge=\"+\"/>\r\n    <residue id=\"3\" type=\"aa_20\" identifier=\"ASN\" shortcut=\"N\" name=\"Asparagine\" hydropathy=\"-3.5\" hydrophobicity=\"-0.77\" donors=\"ND2\" acceptors=\"OD1\"/>\r\n    <residue id=\"4\" type=\"aa_20\" identifier=\"ASP\" shortcut=\"D\" name=\"Aspartic Acid\" hydropathy=\"-3.5\" hydrophobicity=\"-1.04\" donors=\"\" acceptors=\"OD1,OD2\" charge=\"-\"/>\r\n    <!-- Aspartic acid with neutral charge -->\r\n    <residue id=\"35\" type=\"aa_ext\" identifier=\"ASH\" shortcut=\"D\" name=\"Aspartic Acid\" hydropathy=\"-3.5\" hydrophobicity=\"-1.04\" donors=\"\" acceptors=\"OD1,OD2\"/>\r\n    <residue id=\"5\" type=\"aa_20\" identifier=\"CYS\" shortcut=\"C\" name=\"Cysteine\" hydropathy=\"2.5\" hydrophobicity=\"0.77\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"36\" type=\"aa_20\" identifier=\"CYX\" shortcut=\"C\" name=\"Cysteine\" hydropathy=\"2.5\" hydrophobicity=\"0.77\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"6\" type=\"aa_20\" identifier=\"GLU\" shortcut=\"E\" name=\"Glutamic Acid\" hydropathy=\"-3.5\" hydrophobicity=\"-1.14\" donors=\"\" acceptors=\"OE1,OE2\" charge=\"-\"/>\r\n    <!-- Glutamic acid with neutral charge -->\r\n    <residue id=\"34\" type=\"aa_ext\" identifier=\"GLH\" shortcut=\"E\" name=\"Glutamic Acid\" hydropathy=\"-3.5\" hydrophobicity=\"-1.14\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"7\" type=\"aa_20\" identifier=\"GLN\" shortcut=\"Q\" name=\"Glutamine\" hydropathy=\"-3.5\" hydrophobicity=\"-1.10\" donors=\"NE2\" acceptors=\"OE1\"/>\r\n    <residue id=\"8\" type=\"aa_20\" identifier=\"GLY\" shortcut=\"G\" name=\"Glycine\" hydropathy=\"-0.4\" hydrophobicity=\"-0.80\" donors=\"\" acceptors=\"\"/>\r\n    <!-- Histidine and it's variants -->\r\n    <residue id=\"9\" type=\"aa_20\" identifier=\"HIS\" shortcut=\"H\" name=\"Histidine\" hydropathy=\"-3.2\" hydrophobicity=\"0.26\" donors=\"ND1,NE2\" acceptors=\"ND1,NE2\" charge=\"+\"/>\r\n    <residue id=\"29\" type=\"aa_ext\" identifier=\"HIE\" shortcut=\"H\" name=\"Histidine\" hydropathy=\"-3.2\" hydrophobicity=\"0.26\" donors=\"ND1,NE2\" acceptors=\"ND1,NE2\"/>\r\n    <residue id=\"30\" type=\"aa_ext\" identifier=\"HID\" shortcut=\"H\" name=\"Histidine\" hydropathy=\"-3.2\" hydrophobicity=\"0.26\" donors=\"ND1,NE2\" acceptors=\"ND1,NE2\"/>\r\n    <residue id=\"31\" type=\"aa_ext\" identifier=\"HIP\" shortcut=\"H\" name=\"Histidine\" hydropathy=\"-3.2\" hydrophobicity=\"0.26\" donors=\"ND1,NE2\" acceptors=\"ND1,NE2\" charge=\"+\"/>\r\n    <!-- -->\r\n    <residue id=\"10\" type=\"aa_20\" identifier=\"ILE\" shortcut=\"I\" name=\"Isoleucine\" hydropathy=\"4.5\" hydrophobicity=\"1.81\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"11\" type=\"aa_20\" identifier=\"LEU\" shortcut=\"L\" name=\"Leucine\" hydropathy=\"3.8\" hydrophobicity=\"1.14\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"12\" type=\"aa_20\" identifier=\"LYS\" shortcut=\"K\" name=\"Lysine\" hydropathy=\"-3.9\" hydrophobicity=\"-0.41\" donors=\"NZ\" acceptors=\"\" charge=\"+\"/>\r\n    <!-- Lysine with neutral charge -->\r\n    <residue id=\"37\" type=\"aa_ext\" identifier=\"LYN\" shortcut=\"K\" name=\"Lysine\" hydropathy=\"-3.9\" hydrophobicity=\"-0.41\" donors=\"NZ\" acceptors=\"\"/>\r\n    <residue id=\"13\" type=\"aa_20\" identifier=\"MET\" shortcut=\"M\" name=\"Methionine\" hydropathy=\"1.9\" hydrophobicity=\"1.00\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"14\" type=\"aa_20\" identifier=\"PHE\" shortcut=\"F\" name=\"Phenylalanine\" hydropathy=\"2.8\" hydrophobicity=\"1.35\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"15\" type=\"aa_20\" identifier=\"PRO\" shortcut=\"P\" name=\"Proline\" hydropathy=\"-1.6\" hydrophobicity=\"-0.09\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"16\" type=\"aa_20\" identifier=\"SER\" shortcut=\"S\" name=\"Serine\" hydropathy=\"-0.8\" hydrophobicity=\"-0.97\" donors=\"OG\" acceptors=\"OG\"/>\r\n    <residue id=\"17\" type=\"aa_20\" identifier=\"THR\" shortcut=\"T\" name=\"Threonine\" hydropathy=\"-0.7\" hydrophobicity=\"-0.77\" donors=\"OG1\" acceptors=\"OG1\"/>\r\n    <residue id=\"18\" type=\"aa_20\" identifier=\"TRP\" shortcut=\"W\" name=\"Tryptophan\" hydropathy=\"-0.9\" hydrophobicity=\"1.71\" donors=\"NE1\" acceptors=\"\"/>\r\n    <residue id=\"19\" type=\"aa_20\" identifier=\"TYR\" shortcut=\"Y\" name=\"Tyrosine\" hydropathy=\"-1.3\" hydrophobicity=\"1.11\" donors=\"OH\" acceptors=\"OH\"/>\r\n    <!--<residue id=\"38\" identifier=\"TYZ\" shortcut=\"Y\" name=\"Tyrosine\"/>-->\r\n    <residue id=\"20\" type=\"aa_20\" identifier=\"VAL\" shortcut=\"V\" name=\"Valine\" hydropathy=\"4.2\" hydrophobicity=\"1.13\" donors=\"\" acceptors=\"\"/>\r\n    <!-- Long nucleobases, WARNING: duplicate shortcuts -->\r\n    <residue id=\"21\" type=\"nb\" identifier=\"URI\" shortcut=\"U\" name=\"Uracil\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"22\" type=\"nb\" identifier=\"ADE\" shortcut=\"A\" name=\"Adenine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"23\" type=\"nb\" identifier=\"CYT\" shortcut=\"C\" name=\"Cytosine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"24\" type=\"nb\" identifier=\"GUA\" shortcut=\"G\" name=\"Guanine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"25\" type=\"nb\" identifier=\"THY\" shortcut=\"T\" name=\"Thymine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <!-- Water residues -->\r\n    <residue id=\"26\" type=\"sol\" identifier=\"HOH\" shortcut=\"HOH\" name=\"Water\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"27\" type=\"sol\" identifier=\"WAT\" shortcut=\"HOH\" name=\"Water\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"28\" type=\"sol\" identifier=\"H2O\" shortcut=\"HOH\" name=\"Water\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"43\" type=\"sol\" identifier=\"SOL\" shortcut=\"SOL\" name=\"Solvent\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"44\" type=\"sol\" identifier=\"TIP3\" shortcut=\"TIP3\" name=\"Water\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <!-- Ligands -->\r\n    <residue id=\"32\" type=\"lig\" identifier=\"DCL\" shortcut=\"DCL\" name=\"Ligand\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"33\" type=\"lig\" identifier=\"CL\" shortcut=\"CL\" name=\"Ligand\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <!-- Short nucleobases -->\r\n    <residue id=\"38\" type=\"nb\" identifier=\"A\" shortcut=\"A\" name=\"Adenine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"39\" type=\"nb\" identifier=\"C\" shortcut=\"C\" name=\"Cytosine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"40\" type=\"nb\" identifier=\"G\" shortcut=\"G\" name=\"Guanine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"41\" type=\"nb\" identifier=\"T\" shortcut=\"T\" name=\"Thymine\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n    <residue id=\"42\" type=\"nb\" identifier=\"U\" shortcut=\"U\" name=\"Uracil\" hydropathy=\"0\" hydrophobicity=\"0\" donors=\"\" acceptors=\"\"/>\r\n</root>\r\n";
 
 /***/ })
 

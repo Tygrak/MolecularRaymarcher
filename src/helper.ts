@@ -2,9 +2,9 @@ import { vec2, vec3, mat4 } from 'gl-matrix';
 import { CreateSphereGeometry, CubeData } from './meshHelpers';
 import { TestData, Data1cqw } from './data/test_data';
 import { LoadData } from './loadData';
-import { AtomTypes, GetAtomType } from './atomDatabase';
+import { GetAtomType } from './atomDatabase';
 
-export const CreateMesh = () => {
+export function CreateMesh() {
     const loaded = LoadData(Data1cqw);
     const atoms = loaded.atoms;
     console.log(loaded.chains);
@@ -31,12 +31,11 @@ export const CreateMesh = () => {
         result.positions.set(positions, instanceMesh.positions.length*i);
         result.colors.set(colors, instanceMesh.colors.length*i);
     }
-    console.log(AtomTypes);
     console.log(result);
     return result;
 }
 
-export const CreateAnimation = (draw:any, rotation:vec3 = vec3.fromValues(0,0,0), isAnimation = true ) => {
+export function CreateAnimation(draw:any, rotation:vec3 = vec3.fromValues(0,0,0), isAnimation = true ) {
     function step() {
         if(isAnimation){
             rotation[0] += 0.01;
@@ -51,7 +50,7 @@ export const CreateAnimation = (draw:any, rotation:vec3 = vec3.fromValues(0,0,0)
     requestAnimationFrame(step);
 }
 
-export const CreateTransforms = (modelMat:mat4, translation:vec3 = [0,0,0], rotation:vec3 = [0,0,0], scaling:vec3 = [1,1,1]) => {
+export function CreateTransforms(modelMat:mat4, translation:vec3 = [0,0,0], rotation:vec3 = [0,0,0], scaling:vec3 = [1,1,1]) {
     const rotateXMat = mat4.create();
     const rotateYMat = mat4.create();
     const rotateZMat = mat4.create();   
@@ -72,8 +71,7 @@ export const CreateTransforms = (modelMat:mat4, translation:vec3 = [0,0,0], rota
     mat4.multiply(modelMat, translateMat, modelMat);
 };
 
-export const CreateViewProjection = (aspectRatio = 1.0, cameraPosition:vec3 = [2, 2, 4], lookDirection:vec3 = [0, 0, 0], upDirection:vec3 = [0, 1, 0]) => {
-
+export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2, 2, 4], lookDirection:vec3 = [0, 0, 0], upDirection:vec3 = [0, 1, 0]) {
     const viewMatrix = mat4.create();
     const projectionMatrix = mat4.create();       
     const viewProjectionMatrix = mat4.create();
@@ -98,8 +96,8 @@ export const CreateViewProjection = (aspectRatio = 1.0, cameraPosition:vec3 = [2
 };
 
 
-export const CreateGPUBufferUint = (device:GPUDevice, data:Uint32Array, 
-    usageFlag:GPUBufferUsageFlags = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) => {
+export function CreateGPUBufferUint(device:GPUDevice, data:Uint32Array, 
+    usageFlag:GPUBufferUsageFlags = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST) {
     const buffer = device.createBuffer({
         size: data.byteLength,
         usage: usageFlag,
@@ -122,7 +120,7 @@ export const CreateGPUBuffer = (device:GPUDevice, data:Float32Array,
     return buffer;
 };
 
-export const InitGPU = async () => {
+export async function InitGPU() {
     const checkgpu = CheckWebGPU();
     if(checkgpu.includes('Your current browser does not support WebGPU!')){
         console.log(checkgpu);
@@ -142,7 +140,7 @@ export const InitGPU = async () => {
     return{ device, canvas, format, context };
 };
 
-export const CheckWebGPU = () => {
+export function CheckWebGPU() {
     let result = 'Great, your current browser supports WebGPU!';
     if (!navigator.gpu) {
         result = `Your current browser does not support WebGPU! Make sure you are on a system 
