@@ -2,16 +2,17 @@ import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, Creat
 import shader from './shader.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
-import $ from 'jquery';
+import $, { data } from 'jquery';
 const createCamera = require('3d-view-controls');
 
+const dataSelection = document.getElementById("dataSelection") as HTMLSelectElement;
 
-const Create3DObject = async (isAnimation = true) => {
+async function Create3DObject(isAnimation = true) {
     const gpu = await InitGPU();
     const device = gpu.device;
 
     // create vertex buffers
-    const structureMeshData = CreateStructureMesh();
+    const structureMeshData = CreateStructureMesh(dataSelection.value);
     const atomsMeshData = structureMeshData.atoms;
     const atomsNumberOfVertices = atomsMeshData.positions.length / 3;
     const atomsVertexBuffer = CreateGPUBuffer(device, atomsMeshData.positions);
@@ -76,12 +77,18 @@ const Create3DObject = async (isAnimation = true) => {
     const mvpMatrix = mat4.create();
     let vMatrix = mat4.create();
     let vpMatrix = mat4.create();
-    const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, [0, 5, 45]);
+    let cameraPosition = vec3.fromValues(0, 5, 45);
+    /*if (dataSelection.value != "1cqw") {
+        cameraPosition = vec3.fromValues(2500, 715, 3775);
+    }*/
+    const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition);
     vpMatrix = vp.viewProjectionMatrix;
 
     // add rotation and camera:
     let rotation = vec3.fromValues(0, 0, 0);       
     var camera = createCamera(gpu.canvas, vp.cameraOption);
+    camera.zoomMax = 1000;
+    camera.zoomMin = 0.01;
 
     // create uniform buffer and layout
     const uniformBuffer = device.createBuffer({
@@ -178,6 +185,10 @@ $('#id-radio input:radio').on('click', function(){
     is_animation = val === 'animation'?true:false;
     Create3DObject(is_animation);
 });
+
+dataSelection.oninput = (e) => {
+    Create3DObject(is_animation);
+};
 
 window.addEventListener('resize', function(){
     Create3DObject(is_animation);

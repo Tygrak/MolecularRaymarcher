@@ -3,10 +3,16 @@ import { CreateBondGeometry, CreateSphereGeometry, CubeData } from './meshHelper
 import { LoadData } from './loadData';
 import { GetAtomType } from './atomDatabase';
 
-export function CreateStructureMesh() {
+export function CreateStructureMesh(dataFileName: string) {
     let t0 = performance.now();
-    const dataText = require('./data/1cqw.pdb');
-    const loaded = LoadData(dataText);
+    let loaded;
+    if (dataFileName == "1aon") {
+        const dataText = require('./data/1aon.pdb');
+        loaded = LoadData(dataText);
+    } else {
+        const dataText = require('./data/1cqw.pdb');
+        loaded = LoadData(dataText);
+    }
     let t1 = performance.now();
     const atoms = loaded.atoms;
     console.log(loaded.chains);
@@ -94,7 +100,7 @@ export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2
     const viewMatrix = mat4.create();
     const projectionMatrix = mat4.create();       
     const viewProjectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, 2*Math.PI/5, aspectRatio, 0.1, 1000.0);
+    mat4.perspective(projectionMatrix, 2*Math.PI/5, aspectRatio, 0.1, 10000.0);
 
     mat4.lookAt(viewMatrix, cameraPosition, lookDirection, upDirection);
     mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);

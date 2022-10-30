@@ -55,7 +55,7 @@ export const LoadData = (dataString: string) => {
 }
 
 const ParseDataLine = (line: string) => {
-    let match = line.match(/ATOM +\d+ +([\w']+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
+    let match = line.match(/ATOM +\d+ +([\w']+) +(\w+) +(\w+) +(\d+) +(-?\d+\.\d+) *(-?\d+\.\d+) *(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(\w)/);
     if (match == null) {
         return null;
     }
