@@ -3,6 +3,8 @@ import { CreateBondGeometry, CreateSphereGeometry, CubeData } from './meshHelper
 import { LoadData } from './loadData';
 import { GetAtomType } from './atomDatabase';
 
+const AtomScale = 0.25;
+
 export function CreateStructureMesh(dataFileName: string) {
     let t0 = performance.now();
     let loaded;
@@ -15,7 +17,10 @@ export function CreateStructureMesh(dataFileName: string) {
     }
     let t1 = performance.now();
     const atoms = loaded.atoms;
+    console.log("Chains:");
     console.log(loaded.chains);
+    //console.log("Atoms:");
+    //console.log(loaded.atoms);
     //const instanceMesh = CubeData();
     const instanceMesh = CreateSphereGeometry(1, 12, 6);
     let resultAtoms = {positions: new Float32Array(instanceMesh.positions.length*atoms.length), colors: new Float32Array(instanceMesh.colors.length*atoms.length)};
@@ -24,11 +29,11 @@ export function CreateStructureMesh(dataFileName: string) {
         let positions = new Float32Array(instanceMesh.positions);
         for (let j = 0; j < positions.length; j++) {
             if (j%3 == 0) {
-                positions[j] = (positions[j]/4)*GetAtomType(atom).covalentRadius+atom.x;
+                positions[j] = (positions[j]*AtomScale)*GetAtomType(atom).covalentRadius+atom.x;
             } else if (j%3 == 1) {
-                positions[j] = (positions[j]/4)*GetAtomType(atom).covalentRadius+atom.y;
+                positions[j] = (positions[j]*AtomScale)*GetAtomType(atom).covalentRadius+atom.y;
             } else if (j%3 == 2) {
-                positions[j] = (positions[j]/4)*GetAtomType(atom).covalentRadius+atom.z;
+                positions[j] = (positions[j]*AtomScale)*GetAtomType(atom).covalentRadius+atom.z;
             }
         }
         let atomColor = atom.GetColor();
@@ -108,7 +113,7 @@ export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2
     const cameraOption = {
         eye: cameraPosition,
         center: lookDirection,
-        zoomMax: 100,
+        zoomMax: 500,
         zoomSpeed: 2
     };
 

@@ -78,9 +78,10 @@ async function Create3DObject(isAnimation = true) {
     let vMatrix = mat4.create();
     let vpMatrix = mat4.create();
     let cameraPosition = vec3.fromValues(0, 5, 45);
-    /*if (dataSelection.value != "1cqw") {
-        cameraPosition = vec3.fromValues(2500, 715, 3775);
-    }*/
+    console.log(dataSelection.value);
+    if (dataSelection.value != "1cqw") {
+        cameraPosition = vec3.fromValues(125, 31.5, 10.5);
+    }
     const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition);
     vpMatrix = vp.viewProjectionMatrix;
 
