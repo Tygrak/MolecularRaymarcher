@@ -1,27 +1,26 @@
-import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateAnimation, CreateStructureMesh } from './helper';
+import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection} from './helper';
 import shader from './shader.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
 import $, { data } from 'jquery';
+import { Structure } from './structure';
 const createCamera = require('3d-view-controls');
 
 const dataSelection = document.getElementById("dataSelection") as HTMLSelectElement;
 
-async function Create3DObject(isAnimation = true) {
+let structure1cqw : Structure;
+let structure1aon : Structure;
+let isAnimation = false;
+
+async function Create3DObject() {
     const gpu = await InitGPU();
     const device = gpu.device;
 
     // create vertex buffers
-    const structureMeshData = CreateStructureMesh(dataSelection.value);
-    const atomsMeshData = structureMeshData.atoms;
-    const atomsNumberOfVertices = atomsMeshData.positions.length / 3;
-    const atomsVertexBuffer = CreateGPUBuffer(device, atomsMeshData.positions);
-    const atomsColorBuffer = CreateGPUBuffer(device, atomsMeshData.colors);
-    
-    const bondsMeshData = structureMeshData.bonds;
-    const bondsNumberOfVertices = bondsMeshData.positions.length / 3;
-    const bondsVertexBuffer = CreateGPUBuffer(device, bondsMeshData.positions);
-    const bondsColorBuffer = CreateGPUBuffer(device, bondsMeshData.colors);
+    structure1cqw = new Structure("1cqw");
+    structure1cqw.InitializeBuffers(device);
+    structure1aon = new Structure("1aon");
+    structure1aon.InitializeBuffers(device);
 
     let percentageShown = 1;
  
@@ -88,8 +87,6 @@ async function Create3DObject(isAnimation = true) {
     // add rotation and camera:
     let rotation = vec3.fromValues(0, 0, 0);       
     var camera = createCamera(gpu.canvas, vp.cameraOption);
-    camera.zoomMax = 1000;
-    camera.zoomMin = 0.01;
 
     // create uniform buffer and layout
     const uniformBuffer = device.createBuffer({
@@ -130,7 +127,22 @@ async function Create3DObject(isAnimation = true) {
             depthStoreOp: "store",
         }
     };
-    
+
+    function CreateAnimation(draw : any) {
+        function step() {
+            if(isAnimation){
+                rotation[0] += 0.01;
+                rotation[1] += 0.01;
+                rotation[2] += 0.01;
+            } else{
+                rotation = [0, 0, 0];
+            }
+            draw();
+            requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
     function draw() {
         if(!isAnimation){
             if(camera.tick()){
@@ -150,21 +162,11 @@ async function Create3DObject(isAnimation = true) {
 
 
         renderPass.setPipeline(pipeline);
-        {
-            let numberOfVerticesToDraw = Math.round(atomsNumberOfVertices*percentageShown)-Math.round(atomsNumberOfVertices*percentageShown)%3;
-            renderPass.setVertexBuffer(0, atomsVertexBuffer);
-            renderPass.setVertexBuffer(1, atomsColorBuffer);
-            renderPass.setBindGroup(0, uniformBindGroup);
-            //renderPass.draw(atomsNumberOfVertices);
-            renderPass.draw(numberOfVerticesToDraw);
-        }
-        {
-            let numberOfVerticesToDraw = Math.round(bondsNumberOfVertices*percentageShown)-Math.round(bondsNumberOfVertices*percentageShown)%3;
-            renderPass.setVertexBuffer(0, bondsVertexBuffer);
-            renderPass.setVertexBuffer(1, bondsColorBuffer);
-            renderPass.setBindGroup(0, uniformBindGroup);
-            //renderPass.draw(bondsNumberOfVertices);
-            renderPass.draw(numberOfVerticesToDraw);
+        renderPass.setBindGroup(0, uniformBindGroup);
+        if (dataSelection.value != "1cqw") {
+            structure1aon.DrawStructure(renderPass, percentageShown);
+        } else {
+            structure1cqw.DrawStructure(renderPass, percentageShown);
         }
         renderPass.end();
 
@@ -176,23 +178,26 @@ async function Create3DObject(isAnimation = true) {
         percentageShown = parseFloat(sliderPercentageShown.value)/100;
     };
 
-    CreateAnimation(draw, rotation, isAnimation);
+    dataSelection.oninput = (e) => {
+        console.log(dataSelection.value);
+        cameraPosition = vec3.fromValues(0, 5, 45);
+        if (dataSelection.value != "1cqw") {
+            cameraPosition = vec3.fromValues(125, 31.5, 10.5);
+        }
+    };
+
+    CreateAnimation(draw);
 }
 
-let is_animation = false;
-Create3DObject(is_animation);
+Create3DObject();
 $('#id-radio input:radio').on('click', function(){
     let val = $('input[name="options"]:checked').val();
-    is_animation = val === 'animation'?true:false;
-    Create3DObject(is_animation);
+    isAnimation = val === 'animation'?true:false;
 });
 
-dataSelection.oninput = (e) => {
-    Create3DObject(is_animation);
-};
-
 window.addEventListener('resize', function(){
-    Create3DObject(is_animation);
+    //todo: make better
+    Create3DObject();
 });
 
 
