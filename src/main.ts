@@ -4,13 +4,18 @@ import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
 import $, { data } from 'jquery';
 import { Structure } from './structure';
+import { RayMarchQuad } from './rayMarchQuad';
+
 const createCamera = require('3d-view-controls');
 
 const dataSelection = document.getElementById("dataSelection") as HTMLSelectElement;
+const visualizationSelection = document.getElementById("visualizationSelection") as HTMLSelectElement;
 
 let structure1cqw : Structure;
 let structure1aon : Structure;
 let isAnimation = false;
+
+let rayMarchQuad : RayMarchQuad;
 
 async function Create3DObject() {
     const gpu = await InitGPU();
@@ -19,8 +24,10 @@ async function Create3DObject() {
     // create vertex buffers
     structure1cqw = new Structure("1cqw");
     structure1cqw.InitializeBuffers(device);
-    structure1aon = new Structure("1aon");
-    structure1aon.InitializeBuffers(device);
+    //structure1aon = new Structure("1aon");
+    //structure1aon.InitializeBuffers(device);
+
+    rayMarchQuad = new RayMarchQuad(device, gpu.format);
 
     let percentageShown = 1;
  
@@ -77,6 +84,7 @@ async function Create3DObject() {
     let vMatrix = mat4.create();
     let vpMatrix = mat4.create();
     let cameraPosition = vec3.fromValues(0, 5, 45);
+
     console.log(dataSelection.value);
     if (dataSelection.value != "1cqw") {
         cameraPosition = vec3.fromValues(125, 31.5, 10.5);
@@ -144,9 +152,9 @@ async function Create3DObject() {
     }
 
     function draw() {
+        const pMatrix = vp.projectionMatrix;
         if(!isAnimation){
             if(camera.tick()){
-                const pMatrix = vp.projectionMatrix;
                 vMatrix = camera.matrix;
                 mat4.multiply(vpMatrix, pMatrix, vMatrix);
             }
@@ -160,13 +168,18 @@ async function Create3DObject() {
         const commandEncoder = device.createCommandEncoder();
         const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
 
-
-        renderPass.setPipeline(pipeline);
-        renderPass.setBindGroup(0, uniformBindGroup);
-        if (dataSelection.value != "1cqw") {
-            structure1aon.DrawStructure(renderPass, percentageShown);
+        if (visualizationSelection.value == "basic") {
+            renderPass.setPipeline(pipeline);
+            renderPass.setBindGroup(0, uniformBindGroup);
+            if (dataSelection.value != "1cqw") {
+                structure1aon.DrawStructure(renderPass, percentageShown);
+            } else {
+                structure1cqw.DrawStructure(renderPass, percentageShown);
+            }
         } else {
-            structure1cqw.DrawStructure(renderPass, percentageShown);
+            let inverseVp = mat4.create();
+            mat4.invert(inverseVp, vpMatrix);
+            rayMarchQuad.Draw(device, renderPass, mvpMatrix, inverseVp, camera.eye);
         }
         renderPass.end();
 
