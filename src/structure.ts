@@ -50,19 +50,24 @@ export class Structure {
     }
 
     public DrawStructure(renderPass : GPURenderPassEncoder, percentageShown : number) {
-        for (let i = 0; i < Math.round(this.chainMeshes.length*percentageShown); i++) {
+        let chainsShown = Math.ceil(this.chainMeshes.length*percentageShown);
+        for (let i = 0; i < chainsShown; i++) {
             const chainMesh = this.chainMeshes[i];
             if (!chainMesh.initializedBuffers) {
                 console.log("warning! tried drawing using uninitialized chainmesh ["+i+"]");
                 continue;
             }
-            let numberOfVerticesToDraw = chainMesh.atomsNumberOfVertices;
-            //let numberOfVerticesToDraw = Math.round(cm.atomsNumberOfVertices*percentageShown)-Math.round(cm.atomsNumberOfVertices*percentageShown)%3;
+            let chainPercentageShown = 1;
+            if (i == chainsShown-1) {
+                chainPercentageShown = 1-(chainsShown-this.chainMeshes.length*percentageShown);
+            }
+            //let numberOfVerticesToDraw = chainMesh.atomsNumberOfVertices;
+            let numberOfVerticesToDraw = Math.round(chainMesh.atomsNumberOfVertices*chainPercentageShown)-Math.round(chainMesh.atomsNumberOfVertices*chainPercentageShown)%3;
             renderPass.setVertexBuffer(0, chainMesh.atomsVertexBuffer!);
             renderPass.setVertexBuffer(1, chainMesh.atomsColorBuffer!);
             renderPass.draw(numberOfVerticesToDraw);
-            numberOfVerticesToDraw = chainMesh.bondsNumberOfVertices;
-            //numberOfVerticesToDraw = Math.round(cm.bondsNumberOfVertices*percentageShown)-Math.round(cm.bondsNumberOfVertices*percentageShown)%3;
+            //numberOfVerticesToDraw = chainMesh.bondsNumberOfVertices;
+            numberOfVerticesToDraw = Math.round(chainMesh.bondsNumberOfVertices*chainPercentageShown)-Math.round(chainMesh.bondsNumberOfVertices*chainPercentageShown)%3;
             renderPass.setVertexBuffer(0, chainMesh.bondsVertexBuffer!);
             renderPass.setVertexBuffer(1, chainMesh.bondsColorBuffer!);
             renderPass.draw(numberOfVerticesToDraw);

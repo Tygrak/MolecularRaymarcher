@@ -10,6 +10,9 @@ const createCamera = require('3d-view-controls');
 
 const dataSelection = document.getElementById("dataSelection") as HTMLSelectElement;
 const visualizationSelection = document.getElementById("visualizationSelection") as HTMLSelectElement;
+const sliderPercentageShown = document.getElementById("sliderPercentageShown") as HTMLInputElement;
+const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
+const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
 
 let structure1cqw : Structure;
 let structure1aon : Structure;
@@ -24,10 +27,9 @@ async function Create3DObject() {
     // create vertex buffers
     structure1cqw = new Structure("1cqw");
     structure1cqw.InitializeBuffers(device);
-    //structure1aon = new Structure("1aon");
-    //structure1aon.InitializeBuffers(device);
 
     rayMarchQuad = new RayMarchQuad(device, gpu.format);
+    rayMarchQuad.LoadAtoms(device, structure1cqw);
 
     let percentageShown = 1;
  
@@ -179,14 +181,15 @@ async function Create3DObject() {
         } else {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
-            rayMarchQuad.Draw(device, renderPass, mvpMatrix, inverseVp, camera.eye);
+            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
+            let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
+            rayMarchQuad.Draw(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
         }
         renderPass.end();
 
         device.queue.submit([commandEncoder.finish()]);
     }
 
-    let sliderPercentageShown = document.getElementById("sliderPercentageShown") as HTMLInputElement;
     sliderPercentageShown.oninput = (e) => {
         percentageShown = parseFloat(sliderPercentageShown.value)/100;
     };
@@ -196,6 +199,10 @@ async function Create3DObject() {
         cameraPosition = vec3.fromValues(0, 5, 45);
         if (dataSelection.value != "1cqw") {
             cameraPosition = vec3.fromValues(125, 31.5, 10.5);
+        }
+        if (dataSelection.value == "1aon" && structure1aon == undefined) {
+            structure1aon = new Structure("1aon");
+            structure1aon.InitializeBuffers(device);
         }
     };
 

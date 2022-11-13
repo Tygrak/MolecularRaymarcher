@@ -1,4 +1,5 @@
 import { mat4, vec3, vec4 } from "gl-matrix";
+import { GetAtomType } from "./atomDatabase";
 import { CreateGPUBuffer } from "./helper";
 import shader from './raymarch.wgsl';
 import { Structure } from "./structure";
@@ -12,8 +13,14 @@ export class RayMarchQuad {
     mvpUniformBuffer : GPUBuffer;
     inverseVpUniformBuffer : GPUBuffer;
     cameraPosBuffer : GPUBuffer;
-    atomsBuffer : GPUBuffer;
     uniformBindGroup : GPUBindGroup;
+
+    atomsCount : number;
+    atomsBuffer : GPUBuffer;
+    atomsBindGroup : GPUBindGroup;
+
+    atomDrawLimitBuffer : GPUBuffer;
+    drawSettingsBindGroup : GPUBindGroup;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -90,11 +97,6 @@ export class RayMarchQuad {
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        this.atomsBuffer = device.createBuffer({
-            size: 0,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
         this.uniformBindGroup = device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(0),
             entries: [
@@ -118,17 +120,83 @@ export class RayMarchQuad {
                 }
             ]
         });
+
+        this.atomsCount = 0;
+        this.atomsBuffer = device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        });
+        this.atomsBindGroup = device.createBindGroup({
+            layout: this.pipeline.getBindGroupLayout(1),
+            entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.atomsBuffer,
+                    }
+                },
+            ]
+        });
+
+        this.atomDrawLimitBuffer = device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        this.drawSettingsBindGroup = device.createBindGroup({
+            layout: this.pipeline.getBindGroupLayout(2),
+            entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.atomDrawLimitBuffer,
+                    }
+                },
+            ]
+        });
     }
 
-    public Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3) {
+    public LoadAtoms(device: GPUDevice, structure: Structure) {
+        this.atomsCount = structure.atoms.length;
+        this.atomsBuffer = device.createBuffer({
+            size: structure.atoms.length*4*4,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        });
+        let atomPositions: Float32Array = new Float32Array(structure.atoms.length*4);
+        for (let i = 0; i < structure.atoms.length; i++) {
+            const atom = structure.atoms[i];
+            atomPositions[i*4+0] = atom.x;
+            atomPositions[i*4+1] = atom.y;
+            atomPositions[i*4+2] = atom.z;
+            atomPositions[i*4+3] = GetAtomType(atom).number;
+        }
+        device.queue.writeBuffer(this.atomsBuffer, 0, atomPositions.buffer);
+        this.atomsBindGroup = device.createBindGroup({
+            layout: this.pipeline.getBindGroupLayout(1),
+            entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.atomsBuffer,
+                    }
+                },
+            ]
+        });
+    }
+
+    public Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number) {
+        const maxDrawnAmount = 300;
         device.queue.writeBuffer(this.mvpUniformBuffer, 0, mvpMatrix as ArrayBuffer);
         device.queue.writeBuffer(this.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
         device.queue.writeBuffer(this.cameraPosBuffer, 0, vec4.fromValues(cameraPos[0], cameraPos[1], cameraPos[2], 1.0) as ArrayBuffer);
+        let startPos = maxDrawnAmount + (this.atomsCount-maxDrawnAmount-maxDrawnAmount) * drawStartPosition;
+        let drawSettings = vec4.fromValues(Math.round(percentageShown*maxDrawnAmount), Math.round(startPos), 1.0, 1.0);
+        device.queue.writeBuffer(this.atomDrawLimitBuffer, 0, drawSettings as ArrayBuffer);
         renderPass.setPipeline(this.pipeline);
         renderPass.setBindGroup(0, this.uniformBindGroup);
+        renderPass.setBindGroup(1, this.atomsBindGroup);
+        renderPass.setBindGroup(2, this.drawSettingsBindGroup);
         renderPass.setVertexBuffer(0, this.quadPositions);
         renderPass.setVertexBuffer(1, this.quadColors);
-        renderPass.setPipeline(this.pipeline);
         renderPass.draw(numberOfVerticesToDraw);
     }
 }
