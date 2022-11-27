@@ -31,4 +31,8 @@ export class Atom {
         }
         return vec3.fromValues(1, 0.1, 1);
     }
+
+    public Distance(atom: Atom) {
+        return vec3.distance(this.GetPosition(), atom.GetPosition());
+    }
 }

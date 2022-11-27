@@ -5,6 +5,9 @@ import { vec3, mat4 } from 'gl-matrix';
 import $, { data } from 'jquery';
 import { Structure } from './structure';
 import { RayMarchQuad } from './rayMarchQuad';
+import { Atom } from './atom';
+import { KdTree } from './kdtree';
+import { TestKdTrees } from './tests';
 
 const createCamera = require('3d-view-controls');
 
@@ -20,7 +23,7 @@ let isAnimation = false;
 
 let rayMarchQuad : RayMarchQuad;
 
-async function Create3DObject() {
+async function Initialize() {
     const gpu = await InitGPU();
     const device = gpu.device;
 
@@ -30,6 +33,12 @@ async function Create3DObject() {
 
     rayMarchQuad = new RayMarchQuad(device, gpu.format);
     rayMarchQuad.LoadAtoms(device, structure1cqw);
+
+    let kTree = new KdTree(structure1cqw.atoms);
+    console.log(kTree);
+    //console.log(kTree.Nearest(new Atom(5, 5, 5, "C", "C")));
+    //todo: fix test
+    //TestKdTrees();
 
     let percentageShown = 1;
  
@@ -209,7 +218,7 @@ async function Create3DObject() {
     CreateAnimation(draw);
 }
 
-Create3DObject();
+Initialize();
 $('#id-radio input:radio').on('click', function(){
     let val = $('input[name="options"]:checked').val();
     isAnimation = val === 'animation'?true:false;
@@ -217,7 +226,7 @@ $('#id-radio input:radio').on('click', function(){
 
 window.addEventListener('resize', function(){
     //todo: make better
-    Create3DObject();
+    Initialize();
 });
 
 
