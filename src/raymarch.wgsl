@@ -3,21 +3,21 @@
 @binding(2) @group(0) var<uniform> cameraPos : vec4<f32>;
 
 struct Atom {
-  position : vec3<f32>,
-  number : f32,
+    position : vec3<f32>,
+    number : f32,
 }
 
 struct Atoms {
-  atoms : array<Atom>,
+    atoms : array<Atom>,
 }
 
 @binding(0) @group(1) var<storage, read> atoms : Atoms;
 
 struct DrawSettings {
-  amount : f32,
-  start : f32,
-  pad1 : f32,
-  pad2 : f32,
+    amount : f32,
+    start : f32,
+    pad1 : f32,
+    pad2 : f32,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -34,6 +34,11 @@ fn vs_main(@location(0) pos: vec4<f32>, @location(1) color: vec4<f32>) -> Output
     let mvp = mvpMatrix;
     let invVp = inverseVpMatrix;
     return output;
+}
+
+struct SdfResult {
+    distance : f32,
+    atomNumber : f32, 
 }
 
 fn opSmoothUnion(d1: f32, d2: f32, k: f32) -> f32 {
@@ -56,18 +61,44 @@ fn covalentRadius(number: f32) -> f32 {
     return 1.02;
 }
 
-fn dAtoms(p: vec3<f32>) -> f32 {
+fn dAtoms(p: vec3<f32>) -> SdfResult {
     let amount = arrayLength(&atoms.atoms);
-    var minValue = 1000000000.0;
+    var minDistance = 1000000000.0;
+    var resDistance = 1000000000.0;
+    var atomNumber = -1.0;
     for (var i : i32 = i32(drawSettings.start); i < i32(drawSettings.amount)+i32(drawSettings.start); i++) {
-        minValue = opSmoothUnion(minValue, dSphere(p, atoms.atoms[i].position, covalentRadius(atoms.atoms[i].number)), 1.0);
+        //let d = opSmoothUnion(minDistance, dSphere(p, atoms.atoms[i].position, covalentRadius(atoms.atoms[i].number)), 1.0);
+        let d = dSphere(p, atoms.atoms[i].position, covalentRadius(atoms.atoms[i].number));
+        if (d < minDistance) {
+            atomNumber = atoms.atoms[i].number;
+            minDistance = d;
+        }
+        resDistance = opSmoothUnion(resDistance, d, 1);
     }
-    return minValue;
+    var result: SdfResult;
+    result.distance = resDistance;
+    result.atomNumber = atomNumber;
+    return result;
 }
 
-fn dScene(p: vec3<f32>) -> f32 {
-    let dist = dAtoms(p);
-    return dist;
+fn dScene(p: vec3<f32>) -> SdfResult {
+    let sdfResult = dAtoms(p);
+    return sdfResult;
+}
+
+fn getAtomColor(atomNumber: f32) -> vec4<f32> {
+    if (atomNumber < 0) {
+        return vec4(0.0, 0.0, 0.0, 1.0);
+    } else if (atomNumber < 6.5) {
+        return vec4(0.3, 0.8, 0.3, 1.0); // C
+    } else if (atomNumber < 7.5) {
+        return vec4(0.05, 0.05, 0.85, 1.0); // N
+    } else if (atomNumber < 8.5) {
+        return vec4(0.85, 0.05, 0.05, 1.0); // O
+    } else if (atomNumber < 16.5) {
+        return vec4(0.975, 0.975, 0.025, 1.0); // S
+    }
+    return vec4(1.0, 1.0, 1.0, 1.0);
 }
 
 @fragment
@@ -80,9 +111,7 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>
     // convert ray direction from normalized device coordinate to world coordinate
     let rayDirection : vec3<f32> = normalize((inverseVpMatrix * ndcRay).xyz);
     //let rayDirection : vec3<f32> = ndcRay.xyz;
-    //let start : vec3<f32> = vec3(0, 0, -10); 
     let start : vec3<f32> = cameraPos.xyz; 
-
 
     var t : f32 = 0.0;
     var pos : vec3<f32> = vec3(0.0);
@@ -91,13 +120,14 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>
 			return vec4(0.0, 0.0, 0.0, 1.0);
 		}
         pos = start+t*rayDirection;
-        //let a = dAtoms(pos);
-		let distance = dScene(pos);
+		let sdfResult = dScene(pos);
         
-		if (distance < 0.025) {
-			return vec4(1.0-f32(iteration)/25.0, 1.0-f32(iteration)/25.0, 1.0-f32(iteration)/25.0, 1.0);
+		if (sdfResult.distance < 0.025) {
+            return getAtomColor(sdfResult.atomNumber);
+            //return vec4(getAtomColor(sdfResult.atomNumber).xyz*f32(iteration)/25.0, 1.0);
+			//return vec4(1.0-f32(iteration)/25.0, 1.0-f32(iteration)/25.0, 1.0-f32(iteration)/25.0, 1.0);
 		}
-		t = t+distance;
+		t = t+sdfResult.distance;
 	}
 
     return vec4(0.35, 0.35, 0.35, 1.0);
