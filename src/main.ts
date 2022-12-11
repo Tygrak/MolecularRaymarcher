@@ -17,9 +17,12 @@ const sliderPercentageShown = document.getElementById("sliderPercentageShown") a
 const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
 const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
 
+const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
+
 let structure1cqw : Structure;
 let structure1aon : Structure;
 let isAnimation = false;
+let renderMs = 0.1;
 
 let rayMarchQuad : RayMarchQuad;
 
@@ -37,8 +40,8 @@ async function Initialize() {
     let kTree = new KdTree(structure1cqw.atoms);
     console.log(kTree);
     //console.log(kTree.Nearest(new Atom(5, 5, 5, "C", "C")));
-    //todo: fix test
-    //TestKdTrees();
+    
+    TestKdTrees();
 
     let percentageShown = 1;
  
@@ -163,6 +166,7 @@ async function Initialize() {
     }
 
     function draw() {
+        let t1 = performance.now();
         const pMatrix = vp.projectionMatrix;
         if(!isAnimation){
             if(camera.tick()){
@@ -197,6 +201,10 @@ async function Initialize() {
         renderPass.end();
 
         device.queue.submit([commandEncoder.finish()]);
+        let t2 = performance.now();
+        let time = t2-t1;
+        renderMs = (renderMs * 0.9) + (time * (1.0-0.9));
+        fpsCounterElement.innerText = (renderMs).toFixed(4);
     }
 
     sliderPercentageShown.oninput = (e) => {

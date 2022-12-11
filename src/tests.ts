@@ -17,7 +17,7 @@ export function TestKdTrees(){
     CompareAtoms(tree.Nearest(new Atom(0, 0, 0, "C", "C")).atom, atoms[0]);
     CompareAtoms(tree.Nearest(new Atom(0.9, 0, 0, "C", "C")).atom, atoms[1]);
     CompareAtoms(tree.Nearest(new Atom(0, 1.2, 0, "C", "C")).atom, atoms[2]);
-    CompareAtoms(tree.Nearest(new Atom(0.9, 1.2, 0.5, "C", "C")).atom, atoms[7]);
+    CompareAtoms(tree.Nearest(new Atom(0.9, 1.2, 0.75, "C", "C")).atom, atoms[7]);
     CompareAtoms(tree.Nearest(new Atom(1.8, 0.2, 0, "C", "C")).atom, atoms[8]);
     console.log("Kd tree tests passed");
 }

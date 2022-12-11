@@ -1,6 +1,7 @@
 import { mat4, vec3, vec4 } from "gl-matrix";
 import { GetAtomType } from "./atomDatabase";
 import { CreateGPUBuffer } from "./helper";
+import { KdTree } from "./kdtree";
 import shader from './raymarch.wgsl';
 import { Structure } from "./structure";
 
@@ -156,18 +157,19 @@ export class RayMarchQuad {
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
-        this.atomsCount = structure.atoms.length;
+        let tree: KdTree = new KdTree(structure.atoms);
+        this.atomsCount = tree.tree.length;
         this.atomsBuffer = device.createBuffer({
-            size: structure.atoms.length*4*4,
+            size: tree.tree.length*4*4,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         });
-        let atomPositions: Float32Array = new Float32Array(structure.atoms.length*4);
-        for (let i = 0; i < structure.atoms.length; i++) {
-            const atom = structure.atoms[i];
-            atomPositions[i*4+0] = atom.x;
-            atomPositions[i*4+1] = atom.y;
-            atomPositions[i*4+2] = atom.z;
-            atomPositions[i*4+3] = GetAtomType(atom).number;
+        let atomPositions: Float32Array = new Float32Array(tree.tree.length*4);
+        for (let i = 0; i < tree.tree.length; i++) {
+            const atom = tree.tree[i];
+            atomPositions[i*4+0] = atom[0];
+            atomPositions[i*4+1] = atom[1];
+            atomPositions[i*4+2] = atom[2];
+            atomPositions[i*4+3] = atom[3];
         }
         device.queue.writeBuffer(this.atomsBuffer, 0, atomPositions.buffer);
         this.atomsBindGroup = device.createBindGroup({
