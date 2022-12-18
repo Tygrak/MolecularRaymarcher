@@ -1,5 +1,5 @@
 import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection} from './helper';
-import shader from './shader.wgsl';
+import shader from './shaders/shader.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
 import $, { data } from 'jquery';
@@ -8,6 +8,7 @@ import { RayMarchQuad } from './rayMarchQuad';
 import { Atom } from './atom';
 import { KdTree } from './kdtree';
 import { TestKdTrees } from './tests';
+import { ImpostorRenderer } from './impostorRenderer';
 
 const createCamera = require('3d-view-controls');
 
@@ -16,6 +17,7 @@ const visualizationSelection = document.getElementById("visualizationSelection")
 const sliderPercentageShown = document.getElementById("sliderPercentageShown") as HTMLInputElement;
 const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
 const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
+const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as HTMLInputElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
@@ -25,6 +27,7 @@ let isAnimation = false;
 let renderMs = 0.1;
 
 let rayMarchQuad : RayMarchQuad;
+let impostorRenderer : ImpostorRenderer;
 
 async function Initialize() {
     const gpu = await InitGPU();
@@ -36,6 +39,9 @@ async function Initialize() {
 
     rayMarchQuad = new RayMarchQuad(device, gpu.format);
     rayMarchQuad.LoadAtoms(device, structure1cqw);
+
+    impostorRenderer = new ImpostorRenderer(device, gpu.format);
+    impostorRenderer.LoadAtoms(device, structure1cqw);
 
     let kTree = new KdTree(structure1cqw.atoms);
     console.log(kTree);
@@ -191,7 +197,14 @@ async function Initialize() {
             } else {
                 structure1cqw.DrawStructure(renderPass, percentageShown);
             }
-        } else {
+        } else if (visualizationSelection.value == "impostor") {
+            const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, camera.eye, camera.view.center, camera.view.up);
+            //let vMatrix = mat4.clone(vpMatrix);
+            let vMatrix = mat4.clone(vp.viewMatrix);
+            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
+            let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+            impostorRenderer.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+        } else if (visualizationSelection.value == "raymarch") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;

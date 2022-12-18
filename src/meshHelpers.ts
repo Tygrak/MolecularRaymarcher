@@ -1,5 +1,6 @@
-import { vec3 } from "gl-matrix";
+import { vec2, vec3, vec4 } from "gl-matrix";
 import { Atom } from "./atom";
+import { GetAtomType } from "./atomDatabase";
 
 export function CubeData() {
     const positions = new Float32Array([
@@ -242,6 +243,42 @@ export function ArbitraryOrthogonalVector(v: vec3) {
     let arbitraryNonParallelVec = v[0] != 1.0 ? vec3.fromValues(1.0, 0.0, 0.0) : vec3.fromValues(0.0, 1.0, 0.0);
     let orthogonal = vec3.cross(vec3.create(), v, arbitraryNonParallelVec);
     return vec3.normalize(orthogonal, orthogonal);
+}
+
+//todo: change to take in atom?
+export function CreateQuadGeometry(atom: Atom) {
+    let v = vec3.fromValues(atom.x, atom.y, atom.z);
+    let resultPositions = new Float32Array([
+        ...v, 
+        ...v,
+        ...v,
+
+        ...v,
+        ...v,
+        ...v,
+    ]);
+    let color = atom.GetColor();
+    let resultColors = new Float32Array([
+        ...color, 
+        ...color,
+        ...color,
+
+        ...color,
+        ...color,
+        ...color,
+    ]);
+    let type = GetAtomType(atom);
+    let i = vec3.fromValues(type.number, type.covalentRadius, 0.0);
+    let atomInfo = new Float32Array([
+        ...i, 
+        ...i,
+        ...i,
+
+        ...i,
+        ...i,
+        ...i,
+    ]);
+    return {positions: resultPositions, color: resultColors, info: atomInfo};
 }
 
 // https://www.songho.ca/opengl/gl_sphere.html

@@ -21,18 +21,18 @@ export function CreateTransforms(modelMat:mat4, translation:vec3 = [0,0,0], rota
     mat4.multiply(modelMat, translateMat, modelMat);
 };
 
-export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2, 2, 4], lookDirection:vec3 = [0, 0, 0], upDirection:vec3 = [0, 1, 0]) {
+export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2, 2, 4], center:vec3 = [0, 0, 0], upDirection:vec3 = [0, 1, 0]) {
     const viewMatrix = mat4.create();
     const projectionMatrix = mat4.create();       
     const viewProjectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, 2*Math.PI/5, aspectRatio, 0.1, 10000.0);
 
-    mat4.lookAt(viewMatrix, cameraPosition, lookDirection, upDirection);
+    mat4.lookAt(viewMatrix, cameraPosition, center, upDirection);
     mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
 
     const cameraOption = {
         eye: cameraPosition,
-        center: lookDirection,
+        center: center,
         zoomMax: 500,
         zoomSpeed: 2
     };

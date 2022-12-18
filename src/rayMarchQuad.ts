@@ -2,7 +2,7 @@ import { mat4, vec3, vec4 } from "gl-matrix";
 import { GetAtomType } from "./atomDatabase";
 import { CreateGPUBuffer } from "./helper";
 import { KdTree } from "./kdtree";
-import shader from './raymarch.wgsl';
+import shader from './shaders/raymarch.wgsl';
 import { Structure } from "./structure";
 
 const numberOfVerticesToDraw = 6;
