@@ -10,14 +10,15 @@ struct DrawSettings {
 }
 @binding(0) @group(1) var<uniform> drawSettings : DrawSettings;
 
-struct Output {
+struct VertexOutput {
     @builtin(position) position : vec4<f32>,
     @location(0) color : vec4<f32>,
     @location(1) uv : vec2<f32>,
+    @location(2) worldPos : vec4<f32>,
 };
 
 @vertex
-fn vs_main(@builtin(vertex_index) index: u32, @location(0) pos: vec4<f32>, @location(1) color: vec4<f32>, @location(2) atomInfo: vec2<f32>) -> Output {
+fn vs_main(@builtin(vertex_index) index: u32, @location(0) pos: vec4<f32>, @location(1) color: vec4<f32>, @location(2) atomInfo: vec2<f32>) -> VertexOutput {
     //atomInfo x=number, y=covalentRadius 
     let mvp = mvpMatrix;
     let v = vMatrix;
@@ -26,7 +27,7 @@ fn vs_main(@builtin(vertex_index) index: u32, @location(0) pos: vec4<f32>, @loca
     //let cameraUp : vec4<f32> = vec4(0, 1, 0, 0);
     let cameraRight = vec4(1, 0, 0, 0)*vMatrix;
     let cameraUp = vec4(0, 1, 0, 0)*vMatrix;
-    var output: Output;
+    var output: VertexOutput;
     output.position = pos;
     let scale = drawSettings.atomScale*atomInfo.y;
     if (index%6 == 0) {
@@ -42,20 +43,32 @@ fn vs_main(@builtin(vertex_index) index: u32, @location(0) pos: vec4<f32>, @loca
         output.position = pos + cameraRight*(0.5)*scale + cameraUp*(0.5)*scale;
         output.uv = vec2(1, 1);
     }
+    output.worldPos = pos;
     output.position = mvpMatrix * output.position;
     output.color = color;
     return output;
 }
 
+struct FragmentOutput {
+    @builtin(frag_depth) depth: f32,
+    @location(0) color: vec4<f32>
+}
+
 @fragment
-fn fs_main(@builtin(position) position : vec4<f32>, @location(0) color: vec4<f32>, @location(1) uv: vec2<f32>) -> @location(0) vec4<f32> {
-    var result = color;
+fn fs_main(@builtin(position) position : vec4<f32>, @location(0) color: vec4<f32>, @location(1) uv: vec2<f32>, @location(2) worldPos: vec4<f32>) -> FragmentOutput {
+    var output: FragmentOutput;
+    output.color = color;
     let amount = drawSettings.amount;
     if (amount > 0) {
-        result.b = result.b*1.1; 
+        output.color.b = output.color.b*1.1; 
     }
-    if (pow(uv.x-0.5, 2)+pow(uv.y-0.5, 2) > 0.25) {
+    let dist = pow(uv.x*2-1.0, 2)+pow(uv.y*2-1.0, 2);
+    if (dist > 1.0) {
         discard;
     }
-    return result;
+    //todo: update z pos
+    //var pos = worldPos*vMatrix+vec4(0, 0, sqrt(1-dist)*drawSettings.atomScale, 0);
+    //pos = mvpMatrix*pos;
+    output.depth = position.z;
+    return output;
 }

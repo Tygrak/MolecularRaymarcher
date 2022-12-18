@@ -49,7 +49,7 @@ export class Structure {
         this.chainMeshes.forEach(cm => cm.DestroyBuffers());
     }
 
-    public DrawStructure(renderPass : GPURenderPassEncoder, percentageShown : number) {
+    public DrawStructure(renderPass : GPURenderPassEncoder, percentageShown : number, bondsOnly : boolean = false) {
         let chainsShown = Math.ceil(this.chainMeshes.length*percentageShown);
         for (let i = 0; i < chainsShown; i++) {
             const chainMesh = this.chainMeshes[i];
@@ -63,9 +63,11 @@ export class Structure {
             }
             //let numberOfVerticesToDraw = chainMesh.atomsNumberOfVertices;
             let numberOfVerticesToDraw = Math.round(chainMesh.atomsNumberOfVertices*chainPercentageShown)-Math.round(chainMesh.atomsNumberOfVertices*chainPercentageShown)%3;
-            renderPass.setVertexBuffer(0, chainMesh.atomsVertexBuffer!);
-            renderPass.setVertexBuffer(1, chainMesh.atomsColorBuffer!);
-            renderPass.draw(numberOfVerticesToDraw);
+            if (!bondsOnly) {
+                renderPass.setVertexBuffer(0, chainMesh.atomsVertexBuffer!);
+                renderPass.setVertexBuffer(1, chainMesh.atomsColorBuffer!);
+                renderPass.draw(numberOfVerticesToDraw);
+            }
             //numberOfVerticesToDraw = chainMesh.bondsNumberOfVertices;
             numberOfVerticesToDraw = Math.round(chainMesh.bondsNumberOfVertices*chainPercentageShown)-Math.round(chainMesh.bondsNumberOfVertices*chainPercentageShown)%3;
             renderPass.setVertexBuffer(0, chainMesh.bondsVertexBuffer!);

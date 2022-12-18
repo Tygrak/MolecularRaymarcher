@@ -27,7 +27,8 @@ let isAnimation = false;
 let renderMs = 0.1;
 
 let rayMarchQuad : RayMarchQuad;
-let impostorRenderer : ImpostorRenderer;
+let impostorRenderer1cqw : ImpostorRenderer;
+let impostorRenderer1aon : ImpostorRenderer;
 
 async function Initialize() {
     const gpu = await InitGPU();
@@ -40,8 +41,8 @@ async function Initialize() {
     rayMarchQuad = new RayMarchQuad(device, gpu.format);
     rayMarchQuad.LoadAtoms(device, structure1cqw);
 
-    impostorRenderer = new ImpostorRenderer(device, gpu.format);
-    impostorRenderer.LoadAtoms(device, structure1cqw);
+    impostorRenderer1cqw = new ImpostorRenderer(device, gpu.format);
+    impostorRenderer1cqw.LoadAtoms(device, structure1cqw);
 
     let kTree = new KdTree(structure1cqw.atoms);
     console.log(kTree);
@@ -199,11 +200,22 @@ async function Initialize() {
             }
         } else if (visualizationSelection.value == "impostor") {
             const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, camera.eye, camera.view.center, camera.view.up);
-            //let vMatrix = mat4.clone(vpMatrix);
             let vMatrix = mat4.clone(vp.viewMatrix);
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
-            impostorRenderer.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+            if (dataSelection.value == "1cqw") {
+                impostorRenderer1cqw.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+
+                renderPass.setPipeline(pipeline);
+                renderPass.setBindGroup(0, uniformBindGroup);
+                structure1cqw.DrawStructure(renderPass, 1, true);
+            } else if (dataSelection.value == "1aon") {
+                impostorRenderer1aon.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+
+                renderPass.setPipeline(pipeline);
+                renderPass.setBindGroup(0, uniformBindGroup);
+                structure1aon.DrawStructure(renderPass, 1, true);
+            }
         } else if (visualizationSelection.value == "raymarch") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
@@ -233,6 +245,8 @@ async function Initialize() {
         if (dataSelection.value == "1aon" && structure1aon == undefined) {
             structure1aon = new Structure("1aon");
             structure1aon.InitializeBuffers(device);
+            impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
+            impostorRenderer1aon.LoadAtoms(device, structure1aon);
         }
     };
 
