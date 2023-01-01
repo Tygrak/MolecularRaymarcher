@@ -43,7 +43,7 @@ fn vs_main(@builtin(vertex_index) index: u32, @location(0) pos: vec4<f32>, @loca
         output.position = pos + cameraRight*(0.5)*scale + cameraUp*(0.5)*scale;
         output.uv = vec2(1, 1);
     }
-    output.worldPos = pos;
+    output.worldPos = output.position;
     output.position = mvpMatrix * output.position;
     output.color = color;
     return output;
@@ -67,8 +67,11 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) color: vec4<f32
         discard;
     }
     //todo: update z pos
-    //var pos = worldPos*vMatrix+vec4(0, 0, sqrt(1-dist)*drawSettings.atomScale, 0);
-    //pos = mvpMatrix*pos;
+    var pos = worldPos;//-vec4(0, 0, 1, 0)*vMatrix*drawSettings.atomScale;
+    pos = mvpMatrix * pos;
     output.depth = position.z;
+    //output.depth = position.z-drawSettings.atomScale/10000.0;
+    //output.depth = 0.5;
+    //output.color = vec4(0, 0, abs(pos.z-position.z), 1.0);
     return output;
 }

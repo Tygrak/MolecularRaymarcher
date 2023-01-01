@@ -25,7 +25,8 @@ export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2
     const viewMatrix = mat4.create();
     const projectionMatrix = mat4.create();       
     const viewProjectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, 2*Math.PI/5, aspectRatio, 0.1, 10000.0);
+    const far = 10000.0;
+    mat4.perspective(projectionMatrix, 2*Math.PI/5, aspectRatio, 0.1, far);
 
     mat4.lookAt(viewMatrix, cameraPosition, center, upDirection);
     mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
@@ -41,7 +42,8 @@ export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2
         viewMatrix,
         projectionMatrix,
         viewProjectionMatrix,
-        cameraOption
+        cameraOption,
+        far
     }
 };
 

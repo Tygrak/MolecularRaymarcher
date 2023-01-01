@@ -187,7 +187,7 @@ fn getAtomColor(atomNumber: f32) -> vec4<f32> {
     } else if (atomNumber < 6.5) {
         return vec4(0.3, 0.8, 0.3, 1.0); // C
     } else if (atomNumber < 7.5) {
-        return vec4(0.05, 0.05, 0.85, 1.0); // N
+        return vec4(0.25, 0.05, 0.85, 1.0); // N
     } else if (atomNumber < 8.5) {
         return vec4(0.85, 0.05, 0.05, 1.0); // O
     } else if (atomNumber < 16.5) {

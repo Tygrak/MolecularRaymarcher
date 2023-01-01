@@ -26,72 +26,61 @@ export class KdTree {
         atoms.sort((a, b) => a.GetPosition()[dim] - b.GetPosition()[dim]);
         const median = Math.floor(atoms.length / 2);
         const atom = atoms[median];
+        const left = atoms.slice(0, median);
+        const right = atoms.slice(median + 1);
         this.tree[position] = vec4.fromValues(atom.x, atom.y, atom.z, GetAtomType(atom).number);
-        this.BuildTree(atoms.slice(0, median), this.Left(position), depth + 1);
-        this.BuildTree(atoms.slice(median + 1), this.Right(position), depth + 1);
+        this.BuildTree(left, this.Left(position), depth + 1);
+        this.BuildTree(right, this.Right(position), depth + 1);
     }
 
+
     public Nearest(atom: Atom) {
+        let pos = atom.GetPosition();
         let curr = 0;
-        let i = 0;
-        while (this.Left(curr) != -1) {
-            const dim = i % 3;
-            i++;
-            if (atom.GetPosition()[dim] > this.tree[curr][dim] && this.Right(curr) != -1) {
-                if (this.tree[this.Right(curr)][3] == -1) {
-                    break;
-                }
-                curr = this.Right(curr);
-            } else {
-                if (this.tree[this.Left(curr)][3] == -1) {
-                    break;
-                }
-                curr = this.Left(curr);
-            }
-        }
-        let bestDistance = vec3.distance(vec3.fromValues(this.tree[curr][0], this.tree[curr][1], this.tree[curr][2]), atom.GetPosition());
-        let bestNode = curr;
-        i--;
-        while (this.Parent(curr) != -1) {
-            const dim = i % 3;
-            i--;
-            const prev = curr;
-            curr = this.Parent(curr);
-            const distance = vec3.distance(vec3.fromValues(this.tree[curr][0], this.tree[curr][1], this.tree[curr][2]), atom.GetPosition());
+        let stack: number[] = [];
+        let bestClipDistance = 10000000000;
+        let bestDistance = 10000000000;
+        let bestNode = 0;
+        stack.push(curr);
+        while (stack.length > 0) {
+            curr = stack.pop()!;
+            const dim = this.DimOfNode(curr);
+            let distance = vec3.distance(vec3.fromValues(this.tree[curr][0], this.tree[curr][1], this.tree[curr][2]), pos);
             if (distance < bestDistance) {
                 bestDistance = distance;
                 bestNode = curr;
             }
-            let subDim = dim;
-            let subtreeCurr = curr;
-            if (this.Right(curr) == prev && this.Left(curr) != -1) {
-                subtreeCurr = this.Left(curr);
-            } else if (this.Right(curr) != -1) {
-                subtreeCurr = this.Right(curr);
-            } else {
-                continue;
-            }
-            while (subtreeCurr != -1 && Math.abs(this.tree[subtreeCurr][subDim]-atom.GetPosition()[subDim]) < bestDistance && this.Left(subtreeCurr) != -1) {
-                subDim = (subDim+1) % 3;
-                const distance = vec3.distance(vec3.fromValues(this.tree[subtreeCurr][0], this.tree[subtreeCurr][1], this.tree[subtreeCurr][2]), atom.GetPosition());
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestNode = subtreeCurr;
-                }
-                if (atom.GetPosition()[subDim] > this.tree[subtreeCurr][subDim] && this.Right(subtreeCurr) != -1) {
-                    if (this.tree[this.Right(subtreeCurr)][3] == -1) {
-                        break;
+            if (pos[dim] > this.tree[curr][dim] && this.Right(curr) != -1) {
+                /*if (this.Left(curr) != -1 && this.tree[this.Left(curr)][3] != -1) {
+                    stack.push(this.Left(curr));
+                }*/
+                if (this.Left(curr) != -1 && this.tree[this.Left(curr)][3] != -1) {
+                    let dist = this.DimDist(pos, this.tree[curr], dim);
+                    if (dist < bestDistance) {
+                        stack.push(this.Left(curr));
                     }
-                    subtreeCurr = this.Right(subtreeCurr);
-                } else {
-                    if (this.tree[this.Left(subtreeCurr)][3] == -1) {
-                        break;
-                    }
-                    subtreeCurr = this.Left(subtreeCurr);
                 }
+                if (this.tree[this.Right(curr)][3] == -1) {
+                    continue;
+                }
+                stack.push(this.Right(curr));
+            } else if (this.Left(curr) != -1) {
+                /*if (this.Right(curr) != -1 && this.tree[this.Right(curr)][3] != -1) {
+                    stack.push(this.Right(curr));
+                }*/
+                if (this.Right(curr) != -1 && this.tree[this.Right(curr)][3] != -1) {
+                    let dist = this.DimDist(pos, this.tree[curr], dim);
+                    if (dist < bestDistance) {
+                        stack.push(this.Right(curr));
+                    }
+                }
+                if (this.tree[this.Left(curr)][3] == -1) {
+                    continue;
+                }
+                stack.push(this.Left(curr));
             }
         }
-        return {atom: this.tree[bestNode], distance: bestDistance};
+        return {atom: this.tree[bestNode], distance: bestDistance, id: bestNode};
     }
 
     public Left(i: number) {
@@ -116,5 +105,16 @@ export class KdTree {
             return -1;
         }
         return result;
+    }
+
+    public DimDist(a: vec3 | vec4, b: vec3 | vec4, dim: number) {
+        return Math.abs(a[dim]-b[dim]);
+    }
+
+    public DimOfNode(i: number) {
+        if (i <= 0.001) {
+            return 0;
+        }
+        return Math.floor(Math.log2(i+1))%3;
     }
 }

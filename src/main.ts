@@ -34,6 +34,8 @@ async function Initialize() {
     const gpu = await InitGPU();
     const device = gpu.device;
 
+    TestKdTrees();
+
     // create vertex buffers
     structure1cqw = new Structure("1cqw");
     structure1cqw.InitializeBuffers(device);
@@ -48,7 +50,6 @@ async function Initialize() {
     console.log(kTree);
     //console.log(kTree.Nearest(new Atom(5, 5, 5, "C", "C")));
     
-    TestKdTrees();
 
     let percentageShown = 1;
  
@@ -116,6 +117,7 @@ async function Initialize() {
     // add rotation and camera:
     let rotation = vec3.fromValues(0, 0, 0);       
     var camera = createCamera(gpu.canvas, vp.cameraOption);
+    console.log(camera);
 
     // create uniform buffer and layout
     const uniformBuffer = device.createBuffer({
