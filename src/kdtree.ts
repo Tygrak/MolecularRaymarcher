@@ -51,9 +51,6 @@ export class KdTree {
                 bestNode = curr;
             }
             if (pos[dim] > this.tree[curr][dim] && this.Right(curr) != -1) {
-                /*if (this.Left(curr) != -1 && this.tree[this.Left(curr)][3] != -1) {
-                    stack.push(this.Left(curr));
-                }*/
                 if (this.Left(curr) != -1 && this.tree[this.Left(curr)][3] != -1) {
                     let dist = this.DimDist(pos, this.tree[curr], dim);
                     if (dist < bestDistance) {
@@ -65,9 +62,6 @@ export class KdTree {
                 }
                 stack.push(this.Right(curr));
             } else if (this.Left(curr) != -1) {
-                /*if (this.Right(curr) != -1 && this.tree[this.Right(curr)][3] != -1) {
-                    stack.push(this.Right(curr));
-                }*/
                 if (this.Right(curr) != -1 && this.tree[this.Right(curr)][3] != -1) {
                     let dist = this.DimDist(pos, this.tree[curr], dim);
                     if (dist < bestDistance) {

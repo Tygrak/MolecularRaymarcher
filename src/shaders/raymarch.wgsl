@@ -87,8 +87,58 @@ fn parent(index: i32) -> i32 {
     return result;
 }
 
+fn DimOfNode(i: i32) -> i32 {
+    return i32(floor(log2(f32(i+1))))%3;
+}
+
+const stackSize = 32;
+var<private> stack: array<i32, stackSize>;
+
 // finds the nearest atom in kdTree
 fn findNearestAtom(p: vec3<f32>) -> Atom {
+    //todo: stackless nearest neighbor
+    var curr: i32 = 0;
+    var bestDistance: f32 = 100000000;
+    var bestNode: i32 = 0;
+    var stackN: i32 = 1;
+    stack[0] = 0;
+    while (stackN > 0) {
+        curr = stack[stackN-1];
+        stackN--;
+        if (curr > 32) {
+            continue;
+        }
+        let dim = DimOfNode(curr);
+        let d = distance(atoms.atoms[curr].position, p);
+        if (d < bestDistance) {
+            bestDistance = d;
+            bestNode = curr;
+        }
+        if (p[dim] > atoms.atoms[curr].position[dim] && right(curr) != -1) {
+            if (left(curr) != -1 && atoms.atoms[left(curr)].number != -1 && abs(p[dim]-atoms.atoms[curr].position[dim]) < bestDistance) {
+                stack[stackN] = left(curr);
+                stackN++;
+            }
+            if (atoms.atoms[right(curr)].number == -1) {
+                continue;
+            }
+            stack[stackN] = right(curr);
+            stackN++;
+        } else if (left(curr) != -1) {
+            if (right(curr) != -1 && atoms.atoms[right(curr)].number != -1 && abs(p[dim]-atoms.atoms[curr].position[dim]) < bestDistance) {
+                stack[stackN] = right(curr);
+                stackN++;
+            }
+            if (atoms.atoms[left(curr)].number == -1) {
+                continue;
+            }
+            stack[stackN] = left(curr);
+            stackN++;
+        }
+    }
+    return atoms.atoms[bestNode];
+    
+    /*
     var curr: i32 = 0;
     var i: i32 = 0;
     while (left(curr) != -1) {
@@ -148,7 +198,7 @@ fn findNearestAtom(p: vec3<f32>) -> Atom {
             }
         }
     }
-    return atoms.atoms[bestNode];
+    return atoms.atoms[bestNode];*/
 }
 
 fn dAtoms(p: vec3<f32>) -> SdfResult {
