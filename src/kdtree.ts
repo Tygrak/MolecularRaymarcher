@@ -42,14 +42,20 @@ export class KdTree {
         let bestDistance = 10000000000;
         let bestNode = 0;
         stack.push(curr);
+        let n = 0;
         while (stack.length > 0) {
             curr = stack.pop()!;
+            n++;
+            /*if (curr > 0 && this.DimDist(pos, this.tree[this.Parent(curr)], this.DimOfNode(this.Parent(curr))) > bestClipDistance) {
+                continue;
+            }*/
             const dim = this.DimOfNode(curr);
             let distance = vec3.distance(vec3.fromValues(this.tree[curr][0], this.tree[curr][1], this.tree[curr][2]), pos);
             if (distance < bestDistance) {
                 bestDistance = distance;
                 bestNode = curr;
             }
+            bestClipDistance = Math.min(this.DimDist(pos, this.tree[curr], dim), bestClipDistance);
             if (pos[dim] > this.tree[curr][dim] && this.Right(curr) != -1) {
                 if (this.Left(curr) != -1 && this.tree[this.Left(curr)][3] != -1) {
                     let dist = this.DimDist(pos, this.tree[curr], dim);
@@ -74,6 +80,7 @@ export class KdTree {
                 stack.push(this.Left(curr));
             }
         }
+        let traversed = n/this.tree.filter(n=>n[3] != -1).length;
         return {atom: this.tree[bestNode], distance: bestDistance, id: bestNode};
     }
 

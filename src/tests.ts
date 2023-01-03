@@ -32,6 +32,19 @@ export function TestKdTrees(){
             }
         }
     }
+    let atomsBig: Atom[] = [];
+    for (let i = 0; i < 4000; i++) {
+        atomsBig.push(new Atom(Math.random()*100, Math.random()*100, Math.random()*100, "C", "C"));
+    }
+    let treeBig = new KdTree(atomsBig);
+    for (let x = 0; x < 100; x += 1) {
+        for (let y = 0; y < 10; y += 5) {
+            for (let z = 0; z < 10; z += 5) {
+                let closest = FindClosest(new Atom(x, y, z, "C", "C"), atomsBig);
+                CompareAtoms(treeBig.Nearest(new Atom(x, y, z, "C", "C")).atom, closest, new Atom(x, y, z, "C", "C"));
+            }
+        }
+    }
     console.log("Kd tree tests passed");
 }
 

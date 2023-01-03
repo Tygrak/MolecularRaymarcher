@@ -80,7 +80,18 @@ export async function InitGPU() {
     }
     const canvas = document.getElementById('canvas-webgpu') as HTMLCanvasElement;
     const adapter = await navigator.gpu?.requestAdapter();
-    const device = await adapter?.requestDevice() as GPUDevice;
+    let timestampsEnabled = false;
+    let device: GPUDevice;
+    try {
+        device = await adapter?.requestDevice({
+            requiredFeatures: ["timestamp-query"],
+        }) as GPUDevice;
+        timestampsEnabled = true;
+        console.log("Created device with timestamps enabled");
+    } catch {
+        device = await adapter?.requestDevice() as GPUDevice;
+        console.log("Created device with timestamps disabled, performance tracking won't be available");
+    }
     const context = canvas.getContext('webgpu') as GPUCanvasContext;
 
     const format = navigator.gpu.getPreferredCanvasFormat();
@@ -89,8 +100,24 @@ export async function InitGPU() {
         format: format,
         alphaMode:'opaque'
     });
-    return{ device, canvas, format, context };
+    return{ device, canvas, format, context, timestampsEnabled };
 };
+
+export function CreateTimestampBuffer(device: GPUDevice, capacity: number = 8) {
+    capacity = Math.floor(8); //Max number of timestamps we can store
+    let querySet = device.createQuerySet({
+        type: "timestamp",
+        count: capacity,
+    });
+    let queryBuffer = device.createBuffer({
+        size: 8 * capacity,
+        usage: GPUBufferUsage.QUERY_RESOLVE 
+        | GPUBufferUsage.STORAGE
+        | GPUBufferUsage.COPY_SRC
+        | GPUBufferUsage.COPY_DST,
+    });
+    return {queryBuffer, querySet, capacity}; 
+}
 
 export function CheckWebGPU() {
     let result = 'Great, your current browser supports WebGPU!';

@@ -91,12 +91,13 @@ fn DimOfNode(i: i32) -> i32 {
     return i32(floor(log2(f32(i+1))))%3;
 }
 
-const stackSize = 32;
+const stackSize = 128;
 var<private> stack: array<i32, stackSize>;
 
 // finds the nearest atom in kdTree
 fn findNearestAtom(p: vec3<f32>) -> Atom {
     //todo: stackless nearest neighbor
+    
     var curr: i32 = 0;
     var bestDistance: f32 = 100000000;
     var bestNode: i32 = 0;

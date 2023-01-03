@@ -1,4 +1,4 @@
-import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection} from './helper';
+import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateTimestampBuffer} from './helper';
 import shader from './shaders/shader.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
@@ -33,6 +33,15 @@ let impostorRenderer1aon : ImpostorRenderer;
 async function Initialize() {
     const gpu = await InitGPU();
     const device = gpu.device;
+
+    let timestampBuffers: {
+        queryBuffer: GPUBuffer;
+        querySet: GPUQuerySet;
+        capacity: number;
+    };
+    if (gpu.timestampsEnabled) {
+        timestampBuffers = CreateTimestampBuffer(device, 8);
+    }
 
     TestKdTrees();
 
@@ -175,7 +184,6 @@ async function Initialize() {
     }
 
     function draw() {
-        let t1 = performance.now();
         const pMatrix = vp.projectionMatrix;
         if(!isAnimation){
             if(camera.tick()){
@@ -192,6 +200,9 @@ async function Initialize() {
         const commandEncoder = device.createCommandEncoder();
         const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
 
+        //todo: https://omar-shehata.medium.com/how-to-use-webgpu-timestamp-query-9bf81fb5344a
+        //use timestampBuffers already created and gpu.timestampsEnabled
+        //renderPass.writeTimestamp(timestampBuffers.querySet, 0);
         if (visualizationSelection.value == "basic") {
             renderPass.setPipeline(pipeline);
             renderPass.setBindGroup(0, uniformBindGroup);
@@ -226,11 +237,8 @@ async function Initialize() {
             rayMarchQuad.Draw(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
         }
         renderPass.end();
-
         device.queue.submit([commandEncoder.finish()]);
-        let t2 = performance.now();
-        let time = t2-t1;
-        renderMs = (renderMs * 0.9) + (time * (1.0-0.9));
+        
         fpsCounterElement.innerText = (renderMs).toFixed(4);
     }
 
