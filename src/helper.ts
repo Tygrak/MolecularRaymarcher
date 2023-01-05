@@ -72,12 +72,9 @@ export const CreateGPUBuffer = (device:GPUDevice, data:Float32Array,
     return buffer;
 };
 
-export async function InitGPU() {
-    const checkgpu = CheckWebGPU();
-    if(checkgpu.includes('Your current browser does not support WebGPU!')){
-        console.log(checkgpu);
-        throw('Your current browser does not support WebGPU!');
-    }
+export async function InitGPU(fixedCanvas: boolean) {
+    CheckWebGPU();
+    InitCanvas(fixedCanvas);
     const canvas = document.getElementById('canvas-webgpu') as HTMLCanvasElement;
     const adapter = await navigator.gpu?.requestAdapter();
     let timestampsEnabled = false;
@@ -90,7 +87,8 @@ export async function InitGPU() {
         console.log("Created device with timestamps enabled");
     } catch {
         device = await adapter?.requestDevice() as GPUDevice;
-        console.log("Created device with timestamps disabled, performance tracking won't be available");
+        console.log("Created device with timestamps disabled, performance tracking won't be available.");
+        console.log("Launch chrome with this command line option to enable: '--disable-dawn-features=disallow_unsafe_apis'");
     }
     const context = canvas.getContext('webgpu') as GPUCanvasContext;
 
@@ -131,22 +129,35 @@ export function CheckWebGPU() {
         You can also use your regular Chrome to try a pre-release version of WebGPU via
         <a href="https://developer.chrome.com/origintrials/#/view_trial/118219490218475521">Origin Trial</a>.                
         `;
+        console.log(result);
+        throw('Your current browser does not support WebGPU!');
     } 
+    return true;
+}
 
+export function InitCanvas(useFixedSize: boolean) {
     const canvas = document.getElementById('canvas-webgpu') as HTMLCanvasElement;
     if(canvas){
         const div = document.getElementsByClassName('item2')[0] as HTMLDivElement;
         if(div){
-            canvas.width  = div.offsetWidth;
-            canvas.height = div.offsetHeight;
-
-            function windowResize() {
+            if (useFixedSize) {
+                canvas.width  = Math.min(div.offsetWidth, 600);
+                canvas.height = Math.min(div.offsetHeight, 600);
+            } else {
                 canvas.width  = div.offsetWidth;
                 canvas.height = div.offsetHeight;
+            }
+
+            function windowResize() {
+                if (useFixedSize) {
+                    canvas.width  = Math.min(div.offsetWidth, 600);
+                    canvas.height = Math.min(div.offsetHeight, 600);
+                } else {
+                    canvas.width  = div.offsetWidth;
+                    canvas.height = div.offsetHeight;
+                }
             };
             window.addEventListener('resize', windowResize);
         }
     }
-
-    return result;
 }

@@ -91,8 +91,9 @@ fn DimOfNode(i: i32) -> i32 {
     return i32(floor(log2(f32(i+1))))%3;
 }
 
-const stackSize = 128;
+const stackSize = 256;
 var<private> stack: array<i32, stackSize>;
+var<private> numIterations: i32 = 0;
 
 // finds the nearest atom in kdTree
 fn findNearestAtom(p: vec3<f32>) -> Atom {
@@ -106,9 +107,15 @@ fn findNearestAtom(p: vec3<f32>) -> Atom {
     while (stackN > 0) {
         curr = stack[stackN-1];
         stackN--;
-        if (curr > 32) {
-            continue;
+        numIterations++;
+        if (curr > 1024) {
+            break;
         }
+        /*let pdim = 
+        if (abs(p[dim]-atoms.atoms[curr].position[dim]) > bestDistance) {
+            stack[stackN] = left(curr);
+            stackN++;
+        }*/
         let dim = DimOfNode(curr);
         let d = distance(atoms.atoms[curr].position, p);
         if (d < bestDistance) {
@@ -261,20 +268,21 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>
 
     var t : f32 = 0.0;
     var pos : vec3<f32> = vec3(0.0);
-	for (var iteration = 0; iteration < 100; iteration++) {
+    var iteration = 0;
+	for (iteration = 0; iteration < 50; iteration++) {
 		if (t > 200.0) {
-			return vec4(0.0, 0.0, 0.0, 1.0);
+			return vec4(0.0, 0.0, 0.0, 1.0)+vec4(f32(iteration)/100.0, (f32(numIterations)/100.0)/f32(iteration), 0, 0);
 		}
         pos = start+t*rayDirection;
 		let sdfResult = dScene(pos);
         
-		if (sdfResult.distance < 0.025) {
-            return getAtomColor(sdfResult.atomNumber);
+		if (sdfResult.distance < 0.05) {
+            return getAtomColor(sdfResult.atomNumber)+vec4(f32(iteration)/100.0, (f32(numIterations)/100.0)/f32(iteration), 0.0, 0.0);
             //return vec4(getAtomColor(sdfResult.atomNumber).xyz*f32(iteration)/25.0, 1.0);
 			//return vec4(1.0-f32(iteration)/25.0, 1.0-f32(iteration)/25.0, 1.0-f32(iteration)/25.0, 1.0);
 		}
 		t = t+sdfResult.distance;
 	}
 
-    return vec4(0.35, 0.35, 0.35, 1.0);
+    return vec4(0.35, 0.35, 0.35, 1.0)+vec4(f32(iteration)/100.0, (f32(numIterations)/100.0)/f32(iteration), 0.0, 0.0);
 }

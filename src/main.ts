@@ -18,12 +18,12 @@ const sliderPercentageShown = document.getElementById("sliderPercentageShown") a
 const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
 const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
 const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as HTMLInputElement;
+const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
 let structure1cqw : Structure;
 let structure1aon : Structure;
-let isAnimation = false;
 let renderMs = 0.1;
 
 let rayMarchQuad : RayMarchQuad;
@@ -31,7 +31,7 @@ let impostorRenderer1cqw : ImpostorRenderer;
 let impostorRenderer1aon : ImpostorRenderer;
 
 async function Initialize() {
-    const gpu = await InitGPU();
+    const gpu = await InitGPU(canvasSizeCheckbox.checked);
     const device = gpu.device;
 
     let timestampBuffers: {
@@ -170,26 +170,22 @@ async function Initialize() {
 
     function CreateAnimation(draw : any) {
         function step() {
-            if(isAnimation){
-                rotation[0] += 0.01;
-                rotation[1] += 0.01;
-                rotation[2] += 0.01;
-            } else{
-                rotation = [0, 0, 0];
-            }
+            rotation = [0, 0, 0];
             draw();
             requestAnimationFrame(step);
         }
         requestAnimationFrame(step);
     }
 
+    let previousFrameDeltaTimesMs: number[] = new Array<number>(60).fill(15);
+    let frameId = 0;
+
     function draw() {
+        frameId++;
         const pMatrix = vp.projectionMatrix;
-        if(!isAnimation){
-            if(camera.tick()){
-                vMatrix = camera.matrix;
-                mat4.multiply(vpMatrix, pMatrix, vMatrix);
-            }
+        if(camera.tick()){
+            vMatrix = camera.matrix;
+            mat4.multiply(vpMatrix, pMatrix, vMatrix);
         }
 
         CreateTransforms(modelMatrix, [0,0,0], rotation);
@@ -198,11 +194,13 @@ async function Initialize() {
         textureView = gpu.context.getCurrentTexture().createView();
         renderPassDescription.colorAttachments[0].view = textureView;
         const commandEncoder = device.createCommandEncoder();
+        if (gpu.timestampsEnabled) {
+            commandEncoder.writeTimestamp(timestampBuffers.querySet, 0);
+        }
         const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
 
         //todo: https://omar-shehata.medium.com/how-to-use-webgpu-timestamp-query-9bf81fb5344a
         //use timestampBuffers already created and gpu.timestampsEnabled
-        //renderPass.writeTimestamp(timestampBuffers.querySet, 0);
         if (visualizationSelection.value == "basic") {
             renderPass.setPipeline(pipeline);
             renderPass.setBindGroup(0, uniformBindGroup);
@@ -237,9 +235,29 @@ async function Initialize() {
             rayMarchQuad.Draw(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
         }
         renderPass.end();
+        if (gpu.timestampsEnabled) {
+            commandEncoder.writeTimestamp(timestampBuffers.querySet, 1);
+            commandEncoder.resolveQuerySet(timestampBuffers.querySet, 0, 2, timestampBuffers.queryBuffer, 0);
+        }
         device.queue.submit([commandEncoder.finish()]);
         
-        fpsCounterElement.innerText = (renderMs).toFixed(4);
+        //read query buffer with timestamps
+        if (gpu.timestampsEnabled) {
+            const size = timestampBuffers.queryBuffer.size;
+            const gpuReadBuffer = device.createBuffer({size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });  const copyEncoder = device.createCommandEncoder();
+            copyEncoder.copyBufferToBuffer(timestampBuffers.queryBuffer, 0, gpuReadBuffer, 0, size);  const copyCommands = copyEncoder.finish();
+            device.queue.submit([copyCommands]);
+            const currFrame = frameId;
+            gpuReadBuffer.mapAsync(GPUMapMode.READ).finally(() => {
+                let arrayBuffer = gpuReadBuffer.getMappedRange();
+                const timingsNanoseconds = new BigInt64Array(arrayBuffer);
+                const frameTimeMs = Number((timingsNanoseconds[1]-timingsNanoseconds[0])/BigInt(1000))/1000;
+                previousFrameDeltaTimesMs[currFrame%previousFrameDeltaTimesMs.length] = frameTimeMs;
+                fpsCounterElement.innerText = (previousFrameDeltaTimesMs.reduce((acc, c) => acc+c)/previousFrameDeltaTimesMs.length).toFixed(3) + "ms";
+            });
+        } else {
+            fpsCounterElement.innerText = "timestamps :(";
+        }
     }
 
     sliderPercentageShown.oninput = (e) => {
@@ -264,15 +282,13 @@ async function Initialize() {
 }
 
 Initialize();
-$('#id-radio input:radio').on('click', function(){
-    let val = $('input[name="options"]:checked').val();
-    isAnimation = val === 'animation'?true:false;
-});
 
 window.addEventListener('resize', function(){
-    //todo: make better
+    //todo: make better, don't vomit errors, just resize things gracefully
     Initialize();
 });
 
-
+canvasSizeCheckbox.addEventListener('change', function(){
+    Initialize();
+});
 
