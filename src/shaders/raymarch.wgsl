@@ -108,7 +108,7 @@ fn findNearestAtom(p: vec3<f32>) -> Atom {
         curr = stack[stackN-1];
         stackN--;
         numIterations++;
-        if (curr > 1024) {
+        if (curr > 2048) {
             break;
         }
         /*let pdim = 

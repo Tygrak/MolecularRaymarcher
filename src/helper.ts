@@ -141,8 +141,8 @@ export function InitCanvas(useFixedSize: boolean) {
         const div = document.getElementsByClassName('item2')[0] as HTMLDivElement;
         if(div){
             if (useFixedSize) {
-                canvas.width  = Math.min(div.offsetWidth, 600);
-                canvas.height = Math.min(div.offsetHeight, 600);
+                canvas.width  = Math.min(div.offsetWidth, 640);
+                canvas.height = Math.min(div.offsetHeight, 640);
             } else {
                 canvas.width  = div.offsetWidth;
                 canvas.height = div.offsetHeight;
@@ -150,8 +150,8 @@ export function InitCanvas(useFixedSize: boolean) {
 
             function windowResize() {
                 if (useFixedSize) {
-                    canvas.width  = Math.min(div.offsetWidth, 600);
-                    canvas.height = Math.min(div.offsetHeight, 600);
+                    canvas.width  = Math.min(div.offsetWidth, 640);
+                    canvas.height = Math.min(div.offsetHeight, 640);
                 } else {
                     canvas.width  = div.offsetWidth;
                     canvas.height = div.offsetHeight;

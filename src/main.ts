@@ -26,7 +26,8 @@ let structure1cqw : Structure;
 let structure1aon : Structure;
 let renderMs = 0.1;
 
-let rayMarchQuad : RayMarchQuad;
+let rayMarchQuad1cqw : RayMarchQuad;
+let rayMarchQuad1aon : RayMarchQuad;
 let impostorRenderer1cqw : ImpostorRenderer;
 let impostorRenderer1aon : ImpostorRenderer;
 
@@ -49,8 +50,8 @@ async function Initialize() {
     structure1cqw = new Structure("1cqw");
     structure1cqw.InitializeBuffers(device);
 
-    rayMarchQuad = new RayMarchQuad(device, gpu.format);
-    rayMarchQuad.LoadAtoms(device, structure1cqw);
+    rayMarchQuad1cqw = new RayMarchQuad(device, gpu.format);
+    rayMarchQuad1cqw.LoadAtoms(device, structure1cqw);
 
     impostorRenderer1cqw = new ImpostorRenderer(device, gpu.format);
     impostorRenderer1cqw.LoadAtoms(device, structure1cqw);
@@ -232,7 +233,17 @@ async function Initialize() {
             mat4.invert(inverseVp, vpMatrix);
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
-            rayMarchQuad.Draw(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
+            rayMarchQuad1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
+        } else if (visualizationSelection.value == "raytrace") {
+            let inverseVp = mat4.create();
+            mat4.invert(inverseVp, vpMatrix);
+            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
+            let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
+            if (dataSelection.value == "1cqw") {
+                rayMarchQuad1cqw.DrawRaytrace(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
+            }/* else if (dataSelection.value == "1aon") {
+                rayMarchQuad1aon.DrawRaytrace(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
+            }*/
         }
         renderPass.end();
         if (gpu.timestampsEnabled) {
@@ -275,6 +286,12 @@ async function Initialize() {
             structure1aon.InitializeBuffers(device);
             impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
+            
+            let t0 = performance.now();
+            rayMarchQuad1aon = new RayMarchQuad(device, gpu.format);
+            rayMarchQuad1aon.LoadAtoms(device, structure1aon);
+            let t1 = performance.now();
+            console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
         }
     };
 
