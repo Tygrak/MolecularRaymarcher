@@ -198,10 +198,8 @@ async function Initialize() {
         if (gpu.timestampsEnabled) {
             commandEncoder.writeTimestamp(timestampBuffers.querySet, 0);
         }
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
 
-        //todo: https://omar-shehata.medium.com/how-to-use-webgpu-timestamp-query-9bf81fb5344a
-        //use timestampBuffers already created and gpu.timestampsEnabled
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
         if (visualizationSelection.value == "basic") {
             renderPass.setPipeline(pipeline);
             renderPass.setBindGroup(0, uniformBindGroup);
@@ -246,10 +244,12 @@ async function Initialize() {
             }*/
         }
         renderPass.end();
+
         if (gpu.timestampsEnabled) {
             commandEncoder.writeTimestamp(timestampBuffers.querySet, 1);
             commandEncoder.resolveQuerySet(timestampBuffers.querySet, 0, 2, timestampBuffers.queryBuffer, 0);
         }
+        
         device.queue.submit([commandEncoder.finish()]);
         
         //read query buffer with timestamps

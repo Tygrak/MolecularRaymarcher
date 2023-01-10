@@ -18,6 +18,8 @@ struct DrawSettings {
     start : f32,
     pad1 : f32,
     pad2 : f32,
+    minLimit : vec4<f32>,
+    maxLimit : vec4<f32>,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -145,68 +147,6 @@ fn findNearestAtom(p: vec3<f32>) -> Atom {
         }
     }
     return atoms.atoms[bestNode];
-    
-    /*
-    var curr: i32 = 0;
-    var i: i32 = 0;
-    while (left(curr) != -1) {
-        let dim = i % 3;
-        i++;
-        if (p[dim] > atoms.atoms[curr].position[dim] && right(curr) != -1) {
-            if (atoms.atoms[right(curr)].number == -1) {
-                break;
-            }
-            curr = right(curr);
-        } else {
-            if (atoms.atoms[left(curr)].number == -1) {
-                break;
-            }
-            curr = left(curr);
-        }
-    }
-    var bestD = distance(atoms.atoms[curr].position, p);
-    var bestNode: i32 = curr;
-    i--;
-    while (parent(curr) != -1) {
-        let dim = i % 3;
-        i--;
-        let prev = curr;
-        curr = parent(curr);
-        let d = distance(atoms.atoms[curr].position, p);
-        if (d < bestD) {
-            bestD = d;
-            bestNode = curr;
-        }
-        var subDim = dim;
-        var subtreeCurr = curr;
-        if (right(curr) == prev && left(curr) != -1) {
-            subtreeCurr = left(curr);
-        } else if (right(curr) != -1) {
-            subtreeCurr = right(curr);
-        } else {
-            continue;
-        }
-        while (subtreeCurr != -1 && abs(atoms.atoms[subtreeCurr].position[subDim]-p[subDim]) < bestD && left(subtreeCurr) != -1) {
-            subDim = (subDim+1) % 3;
-            let subD = distance(atoms.atoms[subtreeCurr].position, p);
-            if (subD < bestD) {
-                bestD = subD;
-                bestNode = subtreeCurr;
-            }
-            if (p[subDim] > atoms.atoms[subtreeCurr].position[subDim] && right(subtreeCurr) != -1) {
-                if (atoms.atoms[right(subtreeCurr)].number == -1) {
-                    break;
-                }
-                subtreeCurr = right(subtreeCurr);
-            } else {
-                if (atoms.atoms[left(subtreeCurr)].number == -1) {
-                    break;
-                }
-                subtreeCurr = left(subtreeCurr);
-            }
-        }
-    }
-    return atoms.atoms[bestNode];*/
 }
 
 fn dAtoms(p: vec3<f32>) -> SdfResult {
@@ -254,17 +194,38 @@ fn getAtomColor(atomNumber: f32) -> vec4<f32> {
     return vec4(1.0, 1.0, 1.0, 1.0);
 }
 
+//modified from https://tavianator.com/2022/ray_box_boundary.html
+fn aabbIntersection(origin: vec3<f32>, direction: vec3<f32>, directionInverse: vec3<f32>, boxMin: vec3<f32>, boxMax: vec3<f32>) -> vec2<f32> {
+    var tmin: f32 = 0.0;
+    var tmax: f32 = 6942069.0;
+
+    for (var i = 0; i < 3; i++) {
+        let t1 = (boxMin[i] - origin[i]) * directionInverse[i];
+        let t2 = (boxMax[i] - origin[i]) * directionInverse[i];
+
+        tmin = max(tmin, min(t1, t2));
+        tmax = min(tmax, max(t1, t2));
+    }
+    return vec2(tmin, tmax);
+}
+
 @fragment
-fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {
+fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {
     let screenPos = vPos;
 
     // ray direction in normalized device coordinate
     let ndcRay = vec4(screenPos.xy, 1.0, 1.0);
 
     // convert ray direction from normalized device coordinate to world coordinate
-    let rayDirection : vec3<f32> = normalize((inverseVpMatrix * ndcRay).xyz);
+    let rayDirection: vec3<f32> = normalize((inverseVpMatrix * ndcRay).xyz);
     //let rayDirection : vec3<f32> = ndcRay.xyz;
-    let start : vec3<f32> = cameraPos.xyz; 
+    var start : vec3<f32> = cameraPos.xyz; 
+    let boundaryIntersection : vec2<f32> = aabbIntersection(start, rayDirection, 1.0/rayDirection, drawSettings.minLimit.xyz, drawSettings.maxLimit.xyz);
+    if (boundaryIntersection.x < boundaryIntersection.y && boundaryIntersection.x > 0) {
+        start = start+rayDirection*boundaryIntersection.x;
+    } else if (boundaryIntersection.x >= boundaryIntersection.y) {
+        return vec4(0.15, 0.0, 0.15, 1.0);
+    }
 
     var t : f32 = 0.0;
     var pos : vec3<f32> = vec3(0.0);

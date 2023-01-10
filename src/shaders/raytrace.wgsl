@@ -18,6 +18,8 @@ struct DrawSettings {
     start : f32,
     pad1 : f32,
     pad2 : f32,
+    minLimit : vec4<f32>,
+    maxLimit : vec4<f32>,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -151,9 +153,12 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>
     // convert ray direction from normalized device coordinate to world coordinate
     let rayDirection: vec3<f32> = normalize((inverseVpMatrix * ndcRay).xyz);
     //let rayDirection : vec3<f32> = ndcRay.xyz;
-    let start: vec3<f32> = cameraPos.xyz; 
+    let start: vec3<f32> = cameraPos.xyz;
+
+    let lightDir: vec3<f32> = normalize(vec3(0.1, 1.05, 0.3)); 
 
     let hit: Hit = evaluateScene(start, rayDirection);
+    let ndotl: f32 = max(dot(hit.normal, lightDir), 0.0);
 
-    return getAtomColor(hit.atomNumber);
+    return getAtomColor(hit.atomNumber)*(ndotl+0.1);
 }

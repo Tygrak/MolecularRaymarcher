@@ -22,6 +22,9 @@ class RayPipelineSetup {
     atomDrawLimitBuffer : GPUBuffer;
     drawSettingsBindGroup : GPUBindGroup;
 
+    minLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
+    maxLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
+
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string) {
         this.pipeline = device.createRenderPipeline({
             layout:'auto',
@@ -127,7 +130,7 @@ class RayPipelineSetup {
         });
 
         this.atomDrawLimitBuffer = device.createBuffer({
-            size: 16,
+            size: 48,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
         this.drawSettingsBindGroup = device.createBindGroup({
@@ -141,6 +144,27 @@ class RayPipelineSetup {
                 },
             ]
         });
+    }
+
+    private UpdateLimitsWithAtom(atom: vec4) {
+        if (atom[0] < this.minLimits[0]) {
+            this.minLimits[0] = atom[0];
+        }
+        if (atom[1] < this.minLimits[1]) {
+            this.minLimits[1] = atom[1];
+        }
+        if (atom[2] < this.minLimits[2]) {
+            this.minLimits[2] = atom[2];
+        }
+        if (atom[0] > this.maxLimits[0]) {
+            this.maxLimits[0] = atom[0];
+        }
+        if (atom[1] > this.maxLimits[1]) {
+            this.maxLimits[1] = atom[1];
+        }
+        if (atom[2] > this.maxLimits[2]) {
+            this.maxLimits[2] = atom[2];
+        }
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
@@ -157,6 +181,7 @@ class RayPipelineSetup {
             atomPositions[i*4+1] = atom[1];
             atomPositions[i*4+2] = atom[2];
             atomPositions[i*4+3] = atom[3];
+            this.UpdateLimitsWithAtom(atom);
         }
         device.queue.writeBuffer(this.atomsBuffer, 0, atomPositions.buffer);
         this.atomsBindGroup = device.createBindGroup({
@@ -207,8 +232,14 @@ export class RayMarchQuad {
         device.queue.writeBuffer(pipelineSetup.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.cameraPosBuffer, 0, vec4.fromValues(cameraPos[0], cameraPos[1], cameraPos[2], 1.0) as ArrayBuffer);
         let startPos = maxDrawnAmount + (pipelineSetup.atomsCount-maxDrawnAmount-maxDrawnAmount) * drawStartPosition;
-        let drawSettings = vec4.fromValues(Math.round(percentageShown*maxDrawnAmount), Math.round(startPos), 1.0, 1.0);
-        device.queue.writeBuffer(pipelineSetup.atomDrawLimitBuffer, 0, drawSettings as ArrayBuffer);
+        let drawSettingsBuffer = new Float32Array(12);
+        drawSettingsBuffer[0] = Math.round(percentageShown*maxDrawnAmount);
+        drawSettingsBuffer[1] = Math.round(startPos);
+        drawSettingsBuffer[2] = 1.0;
+        drawSettingsBuffer[3] = 1.0;
+        drawSettingsBuffer.set(pipelineSetup.minLimits, 4);
+        drawSettingsBuffer.set(pipelineSetup.maxLimits, 8);
+        device.queue.writeBuffer(pipelineSetup.atomDrawLimitBuffer, 0, drawSettingsBuffer);
         renderPass.setPipeline(pipelineSetup.pipeline);
         renderPass.setBindGroup(0, pipelineSetup.uniformBindGroup);
         renderPass.setBindGroup(1, pipelineSetup.atomsBindGroup);
