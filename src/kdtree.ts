@@ -118,4 +118,78 @@ export class KdTree {
         }
         return Math.floor(Math.log2(i+1))%3;
     }
+
+    public NearestTouched(atom: Atom) {
+        let pos = atom.GetPosition();
+        let curr = 0;
+        let stack: number[] = [];
+        let bestClipDistance = 10000000000;
+        let bestDistance = 10000000000;
+        let bestNode = 0;
+        stack.push(curr);
+        let n = 0;
+        let touched = [];
+        while (stack.length > 0) {
+            curr = stack.pop()!;
+            touched.push(curr);
+            n++;
+            /*if (curr > 0 && this.DimDist(pos, this.tree[this.Parent(curr)], this.DimOfNode(this.Parent(curr))) > bestClipDistance) {
+                continue;
+            }*/
+            const dim = this.DimOfNode(curr);
+            let distance = vec3.distance(vec3.fromValues(this.tree[curr][0], this.tree[curr][1], this.tree[curr][2]), pos);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestNode = curr;
+            }
+            bestClipDistance = Math.min(this.DimDist(pos, this.tree[curr], dim), bestClipDistance);
+            if (pos[dim] > this.tree[curr][dim] && this.Right(curr) != -1) {
+                if (this.Left(curr) != -1 && this.tree[this.Left(curr)][3] != -1) {
+                    let dist = this.DimDist(pos, this.tree[curr], dim);
+                    if (dist < bestDistance) {
+                        stack.push(this.Left(curr));
+                    }
+                }
+                if (this.tree[this.Right(curr)][3] == -1) {
+                    continue;
+                }
+                stack.push(this.Right(curr));
+            } else if (this.Left(curr) != -1) {
+                if (this.Right(curr) != -1 && this.tree[this.Right(curr)][3] != -1) {
+                    let dist = this.DimDist(pos, this.tree[curr], dim);
+                    if (dist < bestDistance) {
+                        stack.push(this.Right(curr));
+                    }
+                }
+                if (this.tree[this.Left(curr)][3] == -1) {
+                    continue;
+                }
+                stack.push(this.Left(curr));
+            }
+        }
+        let traversed = n/this.tree.filter(n=>n[3] != -1).length;
+        return {atom: this.tree[bestNode], distance: bestDistance, id: bestNode, touched};
+    }
+
+    public RayMarch(start: vec3, target: vec3) {
+        let rayDirection: vec3 = vec3.normalize(vec3.fromValues(0, 0, 0), vec3.subtract(vec3.fromValues(0, 0, 0), target, start));
+
+        var t = 0.0;
+        var pos = vec3.fromValues(0, 0, 0);
+        var iteration = 0;
+        let touchedInIterations = [];
+        for (iteration = 0; iteration < 50; iteration++) {
+            if (t > 200.0) {
+                break;
+            }
+            pos = vec3.add(vec3.fromValues(0, 0, 0), start, vec3.scale(vec3.fromValues(0, 0, 0), rayDirection, t));
+            let sdfResult = this.NearestTouched(new Atom(pos[0], pos[1], pos[2], "C", "C"));
+            touchedInIterations.push(sdfResult.touched);
+            
+            if (sdfResult.distance < 0.05) {
+                break;
+            }
+            t = t+sdfResult.distance;
+        }
+    }
 }

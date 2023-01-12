@@ -93,7 +93,7 @@ fn DimOfNode(i: i32) -> i32 {
     return i32(floor(log2(f32(i+1))))%3;
 }
 
-const stackSize = 256;
+const stackSize = 16;
 var<private> stack: array<i32, stackSize>;
 var<private> numIterations: i32 = 0;
 

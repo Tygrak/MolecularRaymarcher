@@ -160,5 +160,5 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>
     let hit: Hit = evaluateScene(start, rayDirection);
     let ndotl: f32 = max(dot(hit.normal, lightDir), 0.0);
 
-    return getAtomColor(hit.atomNumber)*(ndotl+0.1);
+    return getAtomColor(hit.atomNumber);//*(ndotl+0.1);
 }
