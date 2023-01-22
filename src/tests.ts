@@ -1,6 +1,7 @@
 import { vec3, vec4 } from "gl-matrix";
 import { Atom } from "./atom";
 import { KdTree } from "./kdtree";
+import { Octree } from "./octree";
 
 export function TestKdTrees(){
     let atoms = [
@@ -17,6 +18,8 @@ export function TestKdTrees(){
         new Atom(5, 2, 1, "C", "C"), // 10
         new Atom(5, 0, 0, "C", "C")];
     let tree = new KdTree(atoms);
+    let octree = new Octree(atoms, 2);
+    console.log(octree);
     CompareAtoms(tree.Nearest(new Atom(1.2, 0.0, 0, "C", "C")).atom, atoms[1], new Atom(1.2, 0.0, 0, "C", "C"));
     CompareAtoms(tree.Nearest(new Atom(0.6, 0.6, 0, "C", "C")).atom, atoms[4], new Atom(0.6, 0.6, 0, "C", "C"));
     CompareAtoms(tree.Nearest(new Atom(0, 0, 0, "C", "C")).atom, atoms[0], new Atom(0, 0, 0, "C", "C"));

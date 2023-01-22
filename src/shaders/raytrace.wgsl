@@ -128,6 +128,21 @@ fn evaluateScene(origin: vec3<f32>, direction: vec3<f32>) -> Hit {
     return closestHit;
 }
 
+//modified from https://tavianator.com/2022/ray_box_boundary.html
+fn aabbIntersection(origin: vec3<f32>, direction: vec3<f32>, directionInverse: vec3<f32>, boxMin: vec3<f32>, boxMax: vec3<f32>) -> vec2<f32> {
+    var tmin: f32 = -100.0;
+    var tmax: f32 = 6942069.0;
+
+    for (var i = 0; i < 3; i++) {
+        let t1 = (boxMin[i] - origin[i]) * directionInverse[i];
+        let t2 = (boxMax[i] - origin[i]) * directionInverse[i];
+
+        tmin = max(tmin, min(t1, t2));
+        tmax = min(tmax, max(t1, t2));
+    }
+    return vec2(tmin, tmax);
+}
+
 fn getAtomColor(atomNumber: f32) -> vec4<f32> {
     if (atomNumber < 0) {
         return vec4(0.0, 0.0, 0.0, 1.0);
@@ -153,7 +168,13 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) vPos: vec4<f32>
     // convert ray direction from normalized device coordinate to world coordinate
     let rayDirection: vec3<f32> = normalize((inverseVpMatrix * ndcRay).xyz);
     //let rayDirection : vec3<f32> = ndcRay.xyz;
-    let start: vec3<f32> = cameraPos.xyz;
+    var start: vec3<f32> = cameraPos.xyz;
+    let boundaryIntersection : vec2<f32> = aabbIntersection(start, rayDirection, 1.0/rayDirection, drawSettings.minLimit.xyz, drawSettings.maxLimit.xyz);
+    if (boundaryIntersection.x < boundaryIntersection.y && boundaryIntersection.x > 0) {
+        start = start+rayDirection*boundaryIntersection.x;
+    } else if (boundaryIntersection.x >= boundaryIntersection.y) {
+        return vec4(0.15, 0.0, 0.15, 1.0);
+    }
 
     let lightDir: vec3<f32> = normalize(vec3(0.1, 1.05, 0.3)); 
 

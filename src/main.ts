@@ -9,6 +9,7 @@ import { Atom } from './atom';
 import { KdTree } from './kdtree';
 import { TestKdTrees } from './tests';
 import { ImpostorRenderer } from './impostorRenderer';
+import { RayMarchOctreeQuad } from './rayMarchOctreeQuad';
 
 const createCamera = require('3d-view-controls');
 
@@ -26,6 +27,7 @@ let structure1cqw : Structure;
 let structure1aon : Structure;
 let renderMs = 0.1;
 
+let rayMarchQuadOct1cqw : RayMarchOctreeQuad;
 let rayMarchQuad1cqw : RayMarchQuad;
 let rayMarchQuad1aon : RayMarchQuad;
 let impostorRenderer1cqw : ImpostorRenderer;
@@ -52,15 +54,16 @@ async function Initialize() {
 
     rayMarchQuad1cqw = new RayMarchQuad(device, gpu.format);
     rayMarchQuad1cqw.LoadAtoms(device, structure1cqw);
+    
+    rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format);
+    rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
 
     impostorRenderer1cqw = new ImpostorRenderer(device, gpu.format);
     impostorRenderer1cqw.LoadAtoms(device, structure1cqw);
 
     let kTree = new KdTree(structure1cqw.atoms);
     console.log(kTree);
-    //console.log(kTree.Nearest(new Atom(5, 5, 5, "C", "C")));
     
-
     let percentageShown = 1;
  
     const pipeline = device.createRenderPipeline({
@@ -232,6 +235,12 @@ async function Initialize() {
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
             rayMarchQuad1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
+        } else if (visualizationSelection.value == "raymarchoctree") {
+            let inverseVp = mat4.create();
+            mat4.invert(inverseVp, vpMatrix);
+            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
+            let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
+            rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
         } else if (visualizationSelection.value == "raytrace") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);

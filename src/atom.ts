@@ -1,4 +1,5 @@
-import { vec3 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
+import { GetAtomType } from "./atomDatabase";
 
 export class Atom {
     name: string;
@@ -17,6 +18,10 @@ export class Atom {
 
     public GetPosition() {
         return vec3.fromValues(this.x, this.y, this.z);
+    }
+
+    public GetVec4Representation() {
+        return vec4.fromValues(this.x, this.y, this.z, GetAtomType(this).number);
     }
 
     public GetColor() {
