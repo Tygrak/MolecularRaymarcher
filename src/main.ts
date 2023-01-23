@@ -240,7 +240,8 @@ async function Initialize() {
             mat4.invert(inverseVp, vpMatrix);
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
-            rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
+            let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+            rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
         } else if (visualizationSelection.value == "raytrace") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);

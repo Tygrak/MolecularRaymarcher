@@ -156,27 +156,6 @@ class RayPipelineSetup {
         });
     }
 
-    private UpdateLimitsWithAtom(atom: vec4) {
-        if (atom[0] < this.minLimits[0]) {
-            this.minLimits[0] = atom[0];
-        }
-        if (atom[1] < this.minLimits[1]) {
-            this.minLimits[1] = atom[1];
-        }
-        if (atom[2] < this.minLimits[2]) {
-            this.minLimits[2] = atom[2];
-        }
-        if (atom[0] > this.maxLimits[0]) {
-            this.maxLimits[0] = atom[0];
-        }
-        if (atom[1] > this.maxLimits[1]) {
-            this.maxLimits[1] = atom[1];
-        }
-        if (atom[2] > this.maxLimits[2]) {
-            this.maxLimits[2] = atom[2];
-        }
-    }
-
     public LoadAtoms(device: GPUDevice, structure: Structure) {
         let tree: Octree = new Octree(structure.atoms, 2);
         console.log(tree);
@@ -192,8 +171,9 @@ class RayPipelineSetup {
             atomPositions[i*4+1] = atom[1];
             atomPositions[i*4+2] = atom[2];
             atomPositions[i*4+3] = atom[3];
-            this.UpdateLimitsWithAtom(atom);
         }
+        this.minLimits = vec4.fromValues(tree.limits.minLimits[0], tree.limits.minLimits[1], tree.limits.minLimits[2], -1);
+        this.maxLimits = vec4.fromValues(tree.limits.maxLimits[0], tree.limits.maxLimits[1], tree.limits.maxLimits[2], -1);
         device.queue.writeBuffer(this.atomsBuffer, 0, atomPositions.buffer);
         this.octreeBuffer = device.createBuffer({
             size: tree.bins.length*8*4,
@@ -229,6 +209,7 @@ export class RayMarchOctreeQuad {
     quadPositions : GPUBuffer;
     quadColors : GPUBuffer;
     pipelineSetupRaymarch : RayPipelineSetup;
+    atomsScale: number = 1;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -259,7 +240,7 @@ export class RayMarchOctreeQuad {
         let drawSettingsBuffer = new Float32Array(12);
         drawSettingsBuffer[0] = Math.round(percentageShown*maxDrawnAmount);
         drawSettingsBuffer[1] = Math.round(startPos);
-        drawSettingsBuffer[2] = 1.0;
+        drawSettingsBuffer[2] = this.atomsScale;
         drawSettingsBuffer[3] = 1.0;
         drawSettingsBuffer.set(pipelineSetup.minLimits, 4);
         drawSettingsBuffer.set(pipelineSetup.maxLimits, 8);
@@ -273,7 +254,8 @@ export class RayMarchOctreeQuad {
         renderPass.draw(numberOfVerticesToDraw);
     }
 
-    public DrawRaymarch(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number) {
+    public DrawRaymarch(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number, atomsScale: number) {
+        this.atomsScale = atomsScale;
         this.Draw(device, renderPass, mvpMatrix, inverseVpMatrix, cameraPos, percentageShown, drawStartPosition, this.pipelineSetupRaymarch);
     }
 }

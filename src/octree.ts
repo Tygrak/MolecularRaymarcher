@@ -44,11 +44,12 @@ export class OctreeBin {
 }
 
 export class Octree {
+    limits: {minLimits: vec3, maxLimits: vec3, center: vec3, size: vec3};
     tree: vec4[];
     bins: OctreeBin[];
     layers: number;
 
-    constructor(atoms: Atom[], layers: number) {
+    constructor(atoms: Atom[], layers: number, margin: number = 1.5) {
         this.layers = layers;
         let binsSize = 0;
         for (let layer = 1; layer < layers; layer++) {
@@ -57,11 +58,15 @@ export class Octree {
         let atomsCopy = Object.assign([], atoms);
         this.tree = new Array<vec4>(atomsCopy.length).fill(vec4.fromValues(-1, -1, -1, -1));
         this.bins = new Array<OctreeBin>(binsSize);
-        this.BuildTree(atomsCopy);
+        this.limits = this.CalculateLimitsForAtoms(atoms);
+        this.limits.minLimits[0] -= margin; this.limits.minLimits[1] -= margin; this.limits.minLimits[2] -= margin;
+        this.limits.maxLimits[0] += margin; this.limits.maxLimits[1] += margin; this.limits.maxLimits[2] += margin;
+        this.limits.size[0] += 2*margin; this.limits.size[1] += 2*margin; this.limits.size[2] += 2*margin;
+        this.BuildTree(atomsCopy, margin);
     }
 
-    private BuildTree(atoms: Atom[]) {
-        let limits = this.CalculateLimitsForAtoms(atoms);
+    private BuildTree(atoms: Atom[], margin: number) {
+        let limits = this.limits;
         let currPos = 0;
         for (let layer = 0; layer < this.layers; layer++) {
             let dimDivider = Math.pow(2, layer+1);
