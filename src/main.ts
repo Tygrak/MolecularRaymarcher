@@ -28,6 +28,7 @@ let structure1aon : Structure;
 let renderMs = 0.1;
 
 let rayMarchQuadOct1cqw : RayMarchOctreeQuad;
+let rayMarchQuadOct1aon : RayMarchOctreeQuad;
 let rayMarchQuad1cqw : RayMarchQuad;
 let rayMarchQuad1aon : RayMarchQuad;
 let impostorRenderer1cqw : ImpostorRenderer;
@@ -241,7 +242,11 @@ async function Initialize() {
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
-            rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+            if (dataSelection.value == "1cqw") {
+                rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+            } else if (dataSelection.value == "1aon") {
+                rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+            }
         } else if (visualizationSelection.value == "raytrace") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
@@ -298,10 +303,16 @@ async function Initialize() {
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
             
             let t0 = performance.now();
-            rayMarchQuad1aon = new RayMarchQuad(device, gpu.format);
-            rayMarchQuad1aon.LoadAtoms(device, structure1aon);
+            //rayMarchQuad1aon = new RayMarchQuad(device, gpu.format);
+            //rayMarchQuad1aon.LoadAtoms(device, structure1aon);
             let t1 = performance.now();
-            console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
+            //console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
+
+            t0 = performance.now();
+            rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
+            t1 = performance.now();
+            console.log("Loading data for raymarch+creating quadtree: " + (t1-t0) + "ms");
         }
     };
 

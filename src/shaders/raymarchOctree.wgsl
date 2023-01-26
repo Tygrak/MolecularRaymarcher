@@ -176,7 +176,7 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom) ->
     return Hit(t, intersection, normal, atom.number);
 }
 
-//todo return the second closest cell too and raymarch along it? 
+//todo return multiple closest cells too and raymarch along them, otherwise at bigger atom sizes we die 
 //todo try messing with this more
 fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> f32 {
     var closestAABBt: f32 = 100000000.0;
@@ -188,17 +188,23 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> f32 {
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[i].min, bins.bins[i].max);
         if (intersection.x < intersection.y && intersection.x > -10.0 && intersection.x <= closestHit.t) {
             numIntersected++;
-            for (var j : i32 = child(i, 0); j < child(i, 8); j++) {
-                let smallIntersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
-                if (smallIntersection.x < smallIntersection.y && smallIntersection.x > -10.0 && smallIntersection.x <= closestHit.t) {
+            for (var m : i32 = child(i, 0); m < child(i, 8); m++) {
+                let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
+                if (intersection2.x < intersection2.y && intersection2.x > -10.0 && intersection2.x <= closestHit.t) {
                     numIntersected++;
-                    for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
-                        let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a]);
-                        numIterations++;
-                        if (hit.t < closestHit.t) {
-                            closestHit = hit;
-                            intersecting = j;
-                            closestAABBt = smallIntersection.x;
+                    for (var j : i32 = child(m, 0); j < child(m, 8); j++) {
+                        let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
+                        if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -10.0 && intersectionFinal.x <= closestHit.t) {
+                            numIntersected++;
+                            for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
+                                let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a]);
+                                numIterations++;
+                                if (hit.t < closestHit.t) {
+                                    closestHit = hit;
+                                    intersecting = j;
+                                    closestAABBt = intersectionFinal.x;
+                                }
+                            }
                         }
                     }
                 }
@@ -256,6 +262,6 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         resultColor = getAtomColor(sdfResult.atomNumber)/5+vec4(-0.25, 0.4, 0.25, 1.0);
     }
     //return resultColor+vec4(f32(iteration)/40.0, f32(numIterations)/100.0, f32(numIntersected)/48.0, 0.0);
-    return resultColor+vec4((f32(numIntersected)/72.0)/2.0, 0.0, 0.0, 0.0);
-    //return resultColor;
+    //return resultColor+vec4(0.0, f32(numIntersected)/40.0, 0.0, 0.0);
+    return resultColor;
 }

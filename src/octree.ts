@@ -52,7 +52,7 @@ export class Octree {
     constructor(atoms: Atom[], layers: number, margin: number = 1.5) {
         this.layers = layers;
         let binsSize = 0;
-        for (let layer = 1; layer < layers; layer++) {
+        for (let layer = 1; layer <= layers; layer++) {
             binsSize += Math.pow(8, layer);
         }
         let atomsCopy = Object.assign([], atoms);
@@ -68,9 +68,11 @@ export class Octree {
     private BuildTree(atoms: Atom[], margin: number) {
         let limits = this.limits;
         let currPos = 0;
+        let binPreviousLayerStart = 0;
         for (let layer = 0; layer < this.layers; layer++) {
             let dimDivider = Math.pow(2, layer+1);
             let binId = 0;
+            binPreviousLayerStart += layer <= 1 ? 0 : Math.pow(8, layer-1);
             for (let z = 0; z < dimDivider; z++) {
                 for (let y = 0; y < dimDivider; y++) {
                     for (let x = 0; x < dimDivider; x++) {
@@ -78,7 +80,7 @@ export class Octree {
                         if (layer == 0) {
                             this.bins[binId] = bin;
                         } else {
-                            let parentIndex = this.bins.findIndex((b) => b.IsVec3Inside(bin.Center()));
+                            let parentIndex = this.bins.findIndex((b, index) => index >= binPreviousLayerStart && b.IsVec3Inside(bin.Center()));
                             let parent = this.bins[parentIndex];
                             this.bins[(parentIndex+1)*8+parent.children] = bin;
                             parent.children++;

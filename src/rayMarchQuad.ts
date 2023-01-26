@@ -199,6 +199,7 @@ class RayPipelineSetup {
 }
 
 export class RayMarchQuad {
+    loaded : Boolean = false;
     quadPositions : GPUBuffer;
     quadColors : GPUBuffer;
     pipelineSetupRaymarch : RayPipelineSetup;
@@ -222,11 +223,16 @@ export class RayMarchQuad {
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
+        this.loaded = true;
         this.pipelineSetupRaymarch.LoadAtoms(device, structure);
         this.pipelineSetupRaytrace.LoadAtoms(device, structure);
     }
 
     private Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number, pipelineSetup: RayPipelineSetup) {
+        if (!this.loaded) {
+            console.log("Data not loaded!");
+            return;
+        }
         const maxDrawnAmount = 300;
         device.queue.writeBuffer(pipelineSetup.mvpUniformBuffer, 0, mvpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
