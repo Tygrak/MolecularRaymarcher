@@ -190,6 +190,10 @@ async function Initialize() {
     let frameId = 0;
 
     function draw() {
+        if (!document.hasFocus()) {
+            return;
+        }
+
         frameId++;
         const pMatrix = vp.projectionMatrix;
         if(camera.tick()){
