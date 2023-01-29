@@ -3,6 +3,7 @@ import { GetAtomType } from "./atomDatabase";
 import { CreateGPUBuffer } from "./helper";
 import { Octree } from "./octree";
 import shaderRaymarch from './shaders/raymarchOctree.wgsl';
+import shaderUtilities from './shaders/utilities.wgsl';
 import { Structure } from "./structure";
 
 const numberOfVerticesToDraw = 6;
@@ -211,6 +212,7 @@ export class RayMarchOctreeQuad {
     quadColors : GPUBuffer;
     pipelineSetupRaymarch : RayPipelineSetup;
     atomsScale: number = 1;
+    debugMode: number = 0;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -225,7 +227,7 @@ export class RayMarchOctreeQuad {
         this.quadPositions = CreateGPUBuffer(device, positions);
         this.quadColors = CreateGPUBuffer(device, colors);
 
-        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shaderRaymarch);
+        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shaderRaymarch+"\n"+shaderUtilities);
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
@@ -247,7 +249,7 @@ export class RayMarchOctreeQuad {
         drawSettingsBuffer[0] = Math.round(percentageShown*maxDrawnAmount);
         drawSettingsBuffer[1] = Math.round(startPos);
         drawSettingsBuffer[2] = this.atomsScale;
-        drawSettingsBuffer[3] = 1.0;
+        drawSettingsBuffer[3] = this.debugMode;
         drawSettingsBuffer.set(pipelineSetup.minLimits, 4);
         drawSettingsBuffer.set(pipelineSetup.maxLimits, 8);
         device.queue.writeBuffer(pipelineSetup.atomDrawLimitBuffer, 0, drawSettingsBuffer);

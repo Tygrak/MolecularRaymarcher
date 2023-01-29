@@ -30,7 +30,7 @@ struct DrawSettings {
     amount: f32,
     start: f32,
     atomsScale: f32,
-    pad2: f32,
+    debugMode: f32,
     minLimit: vec4<f32>,
     maxLimit: vec4<f32>,
 }
@@ -297,19 +297,23 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec2<f32> {
     let inverseDirection = 1.0/direction;
 
     for (var i : i32 = 0; i < 8; i++) {
-        let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[i].min, bins.bins[i].max);
-        if (intersection.x < intersection.y && intersection.x > -10.0) {
+        var firstId = i;
+        if (direction.z < 0) {
+            firstId = 7-i;
+        }
+        let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
+        if (intersection.x < intersection.y && intersection.x > -10.0 && intersection.x <= closestHit.t) {
             numIntersected++;
-            for (var m : i32 = child(i, 0); m < child(i, 8); m++) {
+            for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
-                if (intersection2.x < intersection2.y && intersection2.x > -5.0) {
+                if (intersection2.x < intersection2.y && intersection2.x > -5.0 && intersection2.x <= closestHit.t) {
                     numIntersected++;
                     for (var j : i32 = child(m, 0); j < child(m, 8); j++) {
                         if (j == intersecting || j == neighborX || j == neighborY || j == neighborZ) {
                             continue;
                         }
                         let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
-                        if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -5.0) {// && intersectionFinal.x <= closestHit.t) {
+                        if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -5.0 && intersectionFinal.x <= closestHit.t) {
                             numIntersected++;
                             for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
                                 let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a]);
@@ -382,12 +386,31 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
 		t = t+sdfResult.distance;
 	}
     if (iteration == 100) {
-        resultColor = vec4(-0.25, 0.4, 50.25, 1.0);
+        resultColor = vec4(0.05, 0.05, 0.95, 1.0);
     }
 
+    let debugMode = drawSettings.debugMode;
     let cameraDistance = distance(cameraPos.xyz, pos);
+    if (debugMode == 0) {
+        //default
+        return resultColor*(1-pow(t/limitsMax, 2));
+    } else if (debugMode == 1) {
+        //iterations
+        //return vec4(max(f32(iteration)/20.0, 1)-max((f32(iteration)-20.0)/80.0, 0), f32(iteration)/40.0, f32(iteration)/80.0, 1.0);
+        return colormap_hotmetal(f32(iteration)/25.0);
+    } else if (debugMode == 2) {
+        //octree intersections
+        //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-max((f32(numRaySphereIntersections)-50.0)/350.0, 0), f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
+        return colormap_haze(f32(numRaySphereIntersections)/250.0);
+    } else if (debugMode == 3) {
+        //octree intersections 2
+        return vec4(max(f32(iteration)/10.0, 1)-max((f32(iteration)-10.0)/60.0, 0), f32(numIntersected)/25.0, f32(numIntersected)/35.0, 1.0);
+    }
+    return resultColor;
+    //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-f32(numRaySphereIntersections)/400.0, f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
     //return resultColor+vec4(f32(iteration)/40.0, f32(numRaySphereIntersections)/100.0, f32(numIntersected)/48.0, 0.0);
     //return resultColor+vec4(0.0, f32(numIntersected)/200.0, 0.0, 0.0);
-    return resultColor*(1-pow(t/limitsMax, 2));
     //return resultColor;
 }
+
+//utilities.wgsl inserted here

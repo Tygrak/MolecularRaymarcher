@@ -15,6 +15,7 @@ const createCamera = require('3d-view-controls');
 
 const dataSelection = document.getElementById("dataSelection") as HTMLSelectElement;
 const visualizationSelection = document.getElementById("visualizationSelection") as HTMLSelectElement;
+const debugSelection = document.getElementById("debugSelection") as HTMLSelectElement;
 const sliderPercentageShown = document.getElementById("sliderPercentageShown") as HTMLInputElement;
 const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
 const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
@@ -242,6 +243,8 @@ async function Initialize() {
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+            let debugMode = parseFloat(debugSelection.value);
+            rayMarchQuadOct1cqw.debugMode = debugMode;
             if (dataSelection.value == "1cqw") {
                 rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
             } else if (dataSelection.value == "1aon") {

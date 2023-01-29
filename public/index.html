@@ -30,13 +30,24 @@
          <div>
             <label>
                <select id="visualizationSelection" name="visualizationSelection" style="width: 8rem;">
-                  <option selected value="impostor">Impostor</option>
-                  <option value="raymarchoctree">RaymarchOct</option>
+                  <option value="impostor">Impostor</option>
+                  <option selected value="raymarchoctree">RaymarchOct</option>
                   <option value="raymarch">Raymarch</option>
                   <option value="raytrace">Raytrace</option>
                   <option value="basic">Basic</option>
                </select>
                Visualization Mode
+            </label>
+         </div>
+         <div>
+            <label>
+               <select id="debugSelection" name="debugSelection" style="width: 8rem;">
+                  <option selected value="0">Default</option>
+                  <option value="1">Iterations</option>
+                  <option value="2">Octree</option>
+                  <option value="3">Octree2</option>
+               </select>
+               Debug Mode
             </label>
          </div>
          <div class="slidecontainer">
