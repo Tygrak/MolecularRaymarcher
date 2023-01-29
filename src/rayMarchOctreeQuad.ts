@@ -20,7 +20,7 @@ class RayPipelineSetup {
     octreeBuffer : GPUBuffer;
     atomsBindGroup : GPUBindGroup;
 
-    atomDrawLimitBuffer : GPUBuffer;
+    drawSettingsBuffer : GPUBuffer;
     drawSettingsBindGroup : GPUBindGroup;
 
     minLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
@@ -140,8 +140,8 @@ class RayPipelineSetup {
             ]
         });
 
-        this.atomDrawLimitBuffer = device.createBuffer({
-            size: 48,
+        this.drawSettingsBuffer = device.createBuffer({
+            size: 64,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
         this.drawSettingsBindGroup = device.createBindGroup({
@@ -150,7 +150,7 @@ class RayPipelineSetup {
                 {
                     binding: 0,
                     resource: {
-                        buffer: this.atomDrawLimitBuffer,
+                        buffer: this.drawSettingsBuffer,
                     }
                 },
             ]
@@ -213,6 +213,9 @@ export class RayMarchOctreeQuad {
     pipelineSetupRaymarch : RayPipelineSetup;
     atomsScale: number = 1;
     debugMode: number = 0;
+    allowResetRaymarch: number = 0;
+    getRaymarchCellNeighbors: number = 0;
+    kSmoothminScale: number = 0.8;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -245,14 +248,18 @@ export class RayMarchOctreeQuad {
         device.queue.writeBuffer(pipelineSetup.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.cameraPosBuffer, 0, vec4.fromValues(cameraPos[0], cameraPos[1], cameraPos[2], 1.0) as ArrayBuffer);
         let startPos = maxDrawnAmount + (pipelineSetup.atomsCount-maxDrawnAmount-maxDrawnAmount) * drawStartPosition;
-        let drawSettingsBuffer = new Float32Array(12);
+        let drawSettingsBuffer = new Float32Array(16);
         drawSettingsBuffer[0] = Math.round(percentageShown*maxDrawnAmount);
         drawSettingsBuffer[1] = Math.round(startPos);
         drawSettingsBuffer[2] = this.atomsScale;
         drawSettingsBuffer[3] = this.debugMode;
         drawSettingsBuffer.set(pipelineSetup.minLimits, 4);
         drawSettingsBuffer.set(pipelineSetup.maxLimits, 8);
-        device.queue.writeBuffer(pipelineSetup.atomDrawLimitBuffer, 0, drawSettingsBuffer);
+        drawSettingsBuffer[12] = this.allowResetRaymarch;
+        drawSettingsBuffer[13] = this.getRaymarchCellNeighbors;
+        drawSettingsBuffer[14] = this.kSmoothminScale;
+        drawSettingsBuffer[15] = -1;
+        device.queue.writeBuffer(pipelineSetup.drawSettingsBuffer, 0, drawSettingsBuffer);
         renderPass.setPipeline(pipelineSetup.pipeline);
         renderPass.setBindGroup(0, pipelineSetup.uniformBindGroup);
         renderPass.setBindGroup(1, pipelineSetup.atomsBindGroup);

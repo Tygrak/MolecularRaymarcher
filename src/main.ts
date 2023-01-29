@@ -20,7 +20,10 @@ const sliderPercentageShown = document.getElementById("sliderPercentageShown") a
 const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
 const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
 const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as HTMLInputElement;
+const sliderKSmoothminScale = document.getElementById("kSmoothminScale") as HTMLInputElement;
 const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
+const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
+const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
@@ -243,11 +246,19 @@ async function Initialize() {
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+            let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             let debugMode = parseFloat(debugSelection.value);
-            rayMarchQuadOct1cqw.debugMode = debugMode;
             if (dataSelection.value == "1cqw") {
+                rayMarchQuadOct1cqw.debugMode = debugMode;
+                rayMarchQuadOct1cqw.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
+                rayMarchQuadOct1cqw.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
+                rayMarchQuadOct1cqw.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
             } else if (dataSelection.value == "1aon") {
+                rayMarchQuadOct1aon.debugMode = debugMode;
+                rayMarchQuadOct1aon.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
+                rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
+                rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
             }
         } else if (visualizationSelection.value == "raytrace") {

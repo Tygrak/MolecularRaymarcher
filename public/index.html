@@ -13,6 +13,10 @@
          <h1>WebGPU</h1><br>
          <div>
             <label><input id="canvasSizeCheckbox" type="checkbox" name="options" value="fixed">Use Fixed Canvas Size</label>
+            <br>
+            <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed">Allow Reset Raymarch</label>
+            <br>
+            <label><input id="getRaymarchNeighborsCheckbox" type="checkbox" name="options" value="fixed">Get Raymarch Cell Neighbors</label>
          </div>
          <br>
          <div class="slidecontainer">
@@ -51,14 +55,17 @@
             </label>
          </div>
          <div class="slidecontainer">
-            <label><input type="range" min="1" max="100" step="0.1" value="25" class="slider" id="raymarchingDrawnAmount">Raymarching Drawn Amount</label>
+            <label><input type="range" min="1" max="100" step="0.1" value="25" class="slider" id="raymarchingDrawnAmount">Drawn Amount</label>
          </div>
          <div class="slidecontainer">
-            <label><input type="range" min="0" max="100" step="0.1" value="0" class="slider" id="raymarchingStartPosition">Raymarching Start Position</label>
+            <label><input type="range" min="0" max="100" step="0.1" value="0" class="slider" id="raymarchingStartPosition">D.Start Position</label>
          </div>
          <br>
          <div class="slidecontainer">
             <label><input type="range" min="0.1" max="2.5" step="0.1" value="1" class="slider" id="impostorSizeScale">Atom Size Scale</label>
+         </div>
+         <div class="slidecontainer">
+            <label><input type="range" min="0.01" max="2.5" step="0.05" value="0.8" class="slider" id="kSmoothminScale">Smoothmin k</label>
          </div>
          <div>
             <p id="fpsCounter">10fps</p>
