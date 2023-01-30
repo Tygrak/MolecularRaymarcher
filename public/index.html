@@ -16,7 +16,9 @@
             <br>
             <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed">Allow Reset Raymarch</label>
             <br>
-            <label><input id="getRaymarchNeighborsCheckbox" type="checkbox" name="options" value="fixed">Get Raymarch Cell Neighbors</label>
+            <label><input id="addCloseNeighborsToCellsCheckbox" type="checkbox" name="options" value="fixed" checked>Add Close Neigbors to Cells</label>
+            <br>
+            <label style="display: none;"><input id="getRaymarchNeighborsCheckbox" type="checkbox" name="options" value="fixed">Get Raymarch Cell Neighbors</label>
          </div>
          <br>
          <div class="slidecontainer">
@@ -62,10 +64,10 @@
          </div>
          <br>
          <div class="slidecontainer">
-            <label><input type="range" min="0.1" max="2.5" step="0.1" value="1" class="slider" id="impostorSizeScale">Atom Size Scale</label>
+            <label><input type="range" min="0.1" max="1.5" step="0.1" value="1" class="slider" id="impostorSizeScale">Atom Size Scale</label>
          </div>
          <div class="slidecontainer">
-            <label><input type="range" min="0.01" max="2.5" step="0.05" value="0.8" class="slider" id="kSmoothminScale">Smoothmin k</label>
+            <label><input type="range" min="0.01" max="2.0" step="0.05" value="0.8" class="slider" id="kSmoothminScale">Smoothmin k</label>
          </div>
          <div>
             <p id="fpsCounter">10fps</p>

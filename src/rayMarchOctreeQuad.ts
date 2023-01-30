@@ -157,8 +157,8 @@ class RayPipelineSetup {
         });
     }
 
-    public LoadAtoms(device: GPUDevice, structure: Structure) {
-        let tree: Octree = new Octree(structure.atoms, 3);
+    public LoadAtoms(device: GPUDevice, structure: Structure, margins: number) {
+        let tree: Octree = new Octree(structure.atoms, 3, margins);
         console.log(tree);
         this.atomsCount = tree.tree.length;
         this.atomsBuffer = device.createBuffer({
@@ -216,6 +216,7 @@ export class RayMarchOctreeQuad {
     allowResetRaymarch: number = 0;
     getRaymarchCellNeighbors: number = 0;
     kSmoothminScale: number = 0.8;
+    octreeMargins: number = 1.75;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -235,7 +236,7 @@ export class RayMarchOctreeQuad {
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
         this.loaded = true;
-        this.pipelineSetupRaymarch.LoadAtoms(device, structure);
+        this.pipelineSetupRaymarch.LoadAtoms(device, structure, this.octreeMargins);
     }
 
     private Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number, pipelineSetup: RayPipelineSetup) {
@@ -258,7 +259,7 @@ export class RayMarchOctreeQuad {
         drawSettingsBuffer[12] = this.allowResetRaymarch;
         drawSettingsBuffer[13] = this.getRaymarchCellNeighbors;
         drawSettingsBuffer[14] = this.kSmoothminScale;
-        drawSettingsBuffer[15] = -1;
+        drawSettingsBuffer[15] = this.octreeMargins;
         device.queue.writeBuffer(pipelineSetup.drawSettingsBuffer, 0, drawSettingsBuffer);
         renderPass.setPipeline(pipelineSetup.pipeline);
         renderPass.setBindGroup(0, pipelineSetup.uniformBindGroup);

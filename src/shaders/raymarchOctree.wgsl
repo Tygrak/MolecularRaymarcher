@@ -36,7 +36,7 @@ struct DrawSettings {
     allowReset: f32,
     getCellNeighbors: f32,
     kSmoothminScale: f32,
-    padding3: f32,
+    octreeCreationMargins: f32,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -190,13 +190,12 @@ fn getAtomColor(atomNumber: f32) -> vec4<f32> {
 
 //modified from https://tavianator.com/2022/ray_box_boundary.html
 fn aabbIntersection(origin: vec3<f32>, direction: vec3<f32>, directionInverse: vec3<f32>, boxMin: vec3<f32>, boxMax: vec3<f32>) -> vec2<f32> {
-    let margin = max(drawSettings.atomsScale, drawSettings.kSmoothminScale);
     var tmin: f32 = -100.0;
     var tmax: f32 = 6942069.0;
 
     for (var i = 0; i < 3; i++) {
-        let t1 = (boxMin[i] - 1.05*margin - origin[i]) * directionInverse[i];
-        let t2 = (boxMax[i] + 1.05*margin - origin[i]) * directionInverse[i];
+        let t1 = (boxMin[i] - origin[i]) * directionInverse[i];
+        let t2 = (boxMax[i] - origin[i]) * directionInverse[i];
 
         tmin = max(tmin, min(t1, t2));
         tmax = min(tmax, max(t1, t2));
@@ -288,6 +287,7 @@ fn findNeighboringCells(point: vec3<f32>, binId: i32) {
 }
 
 var<private> start: vec3<f32>;
+var<private> end: f32;
 
 //todo: return multiple closest cells too and raymarch along them, otherwise at bigger atom sizes we die 
 //todo: try messing with this more
@@ -325,7 +325,8 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                 if (hit.t < closestHit.t) {
                                     closestHit = hit;
                                     intersecting = j;
-                                    closestAABBintersection = start+direction*(intersectionFinal.x);
+                                    closestAABBintersection = start+direction*(intersectionFinal.y);
+                                    end = 2+intersectionFinal.y-intersectionFinal.x;
                                 }
                             }
                         }
@@ -353,6 +354,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     //let rayDirection : vec3<f32> = ndcRay.xyz;
     start = cameraPos.xyz; 
     
+    let margin = max(drawSettings.atomsScale, drawSettings.kSmoothminScale);
     let limitsSize = drawSettings.maxLimit.xyz-drawSettings.minLimit.xyz;
     let limitsMax = max(max(limitsSize.x, limitsSize.y), limitsSize.z);
     let boundaryIntersection : vec2<f32> = aabbIntersection(start, rayDirection, 1.0/rayDirection, drawSettings.minLimit.xyz, drawSettings.maxLimit.xyz);
@@ -366,6 +368,10 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
 
     var closestAABB = findIntersectingCells(start, rayDirection);
     if (intersecting == -1) {
+        if (drawSettings.debugMode == 2) {
+            //octree intersections
+            return colormap_haze(f32(numRaySphereIntersections)/250.0);
+        }
         return vec4(0.15, 0.0, 0.15, 1.0);
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
@@ -375,14 +381,14 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     var iteration = 0;
     var resultColor = vec4(0.0, 0.0, 0.0, 1.0);
 	for (iteration = 0; iteration < 100; iteration++) {
-		if (t > limitsMax+drawSettings.atomsScale*2) {
+		if (t > end+2*drawSettings.atomsScale+drawSettings.kSmoothminScale) {
             if (drawSettings.allowReset > 0.5) {
                 t = 0.0;
                 //start = start+rayDirection*(closestAABB.y+0.5);
                 start = closestAABB;
                 closestAABB = findIntersectingCells(start, rayDirection);
                 if (intersecting == -1) {
-                    resultColor = vec4(0.0, 0.0, 0.0, 1.0);
+                    resultColor = vec4(0.15, 0.0, 0.15, 1.0);
                     break;
                 }
             } else {
@@ -403,22 +409,21 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         resultColor = vec4(0.05, 0.05, 0.95, 1.0);
     }
 
-    let debugMode = drawSettings.debugMode;
     let center = drawSettings.minLimit.xyz+limitsSize/2;
     let sphereInitStart = normalize(center-cameraPos.xyz)*limitsMax;
     let cameraDistance = distance(sphereInitStart, pos);
-    if (debugMode == 0) {
+    if (drawSettings.debugMode == 0) {
         //default
         return resultColor*(pow(cameraDistance/(limitsMax*1.2), 2.0));
-    } else if (debugMode == 1) {
+    } else if (drawSettings.debugMode == 1) {
         //iterations
         //return vec4(max(f32(iteration)/20.0, 1)-max((f32(iteration)-20.0)/80.0, 0), f32(iteration)/40.0, f32(iteration)/80.0, 1.0);
         return colormap_hotmetal(f32(iteration)/25.0);
-    } else if (debugMode == 2) {
+    } else if (drawSettings.debugMode == 2) {
         //octree intersections
         //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-max((f32(numRaySphereIntersections)-50.0)/350.0, 0), f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
         return colormap_haze(f32(numRaySphereIntersections)/250.0);
-    } else if (debugMode == 3) {
+    } else if (drawSettings.debugMode == 3) {
         //octree intersections 2
         return vec4(max(f32(iteration)/10.0, 1)-max((f32(iteration)-10.0)/60.0, 0), f32(numIntersected)/25.0, f32(numIntersected)/35.0, 1.0);
     }

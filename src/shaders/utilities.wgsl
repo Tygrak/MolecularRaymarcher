@@ -72,7 +72,7 @@ fn colormap_haze(x: f32) -> vec4<f32> {
     return vec4(r, g, b, 1.0);
 }
 
-//transform_hot_metal modified for multiple colorbands
+//transform_hot_metal modified for higher range
 fn colormap_hotmetal_red(x: f32) -> f32 {
     if (x < 0.0) {
         return 0.0;
@@ -84,30 +84,30 @@ fn colormap_hotmetal_red(x: f32) -> f32 {
 }
 
 fn colormap_hotmetal_green(x: f32) -> f32 {
-    if (x < 0.6) {
-        return 0.0;
-    } else if (x <= 0.95) {
-        return ((x - 0.6) * 728.57) / 255.0;
-    } else {
-        return 1.0;
-    }
+	if (x < 2.5) {
+		if (x < 0.6) {
+			return 0.0;
+		} else if (x <= 0.95) {
+			return ((x - 0.6) * 728.57) / 255.0;
+		} else {
+			return 1.0;
+		}
+	} else {
+		return (4.0-x)/1.5;
+	}
 }
 
 fn colormap_hotmetal_blue(x: f32) -> f32 {
     if (x > 0) {
         return 0.05;
     } else if (x > 1) {
-        return 0.4;
-    } else if (x > 2) {
-        return 0.8;
-    } else if (x > 3) {
-        return 1.0;
+        return 0.05+(x-1)/3;
     }
     return 0.0;
 }
 
 fn colormap_hotmetal(x: f32) -> vec4<f32> {
-    return vec4(colormap_hotmetal_red(x%1), colormap_hotmetal_green(x%1), colormap_hotmetal_blue(x), 1.0);
+    return vec4(colormap_hotmetal_red(min(x, 1)), colormap_hotmetal_green(x), colormap_hotmetal_blue(x), 1.0);
 }
 
 //IDL_Eos_B

@@ -23,6 +23,7 @@ const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as 
 const sliderKSmoothminScale = document.getElementById("kSmoothminScale") as HTMLInputElement;
 const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
 const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
+const addCloseNeighborsToCellsCheckbox = document.getElementById("addCloseNeighborsToCellsCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
@@ -38,9 +39,11 @@ let rayMarchQuad1aon : RayMarchQuad;
 let impostorRenderer1cqw : ImpostorRenderer;
 let impostorRenderer1aon : ImpostorRenderer;
 
+let device: GPUDevice;
+
 async function Initialize() {
     const gpu = await InitGPU(canvasSizeCheckbox.checked);
-    const device = gpu.device;
+    device = gpu.device;
 
     let timestampBuffers: {
         queryBuffer: GPUBuffer;
@@ -346,5 +349,15 @@ window.addEventListener('resize', function(){
 
 canvasSizeCheckbox.addEventListener('change', function(){
     Initialize();
+});
+
+addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
+    if (addCloseNeighborsToCellsCheckbox.checked) {
+        rayMarchQuadOct1cqw.octreeMargins = 1.75;
+        rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
+    } else {
+        rayMarchQuadOct1cqw.octreeMargins = 0.0;
+        rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
+    }
 });
 

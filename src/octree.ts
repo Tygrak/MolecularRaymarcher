@@ -29,6 +29,11 @@ export class OctreeBin {
         return this.IsVec3Inside(a.GetPosition());
     }
 
+    public IsAtomInsideTreeBuild(a: Atom, margin: number) {
+        return a.x >= this.min[0]-margin && a.y >= this.min[1]-margin && a.z >= this.min[2]-margin 
+            && a.x <= this.max[0]+margin && a.y <= this.max[1]+margin && a.z <= this.max[2]+margin;
+    }
+
     public AsArray() {
         let buffer = new Float32Array(8);
         buffer[0] = this.min[0];
@@ -56,7 +61,7 @@ export class Octree {
             binsSize += Math.pow(8, layer);
         }
         let atomsCopy = Object.assign([], atoms);
-        this.tree = new Array<vec4>(atomsCopy.length).fill(vec4.fromValues(-1, -1, -1, -1));
+        this.tree = new Array<vec4>();
         this.bins = new Array<OctreeBin>(binsSize);
         this.limits = this.CalculateLimitsForAtoms(atoms);
         this.limits.minLimits[0] -= margin; this.limits.minLimits[1] -= margin; this.limits.minLimits[2] -= margin;
@@ -88,10 +93,10 @@ export class Octree {
                         if (layer == this.layers-1) {
                             bin.start = currPos;
                             for (let i = atoms.length-1; i >= 0; i--) {
-                                if (bin.IsAtomInside(atoms[i])) {
+                                if (bin.IsAtomInsideTreeBuild(atoms[i], margin)) {
                                     this.tree[currPos] = atoms[i].GetVec4Representation();
                                     currPos++;
-                                    atoms.splice(i, 1);
+                                    //atoms.splice(i, 1);
                                 }
                             }
                             bin.end = currPos+1;
