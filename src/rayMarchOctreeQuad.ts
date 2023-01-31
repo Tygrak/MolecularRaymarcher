@@ -248,10 +248,10 @@ export class RayMarchOctreeQuad {
         device.queue.writeBuffer(pipelineSetup.mvpUniformBuffer, 0, mvpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.cameraPosBuffer, 0, vec4.fromValues(cameraPos[0], cameraPos[1], cameraPos[2], 1.0) as ArrayBuffer);
-        let startPos = maxDrawnAmount + (pipelineSetup.atomsCount-maxDrawnAmount-maxDrawnAmount) * drawStartPosition;
+        //let startPos = maxDrawnAmount + (pipelineSetup.atomsCount-maxDrawnAmount-maxDrawnAmount) * drawStartPosition;
         let drawSettingsBuffer = new Float32Array(16);
-        drawSettingsBuffer[0] = Math.round(percentageShown*maxDrawnAmount);
-        drawSettingsBuffer[1] = Math.round(startPos);
+        drawSettingsBuffer[0] = percentageShown;
+        drawSettingsBuffer[1] = drawStartPosition;
         drawSettingsBuffer[2] = this.atomsScale;
         drawSettingsBuffer[3] = this.debugMode;
         drawSettingsBuffer.set(pipelineSetup.minLimits, 4);
