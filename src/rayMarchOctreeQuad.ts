@@ -216,7 +216,7 @@ export class RayMarchOctreeQuad {
     allowResetRaymarch: number = 0;
     getRaymarchCellNeighbors: number = 0;
     kSmoothminScale: number = 0.8;
-    octreeMargins: number = 2.25;
+    octreeMargins: number = 2.05;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([

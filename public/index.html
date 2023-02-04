@@ -14,7 +14,7 @@
          <div>
             <label><input id="canvasSizeCheckbox" type="checkbox" name="options" value="fixed">Use Fixed Canvas Size</label>
             <br>
-            <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed">Allow Reset Raymarch</label>
+            <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed" checked>Allow Reset Raymarch</label>
             <br>
             <label><input id="addCloseNeighborsToCellsCheckbox" type="checkbox" name="options" value="fixed" checked>Add Close Neigbors to Cells</label>
             <br>
@@ -36,10 +36,12 @@
          <div>
             <label>
                <select id="visualizationSelection" name="visualizationSelection" style="width: 8rem;">
-                  <option value="impostor">Impostor</option>
                   <option selected value="raymarchoctree">RaymarchOct</option>
+                  <option value="impostor">Impostor</option>
+                  <!-- 
                   <option value="raymarch">Raymarch</option>
                   <option value="raytrace">Raytrace</option>
+                  -->
                   <option value="basic">Basic</option>
                </select>
                Visualization Mode
@@ -48,9 +50,9 @@
          <div>
             <label>
                <select id="debugSelection" name="debugSelection" style="width: 8rem;">
-                  <option selected value="7">Lit</option>
+                  <option value="7">Lit</option>
                   <option value="8">LitGooch</option>
-                  <option value="0">Default</option>
+                  <option selected value="0">Default</option>
                   <option value="6">DefaultBright</option>
                   <option value="1">Iterations</option>
                   <option value="2">Octree</option>

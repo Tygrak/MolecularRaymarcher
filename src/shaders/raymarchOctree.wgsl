@@ -90,7 +90,8 @@ fn dSphere(p: vec3<f32>, center: vec3<f32>, radius: f32) -> f32 {
     return length(p-center)-radius;
 }
 
-fn covalentRadius(number: f32) -> f32 {
+fn covalentRadius(w: f32) -> f32 {
+    let number = w%100.0;
     if (number < 1.1) {
         return 1.0*drawSettings.atomsScale;
     } else if (number < 8.1) {
@@ -176,19 +177,23 @@ fn dScene(p: vec3<f32>) -> SdfResult {
     return sdfResult;
 }
 
-fn getAtomColor(atomNumber: f32) -> vec4<f32> {
-    if (atomNumber < 0) {
-        return vec4(0.0, 10.0, 0.0, 1.0);
-    } else if (atomNumber < 6.5) {
-        return vec4(0.3, 0.8, 0.3, 1.0); // C
+fn getAtomColor(w: f32) -> vec4<f32> {
+    let atomNumber = w%100.0;
+    let aminoAtomType = w/100;
+    var color = vec4(10.0, 10.0, 10.0, 1.0);
+    if (atomNumber < 6.5) {
+        color = vec4(0.6, 0.8, 0.3, 1.0); // C
     } else if (atomNumber < 7.5) {
-        return vec4(0.25, 0.05, 0.85, 1.0); // N
+        color = vec4(0.85, 0.05, 0.25, 1.0); // N
     } else if (atomNumber < 8.5) {
-        return vec4(0.85, 0.05, 0.05, 1.0); // O
+        color = vec4(0.20, 0.05, 0.85, 1.0); // O
     } else if (atomNumber < 16.5) {
-        return vec4(0.975, 0.975, 0.025, 1.0); // S
+        color = vec4(0.975, 0.975, 0.025, 1.0); // S
     }
-    return vec4(1.0, 1.0, 1.0, 1.0);
+    if (aminoAtomType > 1) {
+        color = color/5+vec4(0.75, 0.75, 0.75, 0);
+    }
+    return color;
 }
 
 fn findNormal(pos: vec3<f32>) -> vec3<f32> {
@@ -345,7 +350,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                             closestHit = hit;
                                             intersecting = j;
                                             //closestAABBintersection = start+direction*mix(intersectionFinal.x-5, intersectionFinal.y+5, drawSettings.start);
-                                            closestAABBintersection = start+direction*mix(intersectionFinal.x, intersectionFinal.y, drawSettings.start);
+                                            closestAABBintersection = start+direction*mix(intersectionFinal.x-5, intersectionFinal.y, drawSettings.start);
                                             end = 2+intersectionFinal.y-intersectionFinal.x;
                                         }
                                     }
@@ -449,13 +454,13 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     } else if (drawSettings.debugMode == 2) {
         //octree intersections
         //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-max((f32(numRaySphereIntersections)-50.0)/350.0, 0), f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
-        return colormap_haze(f32(numRaySphereIntersections)/250.0);
+        return colormap_haze(f32(numRaySphereIntersections)/400.0);
     } else if (drawSettings.debugMode == 3) {
         //octree intersections 2
-        return vec4(max(f32(iteration)/10.0, 1)-max((f32(iteration)-10.0)/60.0, 0), f32(numIntersected)/25.0, f32(numIntersected)/35.0, 1.0);
+        return vec4(max(f32(iteration)/10.0, 1)-max((f32(iteration)-10.0)/60.0, 0), f32(numIntersected)/55.0, f32(numIntersected)/85.0, 1.0);
     } else if (drawSettings.debugMode == 4) {
         //depth
-        return colormap_eosb(maxDistance/100.0);
+        return colormap_eosb(maxDistance/250.0);
     } else if (drawSettings.debugMode == 5) {
         //normals
         return vec4(findNormal(pos), 1.0);

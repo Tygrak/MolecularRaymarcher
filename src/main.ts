@@ -34,8 +34,6 @@ let renderMs = 0.1;
 
 let rayMarchQuadOct1cqw : RayMarchOctreeQuad;
 let rayMarchQuadOct1aon : RayMarchOctreeQuad;
-let rayMarchQuad1cqw : RayMarchQuad;
-let rayMarchQuad1aon : RayMarchQuad;
 let impostorRenderer1cqw : ImpostorRenderer;
 let impostorRenderer1aon : ImpostorRenderer;
 
@@ -59,9 +57,6 @@ async function Initialize() {
     // create vertex buffers
     structure1cqw = new Structure("1cqw");
     structure1cqw.InitializeBuffers(device);
-
-    rayMarchQuad1cqw = new RayMarchQuad(device, gpu.format);
-    rayMarchQuad1cqw.LoadAtoms(device, structure1cqw);
     
     rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format);
     rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
@@ -241,12 +236,6 @@ async function Initialize() {
                 renderPass.setBindGroup(0, uniformBindGroup);
                 structure1aon.DrawStructure(renderPass, 1, true);
             }
-        } else if (visualizationSelection.value == "raymarch") {
-            let inverseVp = mat4.create();
-            mat4.invert(inverseVp, vpMatrix);
-            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
-            let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
-            rayMarchQuad1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
         } else if (visualizationSelection.value == "raymarchoctree") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
@@ -268,16 +257,6 @@ async function Initialize() {
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
             }
-        } else if (visualizationSelection.value == "raytrace") {
-            let inverseVp = mat4.create();
-            mat4.invert(inverseVp, vpMatrix);
-            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
-            let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
-            if (dataSelection.value == "1cqw") {
-                rayMarchQuad1cqw.DrawRaytrace(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
-            }/* else if (dataSelection.value == "1aon") {
-                rayMarchQuad1aon.DrawRaytrace(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart);
-            }*/
         }
         renderPass.end();
 
@@ -333,7 +312,7 @@ async function Initialize() {
             rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
             rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
             t1 = performance.now();
-            console.log("Loading data for raymarch+creating quadtree: " + (t1-t0) + "ms");
+            console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
     };
 
@@ -353,7 +332,9 @@ canvasSizeCheckbox.addEventListener('change', function(){
 
 addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     if (addCloseNeighborsToCellsCheckbox.checked) {
-        rayMarchQuadOct1cqw.octreeMargins = 2.25;
+        let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+        let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
+        rayMarchQuadOct1cqw.octreeMargins = 0.0+sizeScale+kSmoothminScale*0.9;
         rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     } else {
         rayMarchQuadOct1cqw.octreeMargins = 0.0;

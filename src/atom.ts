@@ -21,7 +21,11 @@ export class Atom {
     }
 
     public GetVec4Representation() {
-        return vec4.fromValues(this.x, this.y, this.z, GetAtomType(this).number);
+        let typeShift = 0;
+        if (this.residueAtomName == "N" || this.residueAtomName == "CA" || this.residueAtomName == "C" || this.residueAtomName == "O") {
+            typeShift = 100;
+        }
+        return vec4.fromValues(this.x, this.y, this.z, GetAtomType(this).number+typeShift);
     }
 
     public GetColor() {
