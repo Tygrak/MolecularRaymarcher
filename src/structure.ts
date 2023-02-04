@@ -13,16 +13,9 @@ export class Structure {
     chains : Chain[];
     chainMeshes : ChainMesh[];
 
-    constructor (dataFileName: string) {
+    constructor (dataText: string) {
         let t0 = performance.now();
-        let loaded;
-        if (dataFileName == "1aon") {
-            const dataText = require('./data/1aon.pdb');
-            loaded = LoadData(dataText);
-        } else {
-            const dataText = require('./data/1cqw.pdb');
-            loaded = LoadData(dataText);
-        }
+        let loaded = LoadData(dataText);
         let t1 = performance.now();
         this.atoms = loaded.atoms;
         this.chains = loaded.chains;

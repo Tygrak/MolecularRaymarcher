@@ -55,7 +55,7 @@ async function Initialize() {
     TestKdTrees();
 
     // create vertex buffers
-    structure1cqw = new Structure("1cqw");
+    structure1cqw = new Structure(require('./data/1cqw.pdb'));
     structure1cqw.InitializeBuffers(device);
     
     rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format);
@@ -297,7 +297,7 @@ async function Initialize() {
             cameraPosition = vec3.fromValues(125, 31.5, 10.5);
         }
         if (dataSelection.value == "1aon" && structure1aon == undefined) {
-            structure1aon = new Structure("1aon");
+            structure1aon = new Structure(require('./data/1aon.pdb'));
             structure1aon.InitializeBuffers(device);
             impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
@@ -334,7 +334,7 @@ addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     if (addCloseNeighborsToCellsCheckbox.checked) {
         let sizeScale = parseFloat(sliderImpostorSizeScale.value);
         let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
-        rayMarchQuadOct1cqw.octreeMargins = 0.0+sizeScale+kSmoothminScale*0.9;
+        rayMarchQuadOct1cqw.octreeMargins = 0.0+sizeScale+kSmoothminScale*1.0;
         rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     } else {
         rayMarchQuadOct1cqw.octreeMargins = 0.0;

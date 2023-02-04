@@ -27,8 +27,8 @@ struct Bins {
 @binding(1) @group(1) var<storage, read> bins : Bins;
 
 struct DrawSettings {
-    amount: f32,
-    start: f32,
+    debugA: f32,
+    debugB: f32,
     atomsScale: f32,
     debugMode: f32,
     minLimit: vec4<f32>,
@@ -37,6 +37,10 @@ struct DrawSettings {
     getCellNeighbors: f32,
     kSmoothminScale: f32,
     octreeCreationMargins: f32,
+    totalAtoms: f32,
+    padding1: f32,
+    padding2: f32,
+    padding3: f32,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -138,7 +142,6 @@ fn dAtomsInBin(p: vec3<f32>, binId: i32) -> SdfResult {
 
 //todo split into function that just returns d and sdfresult that is called only in final, might speed stuff up
 fn dAtoms(p: vec3<f32>) -> SdfResult {
-    let start = i32(drawSettings.start);
     let amount = arrayLength(&atoms.atoms);
     let binsAmount =  arrayLength(&bins.bins);
     var result: SdfResult = dAtomsInBin(p, intersecting);
@@ -179,16 +182,18 @@ fn getAtomColor(w: f32) -> vec4<f32> {
     let aminoAtomType = w/100;
     var color = vec4(10.0, 10.0, 10.0, 1.0);
     if (atomNumber < 6.5) {
-        color = vec4(0.6, 0.8, 0.3, 1.0); // C
+        color = vec4(0.6, 0.9, 0.3, 1.0); // C
     } else if (atomNumber < 7.5) {
-        color = vec4(0.85, 0.05, 0.25, 1.0); // N
+        color = vec4(0.95, 0.05, 0.25, 1.0); // N
     } else if (atomNumber < 8.5) {
-        color = vec4(0.20, 0.05, 0.85, 1.0); // O
+        color = vec4(0.20, 0.05, 0.95, 1.0); // O
     } else if (atomNumber < 16.5) {
-        color = vec4(0.975, 0.975, 0.025, 1.0); // S
+        color = vec4(0.995, 0.995, 0.025, 1.0); // S
     }
     if (aminoAtomType > 1) {
-        color = color/5+vec4(0.75, 0.75, 0.75, 0);
+        color = color/5+vec4(0.85, 0.85, 0.85, 0);
+    } else {
+        color = color/1.275;
     }
     return color;
 }
@@ -432,7 +437,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
                     if (drawSettings.debugMode == 2) {
                         //octree intersections
                         return colormap_haze(f32(numRaySphereIntersections)/250.0);
-                    } else if (drawSettings.debugMode == 9) {
+                    } else if (drawSettings.debugMode == 10) {
                         //stack steps
                         return colormap_eosb(f32(stackPos)/f32(stackSize));
                     }
@@ -472,7 +477,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     } else if (drawSettings.debugMode == 2) {
         //octree intersections
         //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-max((f32(numRaySphereIntersections)-50.0)/350.0, 0), f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
-        return colormap_haze(f32(numRaySphereIntersections)/400.0);
+        return colormap_haze(f32(numRaySphereIntersections)/(drawSettings.totalAtoms/4));
     } else if (drawSettings.debugMode == 3) {
         //octree intersections 2
         return vec4(max(f32(iteration)/10.0, 1)-max((f32(iteration)-10.0)/60.0, 0), f32(numIntersected)/55.0, f32(numIntersected)/85.0, 1.0);
@@ -486,20 +491,26 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         //default bright
         return (vec4(abs(0.5-resultColor.x), abs(0.5-resultColor.y), abs(0.5-resultColor.z), 1.0))*(pow(cameraDistance/(limitsMax*1.2), 2.0));
     } else if (drawSettings.debugMode == 7) {
+        //default semilit
+        let n: vec3<f32> = normalize(findNormal(pos));
+        let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
+        var c = mix(resultColor.xyz*0.5, resultColor.xyz*1.25, (dot(n, l1)+1)/2);
+        return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+    } else if (drawSettings.debugMode == 8) {
         //default lit
         let n: vec3<f32> = findNormal(pos);
         let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
         let l2: vec3<f32> = normalize(vec3(-0.5, 1, 0.25));
         var c = max(dot(n, l1), 0)*vec3(0.75, 0.5, 0.5)*resultColor.xyz + max(dot(n, l2), 0)*vec3(0.5, 0.5, 0.75)*resultColor.xyz;
         return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
-    } else if (drawSettings.debugMode == 8) {
+    } else if (drawSettings.debugMode == 9) {
         //default gooch
         let n: vec3<f32> = findNormal(pos);
         let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
         let ndotl: f32 = dot(n, l1);
-        var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), ndotl*2+1)*resultColor.xyz;
+        var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), (ndotl+1)/2)*resultColor.xyz;
         return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
-    } else if (drawSettings.debugMode == 9) {
+    } else if (drawSettings.debugMode == 10) {
         //stack steps
         return colormap_eosb(f32(stackPos)/f32(stackSize));
     }

@@ -141,7 +141,7 @@ class RayPipelineSetup {
         });
 
         this.drawSettingsBuffer = device.createBuffer({
-            size: 64,
+            size: 80,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
         this.drawSettingsBindGroup = device.createBindGroup({
@@ -217,6 +217,7 @@ export class RayMarchOctreeQuad {
     getRaymarchCellNeighbors: number = 0;
     kSmoothminScale: number = 0.8;
     octreeMargins: number = 2.05;
+    loadedAtoms: number = 0;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -237,6 +238,7 @@ export class RayMarchOctreeQuad {
     public LoadAtoms(device: GPUDevice, structure: Structure) {
         this.loaded = true;
         this.pipelineSetupRaymarch.LoadAtoms(device, structure, this.octreeMargins);
+        this.loadedAtoms = structure.atoms.length;
     }
 
     private Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number, pipelineSetup: RayPipelineSetup) {
@@ -244,12 +246,10 @@ export class RayMarchOctreeQuad {
             console.log("Data not loaded!");
             return;
         }
-        const maxDrawnAmount = 300;
         device.queue.writeBuffer(pipelineSetup.mvpUniformBuffer, 0, mvpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.cameraPosBuffer, 0, vec4.fromValues(cameraPos[0], cameraPos[1], cameraPos[2], 1.0) as ArrayBuffer);
-        //let startPos = maxDrawnAmount + (pipelineSetup.atomsCount-maxDrawnAmount-maxDrawnAmount) * drawStartPosition;
-        let drawSettingsBuffer = new Float32Array(16);
+        let drawSettingsBuffer = new Float32Array(20);
         drawSettingsBuffer[0] = percentageShown;
         drawSettingsBuffer[1] = drawStartPosition;
         drawSettingsBuffer[2] = this.atomsScale;
@@ -260,6 +260,10 @@ export class RayMarchOctreeQuad {
         drawSettingsBuffer[13] = this.getRaymarchCellNeighbors;
         drawSettingsBuffer[14] = this.kSmoothminScale;
         drawSettingsBuffer[15] = this.octreeMargins;
+        drawSettingsBuffer[16] = this.loadedAtoms;
+        drawSettingsBuffer[17] = -1;
+        drawSettingsBuffer[18] = -1;
+        drawSettingsBuffer[19] = -1;
         device.queue.writeBuffer(pipelineSetup.drawSettingsBuffer, 0, drawSettingsBuffer);
         renderPass.setPipeline(pipelineSetup.pipeline);
         renderPass.setBindGroup(0, pipelineSetup.uniformBindGroup);
