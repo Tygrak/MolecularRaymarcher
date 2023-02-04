@@ -353,7 +353,7 @@ canvasSizeCheckbox.addEventListener('change', function(){
 
 addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     if (addCloseNeighborsToCellsCheckbox.checked) {
-        rayMarchQuadOct1cqw.octreeMargins = 1.75;
+        rayMarchQuadOct1cqw.octreeMargins = 2.25;
         rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     } else {
         rayMarchQuadOct1cqw.octreeMargins = 0.0;
