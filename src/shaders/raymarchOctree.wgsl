@@ -113,9 +113,6 @@ fn parent(index: i32) -> i32 {
 }
 
 var<private> intersecting: i32 = -1;
-var<private> previousIntersecting: i32 = -1;
-var<private> previouserIntersecting: i32 = -1;
-var<private> previousestIntersecting: i32 = -1;
 var<private> numRaySphereIntersections: i32 = 0;
 var<private> numIntersected: i32 = 0;
 
@@ -305,54 +302,67 @@ fn findNeighboringCells(point: vec3<f32>, binId: i32) {
 
 var<private> start: vec3<f32>;
 var<private> end: f32;
+const stackSize = 8;
+var<private> stackT: array<f32, stackSize>;
+var<private> stackBins: array<i32, stackSize>;
 
-//todo: return multiple closest cells too and raymarch along them, otherwise at bigger atom sizes we die 
-//todo: try messing with this more
-//todo: start xyz order in way according  https://bertolami.com/files/octrees.pdf
+fn resetStack() {
+    for (var i : i32 = 0; i < stackSize; i++) {
+        stackT[i] = 10000000.0;
+        stackBins[i] = -1;
+    }
+}
+
+fn insertIntoSortedStack(t: f32, bin: i32) {
+    for (var i : i32 = 0; i < stackSize; i++) {
+        if (stackT[i] > t) {
+            for (var j : i32 = stackSize-1; j >= i+1; j--) {
+                stackT[j] = stackT[j-1];
+                stackBins[j] = stackBins[j-1];
+            }
+            stackT[i] = t;
+            stackBins[i] = bin;
+            break;
+        }
+    }
+}
+
 fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     var closestAABBintersection: vec3<f32> = vec3(-1.0);
-    var closestHit: Hit = miss;
     let binsAmount = arrayLength(&bins.bins);
     let inverseDirection = 1.0/direction;
-    let lastIntersecting = previousestIntersecting;
-    previousestIntersecting = previouserIntersecting;
-    previouserIntersecting = previousIntersecting;
-    previousIntersecting = intersecting;
-    intersecting = -1;
+    resetStack();
 
     for (var i : i32 = 0; i < 8; i++) {
         var firstId = i;
-        if (direction.z < 0) {
+        /*if (direction.z < 0) {
             firstId = 7-i;
-        }
+        }*/
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
-        if (intersection.x < intersection.y && intersection.x > -15.0 && intersection.x <= closestHit.t) {
+        if (intersection.x < intersection.y && intersection.x > -15.0) {
             numIntersected++;
             for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
-                if (intersection2.x < intersection2.y && intersection2.x > -5.0 && intersection2.x <= closestHit.t) {
+                if (intersection2.x < intersection2.y && intersection2.x > -10.0) {
                     numIntersected++;
                     for (var n : i32 = child(m, 0); n < child(m, 8); n++) {
                         let intersection3 = aabbIntersection(origin, direction, inverseDirection, bins.bins[n].min, bins.bins[n].max);
-                        if (intersection3.x < intersection3.y && intersection3.x > -5.0 && intersection3.x <= closestHit.t) {
+                        if (intersection3.x < intersection3.y && intersection3.x > -5.0) {
                             numIntersected++;
                             for (var j : i32 = child(n, 0); j < child(n, 8); j++) {
-                                if (j == lastIntersecting || j == previousIntersecting || j == previouserIntersecting || j == previousestIntersecting) {
-                                    continue;
-                                }
                                 let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
-                                if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -0.25 && intersectionFinal.x <= closestHit.t) {
+                                if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -0.25) {
                                     numIntersected++;
+                                    var closestT: f32 = miss.t;
                                     for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
                                         let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a]);
                                         numRaySphereIntersections++;
-                                        if (hit.t < closestHit.t) {
-                                            closestHit = hit;
-                                            intersecting = j;
-                                            //closestAABBintersection = start+direction*mix(intersectionFinal.x-5, intersectionFinal.y+5, drawSettings.start);
-                                            closestAABBintersection = start+direction*mix(intersectionFinal.x-5, intersectionFinal.y, drawSettings.start);
-                                            end = 2+intersectionFinal.y-intersectionFinal.x;
+                                        if (hit.t < closestT) {
+                                            closestT = hit.t;
                                         }
+                                    }
+                                    if (closestT != miss.t) {
+                                        insertIntoSortedStack(closestT, j);
                                     }
                                 }
                             }
@@ -362,12 +372,14 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
             }
         }
     }
-    if (drawSettings.getCellNeighbors > 0.5) { 
-        findNeighboringCells(closestHit.intersection, intersecting);
-    }
-    start = closestHit.intersection;
-    return closestAABBintersection;
+    intersecting = stackBins[0];
+    start = start+direction*stackT[0];
+    let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
+    end = max(binSize.x, max(binSize.y, binSize.z));
+    return start;
 }
+
+const maxIterations = 200;
 
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {
@@ -393,6 +405,8 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         return vec4(0.15, 0.0, 0.15, 1.0);
     }
 
+    let initStart = start;
+
     var closestAABB = findIntersectingCells(start, rayDirection);
     if (intersecting == -1) {
         if (drawSettings.debugMode == 2) {
@@ -408,20 +422,24 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     var iteration = 0;
     var resultColor = vec4(0.0, 0.0, 0.0, 1.0);
     var maxDistance: f32 = -1.0;
-	for (iteration = 0; iteration < 100; iteration++) {
+    var stackPos = 0;
+	for (iteration = 0; iteration < maxIterations; iteration++) {
 		if (t > end+2*drawSettings.atomsScale+drawSettings.kSmoothminScale) {
             if (drawSettings.allowReset > 0.5) {
                 t = 0.0;
-                start = start+rayDirection*(0.1);
-                //start = closestAABB;
-                closestAABB = findIntersectingCells(start, rayDirection);
-                if (intersecting == -1) {
+                stackPos++;
+                if (stackPos == stackSize || stackBins[stackPos] == -1) {
                     if (drawSettings.debugMode == 2) {
                         //octree intersections
                         return colormap_haze(f32(numRaySphereIntersections)/250.0);
+                    } else if (drawSettings.debugMode == 9) {
+                        //stack steps
+                        return colormap_eosb(f32(stackPos)/f32(stackSize));
                     }
                     return vec4(0.15, 0.0, 0.15, 1.0);
                 }
+                start = initStart.xyz+rayDirection*stackT[stackPos];
+                intersecting = stackBins[stackPos];
             } else {
                 resultColor = vec4(0.0, 0.0, 0.0, 1.0);
                 break;
@@ -431,13 +449,13 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
 		let sdfResult = dScene(pos);
         
-		if (sdfResult.distance < 0.05) {
+		if (sdfResult.distance < 0.025) {
             resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+sdfResult.color/2;
             break;
 		}
 		t = t+sdfResult.distance;
 	}
-    if (iteration == 100) {
+    if (iteration == maxIterations) {
         resultColor = vec4(0.05, 0.05, 0.95, 1.0);
     }
 
@@ -450,7 +468,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     } else if (drawSettings.debugMode == 1) {
         //iterations
         //return vec4(max(f32(iteration)/20.0, 1)-max((f32(iteration)-20.0)/80.0, 0), f32(iteration)/40.0, f32(iteration)/80.0, 1.0);
-        return colormap_hotmetal(f32(iteration)/25.0);
+        return colormap_hotmetal(f32(iteration)/maxIterations);
     } else if (drawSettings.debugMode == 2) {
         //octree intersections
         //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-max((f32(numRaySphereIntersections)-50.0)/350.0, 0), f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
@@ -481,6 +499,9 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         let ndotl: f32 = dot(n, l1);
         var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), ndotl*2+1)*resultColor.xyz;
         return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+    } else if (drawSettings.debugMode == 9) {
+        //stack steps
+        return colormap_eosb(f32(stackPos)/f32(stackSize));
     }
     return resultColor;
     //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-f32(numRaySphereIntersections)/400.0, f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
