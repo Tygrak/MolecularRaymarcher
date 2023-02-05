@@ -242,69 +242,6 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom) ->
     return Hit(t, intersection, normal, atom.number);
 }
 
-fn getChildCellFromLimits(point: vec3<f32>) -> i32 {
-    let center: vec3<f32> = drawSettings.minLimit.xyz+(drawSettings.maxLimit.xyz-drawSettings.minLimit.xyz)/2;
-    var childId: i32 = 0;
-    if (point.x > center.x) {
-        childId += 1;
-    }
-    if (point.y > center.y) {
-        childId += 2;
-    }
-    if (point.z > center.z) {
-        childId += 4;
-    }
-    return childId;
-}
-
-fn getChildCellFromBin(point: vec3<f32>, binId: i32) -> i32 {
-    let center: vec3<f32> = bins.bins[binId].min+(bins.bins[binId].max-bins.bins[binId].min)/2;
-    var childId: i32 = 0;
-    if (point.x > center.x) {
-        childId += 1;
-    }
-    if (point.y > center.y) {
-        childId += 2;
-    }
-    if (point.z > center.z) {
-        childId += 4;
-    }
-    return child(binId, childId);
-}
-
-fn findCellInOctreeForPoint(point: vec3<f32>) -> i32 {
-    if ((point.x <= drawSettings.minLimit.x || point.y <= drawSettings.minLimit.y || point.y <= drawSettings.minLimit.z) 
-    || (point.x >= drawSettings.maxLimit.x || point.y >= drawSettings.maxLimit.y || point.z >= drawSettings.maxLimit.z)) {
-        return -1;
-    }
-    let binsAmount = i32(arrayLength(&bins.bins));
-    let size: vec3<f32> = drawSettings.maxLimit.xyz-drawSettings.minLimit.xyz;
-    var bin: i32 = getChildCellFromLimits(point);
-    while (child(bin, 0) < binsAmount) {
-        bin = getChildCellFromBin(point, bin);
-    }
-    return bin;
-}
-
-fn findNeighboringCells(point: vec3<f32>, binId: i32) {
-    let size: vec3<f32> = bins.bins[binId].max-bins.bins[binId].min;
-    if (point.x < bins.bins[binId].min.x+size.x/4) {
-        neighborX = findCellInOctreeForPoint(point-vec3(size.x, 0.0, 0.0));
-    } else if (point.x > bins.bins[binId].min.x+3*size.x/4) {
-        neighborX = findCellInOctreeForPoint(point+vec3(size.x, 0.0, 0.0));
-    }
-    if (point.y < bins.bins[binId].min.y+size.y/4) {
-        neighborY = findCellInOctreeForPoint(point-vec3(0.0, size.y, 0.0));
-    } else if (point.y > bins.bins[binId].min.y+3*size.y/4) {
-        neighborY = findCellInOctreeForPoint(point+vec3(0.0, size.y, 0.0));
-    }
-    if (point.z < bins.bins[binId].min.z+size.z/4) {
-        neighborZ = findCellInOctreeForPoint(point-vec3(0.0, 0.0, size.z));
-    } else if (point.z > bins.bins[binId].min.z+3*size.z/4) {
-        neighborZ = findCellInOctreeForPoint(point+vec3(0.0, 0.0, size.z));
-    }
-}
-
 var<private> start: vec3<f32>;
 var<private> end: f32;
 const stackSize = 8;
@@ -345,15 +282,15 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
         }*/
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
         if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5) {
-            numIntersected++;
+            numIntersected += 12;
             for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
                 if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5) {
-                    numIntersected++;
+                    numIntersected += 4;
                     for (var n : i32 = child(m, 0); n < child(m, 8); n++) {
                         let intersection3 = aabbIntersection(origin, direction, inverseDirection, bins.bins[n].min, bins.bins[n].max);
                         if (intersection3.x < intersection3.y && intersection3.x > -5.0 && bins.bins[n].end < -1.5) {
-                            numIntersected++;
+                            numIntersected += 2;
                             for (var j : i32 = child(n, 0); j < child(n, 8); j++) {
                                 let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
                                 if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -0.25) {
@@ -384,7 +321,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     return start;
 }
 
-const maxIterations = 125;
+const maxIterations = 130;
 
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {

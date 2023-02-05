@@ -25,6 +25,7 @@ const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTML
 const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
 const addCloseNeighborsToCellsCheckbox = document.getElementById("addCloseNeighborsToCellsCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
+const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 
@@ -218,10 +219,12 @@ async function Initialize() {
         if (visualizationSelection.value == "basic") {
             renderPass.setPipeline(pipeline);
             renderPass.setBindGroup(0, uniformBindGroup);
-            if (dataSelection.value != "1cqw") {
+            if (dataSelection.value == "1cqw") {
                 structure1aon.DrawStructure(renderPass, percentageShown);
-            } else {
+            } else if (dataSelection.value == "1aon") {
                 structure1cqw.DrawStructure(renderPass, percentageShown);
+            } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
+                structureLoaded.DrawStructure(renderPass, percentageShown);
             }
         } else if (visualizationSelection.value == "impostor") {
             const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, camera.eye, camera.view.center, camera.view.up);
@@ -240,6 +243,12 @@ async function Initialize() {
                 renderPass.setPipeline(pipeline);
                 renderPass.setBindGroup(0, uniformBindGroup);
                 structure1aon.DrawStructure(renderPass, 1, true);
+            } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
+                impostorRendererLoaded.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+
+                renderPass.setPipeline(pipeline);
+                renderPass.setBindGroup(0, uniformBindGroup);
+                structureLoaded.DrawStructure(renderPass, 1, true);
             }
         } else if (visualizationSelection.value == "raymarchoctree") {
             let inverseVp = mat4.create();
@@ -321,13 +330,12 @@ async function Initialize() {
 
             t0 = performance.now();
             rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
             t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
-        if (dataSelection.value == "Loaded" && structureLoaded == undefined) {
-            structure1aon = new Structure(require('./data/1aon.pdb'));
-            structure1aon.InitializeBuffers(device);
+        if (dataSelection.value == "Loaded" && structureLoaded != undefined) {
             impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
             
@@ -338,8 +346,9 @@ async function Initialize() {
             //console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
 
             t0 = performance.now();
-            rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
-            rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
+            rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+            rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
             t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
@@ -358,6 +367,7 @@ async function Initialize() {
             impostorRendererLoaded = new ImpostorRenderer(device, gpu.format);
             impostorRendererLoaded.LoadAtoms(device, structureLoaded);
             rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
             let t1 = performance.now();
             console.log("Loading data from file (" + dataFileInput.files![0].name + "): " + (t1-t0) + "ms");
@@ -388,6 +398,18 @@ addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     } else {
         rayMarchQuadOct1cqw.octreeMargins = 0.0;
         rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
+    }
+});
+
+makeIrregularOctreeCheckbox.addEventListener('change', function(){
+    rayMarchQuadOct1cqw.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+    rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
+    if (dataSelection.value == "1aon") {
+        rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+        rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
+    } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
+        rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+        rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
     }
 });
 

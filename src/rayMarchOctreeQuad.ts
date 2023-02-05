@@ -157,8 +157,8 @@ class RayPipelineSetup {
         });
     }
 
-    public LoadAtoms(device: GPUDevice, structure: Structure, margins: number) {
-        let tree: Octree = new Octree(structure.atoms, 4, margins);
+    public LoadAtoms(device: GPUDevice, structure: Structure, margins: number, makeIrregularOctree: boolean = true) {
+        let tree: Octree = new Octree(structure.atoms, 4, margins, makeIrregularOctree);
         console.log(tree);
         this.atomsCount = tree.tree.length;
         this.atomsBuffer = device.createBuffer({
@@ -218,6 +218,7 @@ export class RayMarchOctreeQuad {
     kSmoothminScale: number = 0.8;
     octreeMargins: number = 2.05;
     loadedAtoms: number = 0;
+    makeIrregularOctree: boolean = true;
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let positions = new Float32Array([
@@ -237,7 +238,7 @@ export class RayMarchOctreeQuad {
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
         this.loaded = true;
-        this.pipelineSetupRaymarch.LoadAtoms(device, structure, this.octreeMargins);
+        this.pipelineSetupRaymarch.LoadAtoms(device, structure, this.octreeMargins, this.makeIrregularOctree);
         this.loadedAtoms = structure.atoms.length;
     }
 
