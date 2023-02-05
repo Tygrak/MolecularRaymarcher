@@ -161,3 +161,18 @@ export function InitCanvas(useFixedSize: boolean) {
         }
     }
 }
+
+export function LoadData(dataFile: File, callback: Function) {
+    let reader = new FileReader();
+    reader.onload = function (textResult) {
+        if (textResult.target == null) {
+            return;
+        }
+        let text = textResult.target.result;
+        callback(text);
+    }
+    reader.onerror = function (e) {
+        throw ("Loading the data file failed.");
+    }
+    reader.readAsText(dataFile, "UTF-8");
+}

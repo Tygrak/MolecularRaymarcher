@@ -1,4 +1,4 @@
-import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateTimestampBuffer} from './helper';
+import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateTimestampBuffer, LoadData} from './helper';
 import shader from './shaders/shader.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
@@ -25,17 +25,22 @@ const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTML
 const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
 const addCloseNeighborsToCellsCheckbox = document.getElementById("addCloseNeighborsToCellsCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
+const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
+const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
 let structure1cqw : Structure;
 let structure1aon : Structure;
+let structureLoaded : Structure;
 let renderMs = 0.1;
 
 let rayMarchQuadOct1cqw : RayMarchOctreeQuad;
 let rayMarchQuadOct1aon : RayMarchOctreeQuad;
+let rayMarchQuadOctLoaded : RayMarchOctreeQuad;
 let impostorRenderer1cqw : ImpostorRenderer;
 let impostorRenderer1aon : ImpostorRenderer;
+let impostorRendererLoaded : ImpostorRenderer;
 
 let device: GPUDevice;
 
@@ -256,6 +261,12 @@ async function Initialize() {
                 rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+            } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
+                rayMarchQuadOctLoaded.debugMode = debugMode;
+                rayMarchQuadOctLoaded.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
+                rayMarchQuadOctLoaded.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
+                rayMarchQuadOctLoaded.kSmoothminScale = kSmoothminScale;
+                rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
             }
         }
         renderPass.end();
@@ -314,6 +325,44 @@ async function Initialize() {
             t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
+        if (dataSelection.value == "Loaded" && structureLoaded == undefined) {
+            structure1aon = new Structure(require('./data/1aon.pdb'));
+            structure1aon.InitializeBuffers(device);
+            impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
+            impostorRenderer1aon.LoadAtoms(device, structure1aon);
+            
+            let t0 = performance.now();
+            //rayMarchQuad1aon = new RayMarchQuad(device, gpu.format);
+            //rayMarchQuad1aon.LoadAtoms(device, structure1aon);
+            let t1 = performance.now();
+            //console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
+
+            t0 = performance.now();
+            rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
+            t1 = performance.now();
+            console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
+        }
+    };
+
+    dataLoadButton.onclick = (e) => {
+        if (dataFileInput.files == null || dataFileInput.files?.length == 0) {
+            console.log("No file selected!");
+            return;
+        }
+        
+        let t0 = performance.now();
+        LoadData(dataFileInput.files[0], (text: string) => {
+            structureLoaded = new Structure(text);
+            structureLoaded.InitializeBuffers(device);
+            impostorRendererLoaded = new ImpostorRenderer(device, gpu.format);
+            impostorRendererLoaded.LoadAtoms(device, structureLoaded);
+            rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
+            let t1 = performance.now();
+            console.log("Loading data from file (" + dataFileInput.files![0].name + "): " + (t1-t0) + "ms");
+            dataSelection.value = "dataFile";
+        });
     };
 
     CreateAnimation(draw);

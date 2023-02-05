@@ -467,9 +467,10 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     let center = drawSettings.minLimit.xyz+limitsSize/2;
     let sphereInitStart = normalize(center-cameraPos.xyz)*limitsMax;
     let cameraDistance = distance(sphereInitStart, pos);
+    let distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
     if (drawSettings.debugMode == 0) {
         //default
-        return resultColor*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+        return resultColor*distanceFade;
     } else if (drawSettings.debugMode == 1) {
         //iterations
         //return vec4(max(f32(iteration)/20.0, 1)-max((f32(iteration)-20.0)/80.0, 0), f32(iteration)/40.0, f32(iteration)/80.0, 1.0);
@@ -489,27 +490,27 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         return vec4(findNormal(pos), 1.0);
     } else if (drawSettings.debugMode == 6) {
         //default bright
-        return (vec4(abs(0.5-resultColor.x), abs(0.5-resultColor.y), abs(0.5-resultColor.z), 1.0))*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+        return (vec4(abs(0.5-resultColor.x), abs(0.5-resultColor.y), abs(0.5-resultColor.z), 1.0))*(distanceFade);
     } else if (drawSettings.debugMode == 7) {
         //default semilit
         let n: vec3<f32> = normalize(findNormal(pos));
         let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
         var c = mix(resultColor.xyz*0.5, resultColor.xyz*1.25, (dot(n, l1)+1)/2);
-        return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+        return vec4(c, 1.0)*(distanceFade);
     } else if (drawSettings.debugMode == 8) {
         //default lit
         let n: vec3<f32> = findNormal(pos);
         let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
         let l2: vec3<f32> = normalize(vec3(-0.5, 1, 0.25));
         var c = max(dot(n, l1), 0)*vec3(0.75, 0.5, 0.5)*resultColor.xyz + max(dot(n, l2), 0)*vec3(0.5, 0.5, 0.75)*resultColor.xyz;
-        return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+        return vec4(c, 1.0)*(distanceFade);
     } else if (drawSettings.debugMode == 9) {
         //default gooch
         let n: vec3<f32> = findNormal(pos);
         let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
         let ndotl: f32 = dot(n, l1);
         var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), (ndotl+1)/2)*resultColor.xyz;
-        return vec4(c, 1.0)*(pow(cameraDistance/(limitsMax*1.2), 2.0));
+        return vec4(c, 1.0)*(distanceFade);
     } else if (drawSettings.debugMode == 10) {
         //stack steps
         return colormap_eosb(f32(stackPos)/f32(stackSize));
