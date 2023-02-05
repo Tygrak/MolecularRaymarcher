@@ -8,6 +8,9 @@ export class OctreeBin {
     start: number;
     end: number;
     children: number = 0;
+    atomsInChildNodes: number = 0;
+    layer: number = 0;
+    isLeaf: boolean = false;
 
     constructor(x: number, y: number, z: number, minLimit: vec3, size: vec3, dimDivider: number) {
         this.min = vec3.fromValues(minLimit[0]+x*(size[0]/dimDivider), minLimit[1]+y*(size[1]/dimDivider), minLimit[2]+z*(size[2]/dimDivider));
@@ -29,7 +32,7 @@ export class OctreeBin {
         return this.IsVec3Inside(a.GetPosition());
     }
 
-    public IsAtomInsideTreeBuild(a: Atom, margin: number) {
+    public IsAtomInsideWithMargins(a: Atom, margin: number) {
         return a.x >= this.min[0]-margin && a.y >= this.min[1]-margin && a.z >= this.min[2]-margin 
             && a.x <= this.max[0]+margin && a.y <= this.max[1]+margin && a.z <= this.max[2]+margin;
     }
@@ -82,6 +85,7 @@ export class Octree {
                 for (let y = 0; y < dimDivider; y++) {
                     for (let x = 0; x < dimDivider; x++) {
                         let bin = new OctreeBin(x, y, z, limits.minLimits, limits.size, dimDivider);
+                        bin.layer = layer;
                         if (layer == 0) {
                             this.bins[binId] = bin;
                         } else {
@@ -91,11 +95,13 @@ export class Octree {
                             parent.children++;
                         }
                         if (layer == this.layers-1) {
+                            bin.isLeaf = true;
                             bin.start = currPos;
                             for (let i = atoms.length-1; i >= 0; i--) {
-                                if (bin.IsAtomInsideTreeBuild(atoms[i], margin)) {
+                                if (bin.IsAtomInsideWithMargins(atoms[i], margin)) {
                                     this.tree[currPos] = atoms[i].GetVec4Representation();
                                     currPos++;
+                                    this.IncrementChildAtomsCounterInParents(bin);
                                     //atoms.splice(i, 1);
                                 }
                             }
@@ -106,6 +112,7 @@ export class Octree {
                 }
             }
         }
+        this.SetStartEndInNonLeafBins();
     }
 
     private CalculateLimitsForAtoms(atoms: Atom[]) {
@@ -135,6 +142,34 @@ export class Octree {
         let center = vec3.add(vec3.fromValues(0, 0, 0), minLimits, maxLimits);
         let size = vec3.subtract(vec3.fromValues(0, 0, 0), maxLimits, minLimits);
         return {minLimits, maxLimits, center, size};
+    }
+
+    private GetParentBin(bin: OctreeBin) {
+        let binPreviousLayerStart = 0;
+        for (let layer = 0; layer < bin.layer; layer++) {
+            binPreviousLayerStart += layer <= 0 ? 0 : Math.pow(8, layer);
+        }
+        let parentIndex = this.bins.findIndex((b, index) => index >= binPreviousLayerStart && b.IsVec3Inside(bin.Center()));
+        let parent = this.bins[parentIndex];
+        return parent;
+    }
+
+    private IncrementChildAtomsCounterInParents(bin: OctreeBin) {
+        let current = bin;
+        while (current.layer != 0) {
+            current = this.GetParentBin(current);
+            current.atomsInChildNodes++;
+        }
+    }
+
+    private SetStartEndInNonLeafBins() {
+        for (let i = 0; i < this.bins.length; i++) {
+            const bin = this.bins[i];
+            if (!bin.isLeaf) {
+                bin.start = -bin.atomsInChildNodes-1;
+                bin.end = -bin.atomsInChildNodes-1;
+            }
+        }
     }
 
     public Nearest(atom: Atom) {

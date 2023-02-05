@@ -166,3 +166,63 @@ fn colormap_eosb(x: f32) -> vec4<f32> {
 	let v = colormap_eosb_v(clamp(x, 0.0, 1.0));
 	return hsv2rgb(h, s, v);
 }
+
+fn debugModeIterations(iteration: i32, maxIterations: i32) -> vec4<f32> {
+	return colormap_hotmetal(f32(iteration)/f32(maxIterations));
+}
+
+fn debugModeOctree(numRaySphereIntersections: i32, totalAtoms: f32) -> vec4<f32> {
+	return colormap_haze(f32(numRaySphereIntersections)/(drawSettings.totalAtoms/4));
+}
+
+fn debugModeOctree2(numIntersected: i32, iteration: i32, maxIterations: i32) -> vec4<f32> {
+	var rAdd = 0.0;
+	if (iteration > 0) {
+		rAdd = 0.2;
+	}
+	return vec4(f32(iteration)/f32(maxIterations)+rAdd, min(f32(numIntersected)/50.0, 1)-max(f32(max(numIntersected-250, 0))/200.0, 0), f32(max(numIntersected-50, 0))/200.0, 1.0);
+}
+
+fn debugModeDepth(maxDistance: f32) -> vec4<f32> {
+	let farDistance = 400.0;
+	if (maxDistance < farDistance) {
+		return colormap_eosb(maxDistance/farDistance);
+	} else {
+		return colormap_eosb(min(maxDistance/farDistance, 1))*(1-(maxDistance-farDistance)/(farDistance*3));
+	}
+}
+
+fn debugModeNormals(normal: vec3<f32>) -> vec4<f32> {
+	return vec4(normal, 1.0);
+}
+
+fn debugModeSteps(stackPos: i32, stackSize: i32) -> vec4<f32> {
+	return colormap_eosb(f32(stackPos)/f32(stackSize));
+}
+
+fn debugModeBright(resultColor: vec4<f32>, distanceFade: f32) -> vec4<f32> {
+	return (vec4(abs(0.5-resultColor.x), abs(0.5-resultColor.y), abs(0.5-resultColor.z), 1.0))*(distanceFade);
+}
+
+fn debugModeSemilit(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {
+	let n: vec3<f32> = normalize(normal);
+	let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
+	var c = mix(resultColor.xyz*0.5, resultColor.xyz*1.25, (dot(n, l1)+1)/2);
+	return vec4(c, 1.0)*(distanceFade);
+}
+
+fn debugModeLit(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {
+	let n: vec3<f32> = normalize(normal);
+	let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
+	let l2: vec3<f32> = normalize(vec3(-0.5, 1, 0.25));
+	var c = max(dot(n, l1), 0)*vec3(0.75, 0.5, 0.5)*resultColor.xyz + max(dot(n, l2), 0)*vec3(0.5, 0.5, 0.75)*resultColor.xyz;
+	return vec4(c, 1.0)*(distanceFade);
+}
+
+fn debugModeGooch(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {
+	let n: vec3<f32> = normalize(normal);
+	let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
+	let ndotl: f32 = dot(n, l1);
+	var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), (ndotl+1)/2)*resultColor.xyz;
+	return vec4(c, 1.0)*(distanceFade);
+}

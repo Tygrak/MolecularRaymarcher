@@ -344,15 +344,15 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
             firstId = 7-i;
         }*/
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
-        if (intersection.x < intersection.y && intersection.x > -15.0) {
+        if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5) {
             numIntersected++;
             for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
-                if (intersection2.x < intersection2.y && intersection2.x > -10.0) {
+                if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5) {
                     numIntersected++;
                     for (var n : i32 = child(m, 0); n < child(m, 8); n++) {
                         let intersection3 = aabbIntersection(origin, direction, inverseDirection, bins.bins[n].min, bins.bins[n].max);
-                        if (intersection3.x < intersection3.y && intersection3.x > -5.0) {
+                        if (intersection3.x < intersection3.y && intersection3.x > -5.0 && bins.bins[n].end < -1.5) {
                             numIntersected++;
                             for (var j : i32 = child(n, 0); j < child(n, 8); j++) {
                                 let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
@@ -384,7 +384,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     return start;
 }
 
-const maxIterations = 200;
+const maxIterations = 125;
 
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {
@@ -415,8 +415,9 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     var closestAABB = findIntersectingCells(start, rayDirection);
     if (intersecting == -1) {
         if (drawSettings.debugMode == 2) {
-            //octree intersections
-            return colormap_haze(f32(numRaySphereIntersections)/250.0);
+            return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
+        } else if (drawSettings.debugMode == 3) {
+            return debugModeOctree2(numIntersected, 0, maxIterations);
         }
         return vec4(0.15, 0.0, 0.15, 1.0);
     }
@@ -435,11 +436,11 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
                 stackPos++;
                 if (stackPos == stackSize || stackBins[stackPos] == -1) {
                     if (drawSettings.debugMode == 2) {
-                        //octree intersections
-                        return colormap_haze(f32(numRaySphereIntersections)/250.0);
+                        return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
+                    } else if (drawSettings.debugMode == 3) {
+                        return debugModeOctree2(numIntersected, iteration, maxIterations);
                     } else if (drawSettings.debugMode == 10) {
-                        //stack steps
-                        return colormap_eosb(f32(stackPos)/f32(stackSize));
+                        return debugModeSteps(stackPos, stackSize);
                     }
                     return vec4(0.15, 0.0, 0.15, 1.0);
                 }
@@ -454,14 +455,17 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
 		let sdfResult = dScene(pos);
         
-		if (sdfResult.distance < 0.025) {
+		if (sdfResult.distance < 0.05) {
             resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+sdfResult.color/2;
             break;
 		}
 		t = t+sdfResult.distance;
 	}
-    if (iteration == maxIterations) {
-        resultColor = vec4(0.05, 0.05, 0.95, 1.0);
+    if (iteration == maxIterations && drawSettings.debugB > 0.5) {
+        resultColor = vec4(10.05, 10.05, 10.95, 1.0);
+    } else if (iteration == maxIterations && drawSettings.debugB <= 0.5) {
+        let sdfResult = dScene(pos);
+        resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+sdfResult.color/2;
     }
 
     let center = drawSettings.minLimit.xyz+limitsSize/2;
@@ -472,48 +476,25 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         //default
         return resultColor*distanceFade;
     } else if (drawSettings.debugMode == 1) {
-        //iterations
-        //return vec4(max(f32(iteration)/20.0, 1)-max((f32(iteration)-20.0)/80.0, 0), f32(iteration)/40.0, f32(iteration)/80.0, 1.0);
-        return colormap_hotmetal(f32(iteration)/maxIterations);
+        return debugModeIterations(iteration, maxIterations);
     } else if (drawSettings.debugMode == 2) {
-        //octree intersections
-        //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-max((f32(numRaySphereIntersections)-50.0)/350.0, 0), f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
-        return colormap_haze(f32(numRaySphereIntersections)/(drawSettings.totalAtoms/4));
+        return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
     } else if (drawSettings.debugMode == 3) {
-        //octree intersections 2
-        return vec4(max(f32(iteration)/10.0, 1)-max((f32(iteration)-10.0)/60.0, 0), f32(numIntersected)/55.0, f32(numIntersected)/85.0, 1.0);
+        return debugModeOctree2(numIntersected, iteration, maxIterations);
     } else if (drawSettings.debugMode == 4) {
-        //depth
-        return colormap_eosb(maxDistance/250.0);
+        return debugModeDepth(maxDistance);
     } else if (drawSettings.debugMode == 5) {
-        //normals
-        return vec4(findNormal(pos), 1.0);
+        return debugModeNormals(findNormal(pos));
     } else if (drawSettings.debugMode == 6) {
-        //default bright
-        return (vec4(abs(0.5-resultColor.x), abs(0.5-resultColor.y), abs(0.5-resultColor.z), 1.0))*(distanceFade);
+        return debugModeBright(resultColor, distanceFade);
     } else if (drawSettings.debugMode == 7) {
-        //default semilit
-        let n: vec3<f32> = normalize(findNormal(pos));
-        let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
-        var c = mix(resultColor.xyz*0.5, resultColor.xyz*1.25, (dot(n, l1)+1)/2);
-        return vec4(c, 1.0)*(distanceFade);
+        return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 8) {
-        //default lit
-        let n: vec3<f32> = findNormal(pos);
-        let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
-        let l2: vec3<f32> = normalize(vec3(-0.5, 1, 0.25));
-        var c = max(dot(n, l1), 0)*vec3(0.75, 0.5, 0.5)*resultColor.xyz + max(dot(n, l2), 0)*vec3(0.5, 0.5, 0.75)*resultColor.xyz;
-        return vec4(c, 1.0)*(distanceFade);
+        return debugModeLit(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 9) {
-        //default gooch
-        let n: vec3<f32> = findNormal(pos);
-        let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
-        let ndotl: f32 = dot(n, l1);
-        var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), (ndotl+1)/2)*resultColor.xyz;
-        return vec4(c, 1.0)*(distanceFade);
+        return debugModeGooch(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 10) {
-        //stack steps
-        return colormap_eosb(f32(stackPos)/f32(stackSize));
+        return debugModeSteps(stackPos, stackSize);
     }
     return resultColor;
     //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-f32(numRaySphereIntersections)/400.0, f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
