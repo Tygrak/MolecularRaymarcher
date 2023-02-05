@@ -423,11 +423,13 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
 
+    var maxDistance: f32 = -1.0;
+    var raymarchedAtoms: f32 = bins.bins[intersecting].end-bins.bins[intersecting].start;
+
     var t : f32 = 0.0;
     var pos : vec3<f32> = vec3(0.0);
     var iteration = 0;
     var resultColor = vec4(0.0, 0.0, 0.0, 1.0);
-    var maxDistance: f32 = -1.0;
     var stackPos = 0;
 	for (iteration = 0; iteration < maxIterations; iteration++) {
 		if (t > end+2*drawSettings.atomsScale+drawSettings.kSmoothminScale) {
@@ -446,6 +448,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
                 }
                 start = initStart.xyz+rayDirection*stackT[stackPos];
                 intersecting = stackBins[stackPos];
+                raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
             } else {
                 resultColor = vec4(0.0, 0.0, 0.0, 1.0);
                 break;
@@ -495,6 +498,8 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         return debugModeGooch(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 10) {
         return debugModeSteps(stackPos, stackSize);
+    } else if (drawSettings.debugMode == 11) {
+        return debugModeRaymarchedAtoms(raymarchedAtoms);
     }
     return resultColor;
     //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-f32(numRaySphereIntersections)/400.0, f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
