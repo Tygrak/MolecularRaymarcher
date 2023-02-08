@@ -291,6 +291,14 @@ fn debugModeOctree2(numIntersected: i32, iteration: i32, maxIterations: i32) -> 
 	return vec4(0.0, -(f32(iteration)/f32(maxIterations)+rAdd), 0.0, 0.0)+colormap_spectral(f32(numIntersected)/150);
 }
 
+fn debugModeOctree3(numRaySphereIntersections: i32, numIntersected: i32, intersecting: i32) -> vec4<f32> {
+	var iAdd = vec4(0.0, 0.0, 0.0, 0.0);
+	if (intersecting >= 0) {
+		iAdd = vec4(-0.05, -0.05, 0.1, 0.0);
+	}
+	return colormap_haze(f32(numRaySphereIntersections)/(400))/2+colormap_spectral(f32(numIntersected)/100)/2+iAdd;
+}
+
 fn debugModeDepth(maxDistance: f32) -> vec4<f32> {
 	let farDistance = 400.0;
 	if (maxDistance < farDistance) {

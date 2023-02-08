@@ -244,7 +244,7 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom) ->
 
 var<private> start: vec3<f32>;
 var<private> end: f32;
-const stackSize = 8;
+const stackSize = 10;
 var<private> stackT: array<f32, stackSize>;
 var<private> stackBins: array<i32, stackSize>;
 
@@ -282,11 +282,11 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
         }*/
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
         if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5) {
-            numIntersected += 12;
+            numIntersected += 8;
             for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
                 if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5) {
-                    numIntersected += 4;
+                    numIntersected += 3;
                     for (var n : i32 = child(m, 0); n < child(m, 8); n++) {
                         let intersection3 = aabbIntersection(origin, direction, inverseDirection, bins.bins[n].min, bins.bins[n].max);
                         if (intersection3.x < intersection3.y && intersection3.x > -5.0 && bins.bins[n].end < -1.5) {
@@ -299,6 +299,9 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                     for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
                                         let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a]);
                                         numRaySphereIntersections++;
+                                        if (hit.t > intersectionFinal.y || hit.t < intersectionFinal.x) {
+                                            continue;
+                                        }
                                         if (hit.t < closestT) {
                                             closestT = hit.t;
                                         }
@@ -321,7 +324,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     return start;
 }
 
-const maxIterations = 130;
+const maxIterations = 100;
 
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {
@@ -350,6 +353,9 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     let initStart = start;
 
     var closestAABB = findIntersectingCells(start, rayDirection);
+    if (drawSettings.debugMode == 12) {
+        return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
+    }
     if (intersecting == -1) {
         if (drawSettings.debugMode == 2) {
             return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
@@ -380,6 +386,9 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
                         return debugModeOctree2(numIntersected, iteration, maxIterations);
                     } else if (drawSettings.debugMode == 10) {
                         return debugModeSteps(stackPos, stackSize);
+                    }
+                    if (stackPos == stackSize && drawSettings.debugB > 0.5) {
+                        return vec4(10.15, 10.0, 0.15, 1.0);
                     }
                     return vec4(0.15, 0.0, 0.15, 1.0);
                 }
@@ -437,6 +446,8 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         return debugModeSteps(stackPos, stackSize);
     } else if (drawSettings.debugMode == 11) {
         return debugModeRaymarchedAtoms(raymarchedAtoms);
+    } else if (drawSettings.debugMode == 12) {
+        return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
     }
     return resultColor;
     //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-f32(numRaySphereIntersections)/400.0, f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);

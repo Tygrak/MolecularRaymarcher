@@ -124,10 +124,10 @@ export class Octree {
             let prevBins = bins;
             bins = this.MakeBinsFromLimitsUsingCenter(min, max, currCenter, margin, atoms, layer, false);
             let stopMargin = margin*2*(5-layer)+0.25;
-            if (bins.findIndex((b) => b.Size()[0] < stopMargin || b.Size()[1] < stopMargin || b.Size()[2] < stopMargin) != -1) {
+            /*if (bins.findIndex((b) => b.Size()[0] < stopMargin || b.Size()[1] < stopMargin || b.Size()[2] < stopMargin) != -1) {
                 bins = prevBins;
                 break;
-            }
+            }*/
         }
         bins = this.MakeBinsFromLimitsUsingCenter(min, max, currCenter, margin, atoms, layer, insert);
         return bins;
@@ -147,7 +147,6 @@ export class Octree {
                     let b: OctreeBin = new OctreeBin(minX, minY, minZ, maxX, maxY, maxZ);
                     b.layer = layer;
 
-                    //todo: investigate why this doesn't work, from certain angles reducing stuff like this just breaks it
                     if (this.irregular && layer <= 2) {
                         let resultMin = vec3.fromValues(maxX, maxY, maxZ);
                         let resultMax = vec3.fromValues(minX, minY, minZ);
@@ -177,7 +176,8 @@ export class Octree {
                         if (b.IsAtomInsideWithMargins(atoms[i], margin)) {
                             b.atomsInChildNodes++;
                             if (insert) {
-                                this.tree.push(atoms[i].GetVec4Representation());
+                                let v = atoms[i].GetVec4Representation();
+                                this.tree.push(v);
                             }
                         }
                     }
