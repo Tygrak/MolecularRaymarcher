@@ -124,10 +124,10 @@ export class Octree {
             let prevBins = bins;
             bins = this.MakeBinsFromLimitsUsingCenter(min, max, currCenter, margin, atoms, layer, false);
             let stopMargin = margin*2*(5-layer)+0.25;
-            /*if (bins.findIndex((b) => b.Size()[0] < stopMargin || b.Size()[1] < stopMargin || b.Size()[2] < stopMargin) != -1) {
+            if (bins.findIndex((b) => b.Size()[0] < stopMargin || b.Size()[1] < stopMargin || b.Size()[2] < stopMargin) != -1) {
                 bins = prevBins;
                 break;
-            }*/
+            }
         }
         bins = this.MakeBinsFromLimitsUsingCenter(min, max, currCenter, margin, atoms, layer, insert);
         return bins;

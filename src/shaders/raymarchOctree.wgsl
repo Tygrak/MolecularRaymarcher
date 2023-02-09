@@ -223,9 +223,9 @@ fn aabbIntersection(origin: vec3<f32>, direction: vec3<f32>, directionInverse: v
 }
 
 //tddo try find faster version?
-fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom) -> Hit {
+fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom, addSmoothMinMargin: f32) -> Hit {
     let center = atom.position;
-    let radius = covalentRadius(atom.number)+drawSettings.kSmoothminScale*0.51;
+    let radius = covalentRadius(atom.number)+drawSettings.kSmoothminScale*addSmoothMinMargin*0.51;
 	let oc = origin - center;
 	let b = dot(direction, oc);
 	let c = dot(oc, oc) - (radius*radius);
@@ -269,41 +269,64 @@ fn insertIntoSortedStack(t: f32, bin: i32) {
     }
 }
 
+//todo make this efficient not just if in corners but also when at centers of sides
+fn getFirstIndexUsingOrigin(origin: vec3<f32>, i: i32) -> i32 {
+    if (origin.x < 0 && origin.y < 0 && origin.z < 0) {
+        return i;
+    } else if (origin.x > 0 && origin.y < 0 && origin.z < 0) {
+        return (i+1)%8;
+    } else if (origin.x < 0 && origin.y > 0 && origin.z < 0) {
+        return (i+2)%8;
+    } else if (origin.x > 0 && origin.y > 0 && origin.z < 0) {
+        return (i+3)%8;
+    } else if (origin.x < 0 && origin.y < 0 && origin.z > 0) {
+        return (i+4)%8;
+    } else if (origin.x > 0 && origin.y < 0 && origin.z > 0) {
+        return (i+5)%8;
+    } else if (origin.x < 0 && origin.y > 0 && origin.z > 0) {
+        return (i+6)%8;
+    } else { //if (origin.x < 0 && origin.y < 0 && origin.z < 0) {
+        return 7-i;
+    }
+}
+
 fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     var closestAABBintersection: vec3<f32> = vec3(-1.0);
     let binsAmount = arrayLength(&bins.bins);
     let inverseDirection = 1.0/direction;
     resetStack();
 
+    var closestRealHitT = 10000000.0;
     for (var i : i32 = 0; i < 8; i++) {
-        var firstId = i;
-        /*if (direction.z < 0) {
-            firstId = 7-i;
-        }*/
+        var firstId = getFirstIndexUsingOrigin(origin, i);
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
-        if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5) {
+        if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5 && intersection.x < closestRealHitT) {
             numIntersected += 8;
             for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
-                if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5) {
+                if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5 && intersection2.x < closestRealHitT) {
                     numIntersected += 3;
                     for (var n : i32 = child(m, 0); n < child(m, 8); n++) {
                         let intersection3 = aabbIntersection(origin, direction, inverseDirection, bins.bins[n].min, bins.bins[n].max);
-                        if (intersection3.x < intersection3.y && intersection3.x > -5.0 && bins.bins[n].end < -1.5) {
+                        if (intersection3.x < intersection3.y && intersection3.x > -5.0 && bins.bins[n].end < -1.5 && intersection3.x < closestRealHitT) {
                             numIntersected += 2;
                             for (var j : i32 = child(n, 0); j < child(n, 8); j++) {
                                 let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
-                                if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -0.25) {
+                                if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -0.25 && intersectionFinal.x < closestRealHitT) {
                                     numIntersected++;
                                     var closestT: f32 = miss.t;
                                     for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
-                                        let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a]);
+                                        let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 1);
                                         numRaySphereIntersections++;
                                         if (hit.t > intersectionFinal.y || hit.t < intersectionFinal.x) {
                                             continue;
                                         }
-                                        if (hit.t < closestT) {
-                                            closestT = hit.t;
+                                        if (hit.t < miss.t) {
+                                            let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
+                                            closestRealHitT = min(realHit.t, closestRealHitT);
+                                            if (hit.t < closestT) {
+                                                closestT = hit.t;
+                                            }
                                         }
                                     }
                                     if (closestT != miss.t) {
@@ -450,10 +473,6 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
     }
     return resultColor;
-    //return vec4(max(f32(numRaySphereIntersections)/50.0, 1)-f32(numRaySphereIntersections)/400.0, f32(numRaySphereIntersections)/150.0, f32(numRaySphereIntersections)/300.0, 1.0);
-    //return resultColor+vec4(f32(iteration)/40.0, f32(numRaySphereIntersections)/100.0, f32(numIntersected)/48.0, 0.0);
-    //return resultColor+vec4(0.0, f32(numIntersected)/200.0, 0.0, 0.0);
-    //return resultColor;
 }
 
 //utilities.wgsl inserted here
