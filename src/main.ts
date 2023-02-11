@@ -195,7 +195,7 @@ async function Initialize() {
     let frameId = 0;
 
     function draw() {
-        if (!document.hasFocus()) {
+        if (!document.hasFocus() && !benchmarker.running) {
             return;
         }
 

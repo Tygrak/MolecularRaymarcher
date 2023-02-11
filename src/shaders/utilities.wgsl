@@ -280,7 +280,7 @@ fn debugModeIterations(iteration: i32, maxIterations: i32) -> vec4<f32> {
 }
 
 fn debugModeOctree(numRaySphereIntersections: i32, totalAtoms: f32) -> vec4<f32> {
-	return colormap_haze(f32(numRaySphereIntersections)/(drawSettings.totalAtoms/8));
+	return colormap_haze(f32(numRaySphereIntersections)/(drawSettings.totalAtoms/16))/2+colormap_haze(f32(numRaySphereIntersections)/400)/2;
 }
 
 fn debugModeOctree2(numIntersected: i32, iteration: i32, maxIterations: i32) -> vec4<f32> {

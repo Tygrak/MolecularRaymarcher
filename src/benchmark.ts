@@ -7,6 +7,7 @@ export class Benchmarker {
     running: boolean = false;
     distanceFromOrigin: number = 50; 
     positions: vec3[];
+    t0: number = 0;
 
     constructor () {
         this.positions = [];
@@ -15,9 +16,9 @@ export class Benchmarker {
 
     private InitializePositions() {
         this.positions = [];
-        for (let x = -1; x < 2; x += 2) {
+        for (let z = -1; z < 2; z += 2) {
             for (let y = -1; y < 2; y += 2) {
-                for (let z = -1; z < 2; z += 2) {
+                for (let x = -1; x < 2; x += 2) {
                     this.positions.push(vec3.fromValues(x*this.distanceFromOrigin/Math.sqrt(3), y*this.distanceFromOrigin/Math.sqrt(3), z*this.distanceFromOrigin/Math.sqrt(3)));
                 }
             }
@@ -72,6 +73,8 @@ export class Benchmarker {
         if (this.currentFrame >= this.framesPerPosition*this.positions.length) {
             this.running = false;
             console.log("Benchmark finished.\n Total average ms: " + this.frameTimes.reduce((a, b) => a+b)/this.frameTimes.length);
+            let t1 = performance.now();
+            console.log("Total benchmark time: " + (t1-this.t0) + "ms");
             for (let p = 0; p < this.positions.length; p++) {
                 let sum = 0;
                 for (let i = p*this.framesPerPosition; i < (p+1)*this.framesPerPosition; i++) {
@@ -80,7 +83,7 @@ export class Benchmarker {
                 let posString = this.positions[p][0].toFixed(3)+","+this.positions[p][1].toFixed(3)+","+this.positions[p][2].toFixed(3);
                 console.log("Position " + p + " (" + posString + ") average ms: " + sum/this.framesPerPosition);
             }
-            console.log(this.frameTimes);
+            //console.log(this.frameTimes);
         }
     }
 }

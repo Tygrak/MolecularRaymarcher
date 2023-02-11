@@ -124,7 +124,17 @@ var<private> neighborX: i32 = -1;
 var<private> neighborY: i32 = -1;
 var<private> neighborZ: i32 = -1;
 
-fn dAtomsInBin(p: vec3<f32>, binId: i32) -> SdfResult {
+fn dAtomsInBin(p: vec3<f32>, binId: i32) -> f32 {
+    var atomNumber = -1.0;
+    var resDistance = 1000000000.0;
+    for (var i : i32 = i32(bins.bins[binId].start); i < i32(bins.bins[binId].end); i++) {
+        let d = dSphere(p, atoms.atoms[i].position, covalentRadius(atoms.atoms[i].number));
+        resDistance = opSmoothUnion(resDistance, d, drawSettings.kSmoothminScale);
+    }
+    return resDistance;
+}
+
+fn dAtomsInBinColor(p: vec3<f32>, binId: i32) -> SdfResult {
     var atomNumber = -1.0;
     var resDistance = 1000000000.0;
     var resColor: vec4<f32> = vec4(1.0);
@@ -138,14 +148,13 @@ fn dAtomsInBin(p: vec3<f32>, binId: i32) -> SdfResult {
     result.distance = resDistance;
     result.color = resColor;
     return result;
-} 
+}
 
-//todo split into function that just returns d and sdfresult that is called only in final, might speed stuff up
-fn dAtoms(p: vec3<f32>) -> SdfResult {
-    let amount = arrayLength(&atoms.atoms);
-    let binsAmount =  arrayLength(&bins.bins);
-    var result: SdfResult = dAtomsInBin(p, intersecting);
-    if (neighborX != -1) {
+fn dAtoms(p: vec3<f32>) -> f32 {
+    //let amount = arrayLength(&atoms.atoms);
+    //let binsAmount =  arrayLength(&bins.bins);
+    //var result: SdfResult = dAtomsInBin(p, intersecting);
+    /*if (neighborX != -1) {
         let neighborResult: SdfResult = dAtomsInBin(p, neighborX);
         let smoothD = opSmoothUnion(result.distance, neighborResult.distance, drawSettings.kSmoothminScale);
         if (neighborResult.distance < result.distance) {
@@ -168,13 +177,13 @@ fn dAtoms(p: vec3<f32>) -> SdfResult {
             result = neighborResult;
         }
         result.distance = smoothD;
-    }
-    return result;
+    }*/
+    return dAtomsInBin(p, intersecting);
 }
 
-fn dScene(p: vec3<f32>) -> SdfResult {
-    let sdfResult = dAtoms(p);
-    return sdfResult;
+fn dAtomsColor(p: vec3<f32>) -> SdfResult {
+    var result: SdfResult = dAtomsInBinColor(p, intersecting);
+    return result;
 }
 
 fn getAtomColor(w: f32) -> vec4<f32> {
@@ -202,7 +211,7 @@ fn findNormal(pos: vec3<f32>) -> vec3<f32> {
     var n = vec3(0.0);
     for (var i = 0; i < 4; i++) {
         let e = (vec3(f32(((i+3)>>1)&1), f32((i>>1)&1), f32(i&1))*2.0-1.0)*0.5773;
-        n += e*dScene(pos+e*0.001*1.0).distance;
+        n += e*dAtoms(pos+e*0.001*1.0);
     }
     return normalize(n);
 }
@@ -434,18 +443,18 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
 		}
         pos = start+t*rayDirection;
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
-		let sdfResult = dScene(pos);
+		let d = dAtoms(pos);
         
-		if (sdfResult.distance < 0.05) {
-            resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+sdfResult.color/2;
+		if (d < 0.05) {
+            resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+dAtomsColor(pos).color/2;
             break;
 		}
-		t = t+sdfResult.distance;
+		t = t+d+mix(0, 0.05, drawSettings.debugB);
 	}
     if (iteration == maxIterations && drawSettings.debugB > 0.5) {
         resultColor = vec4(10.05, 10.05, 10.95, 1.0);
     } else if (iteration == maxIterations && drawSettings.debugB <= 0.5) {
-        let sdfResult = dScene(pos);
+        let sdfResult = dAtomsColor(pos);
         resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+sdfResult.color/2;
     }
 
