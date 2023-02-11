@@ -10,6 +10,7 @@ import { KdTree } from './kdtree';
 import { TestKdTrees } from './tests';
 import { ImpostorRenderer } from './impostorRenderer';
 import { RayMarchOctreeQuad } from './rayMarchOctreeQuad';
+import { Benchmarker } from './benchmark';
 
 const createCamera = require('3d-view-controls');
 
@@ -28,13 +29,13 @@ const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNei
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
+const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
 let structure1cqw : Structure;
 let structure1aon : Structure;
 let structureLoaded : Structure;
-let renderMs = 0.1;
 
 let rayMarchQuadOct1cqw : RayMarchOctreeQuad;
 let rayMarchQuadOct1aon : RayMarchOctreeQuad;
@@ -205,9 +206,17 @@ async function Initialize() {
             mat4.multiply(vpMatrix, pMatrix, vMatrix);
         }
 
+        let cameraPosition = camera.eye;
+        if (benchmarker.running) {
+            cameraPosition = benchmarker.GetFramePosition();
+            const bViewMatrix = benchmarker.GetFrameViewMatrix();
+            mat4.multiply(vpMatrix, pMatrix, bViewMatrix);
+        }
+
         CreateTransforms(modelMatrix, [0,0,0], rotation);
         mat4.multiply(mvpMatrix, vpMatrix, modelMatrix);
         device.queue.writeBuffer(uniformBuffer, 0, mvpMatrix as ArrayBuffer);
+
         textureView = gpu.context.getCurrentTexture().createView();
         renderPassDescription.colorAttachments[0].view = textureView;
         const commandEncoder = device.createCommandEncoder();
@@ -220,31 +229,31 @@ async function Initialize() {
             renderPass.setPipeline(pipeline);
             renderPass.setBindGroup(0, uniformBindGroup);
             if (dataSelection.value == "1cqw") {
-                structure1aon.DrawStructure(renderPass, percentageShown);
-            } else if (dataSelection.value == "1aon") {
                 structure1cqw.DrawStructure(renderPass, percentageShown);
+            } else if (dataSelection.value == "1aon") {
+                structure1aon.DrawStructure(renderPass, percentageShown);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 structureLoaded.DrawStructure(renderPass, percentageShown);
             }
         } else if (visualizationSelection.value == "impostor") {
-            const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, camera.eye, camera.view.center, camera.view.up);
+            const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
             let vMatrix = mat4.clone(vp.viewMatrix);
             let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
             if (dataSelection.value == "1cqw") {
-                impostorRenderer1cqw.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+                impostorRenderer1cqw.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
 
                 renderPass.setPipeline(pipeline);
                 renderPass.setBindGroup(0, uniformBindGroup);
                 structure1cqw.DrawStructure(renderPass, 1, true);
             } else if (dataSelection.value == "1aon") {
-                impostorRenderer1aon.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+                impostorRenderer1aon.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
 
                 renderPass.setPipeline(pipeline);
                 renderPass.setBindGroup(0, uniformBindGroup);
                 structure1aon.DrawStructure(renderPass, 1, true);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
-                impostorRendererLoaded.Draw(device, renderPass, vpMatrix, vMatrix, camera.eye, drawAmount, sizeScale);
+                impostorRendererLoaded.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
 
                 renderPass.setPipeline(pipeline);
                 renderPass.setBindGroup(0, uniformBindGroup);
@@ -263,19 +272,19 @@ async function Initialize() {
                 rayMarchQuadOct1cqw.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.kSmoothminScale = kSmoothminScale;
-                rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+                rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, drawAmount, drawStart, sizeScale);
             } else if (dataSelection.value == "1aon") {
                 rayMarchQuadOct1aon.debugMode = debugMode;
                 rayMarchQuadOct1aon.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
-                rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+                rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, drawAmount, drawStart, sizeScale);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 rayMarchQuadOctLoaded.debugMode = debugMode;
                 rayMarchQuadOctLoaded.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.kSmoothminScale = kSmoothminScale;
-                rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, camera.eye, drawAmount, drawStart, sizeScale);
+                rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, drawAmount, drawStart, sizeScale);
             }
         }
         renderPass.end();
@@ -290,7 +299,7 @@ async function Initialize() {
         //read query buffer with timestamps
         if (gpu.timestampsEnabled) {
             const size = timestampBuffers.queryBuffer.size;
-            const gpuReadBuffer = device.createBuffer({size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });  const copyEncoder = device.createCommandEncoder();
+            const gpuReadBuffer = device.createBuffer({size, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ});  const copyEncoder = device.createCommandEncoder();
             copyEncoder.copyBufferToBuffer(timestampBuffers.queryBuffer, 0, gpuReadBuffer, 0, size);  const copyCommands = copyEncoder.finish();
             device.queue.submit([copyCommands]);
             const currFrame = frameId;
@@ -300,10 +309,14 @@ async function Initialize() {
                 const frameTimeMs = Number((timingsNanoseconds[1]-timingsNanoseconds[0])/BigInt(1000))/1000;
                 previousFrameDeltaTimesMs[currFrame%previousFrameDeltaTimesMs.length] = frameTimeMs;
                 fpsCounterElement.innerText = (previousFrameDeltaTimesMs.reduce((acc, c) => acc+c)/previousFrameDeltaTimesMs.length).toFixed(3) + "ms";
+                if (benchmarker.running) {
+                    benchmarker.SubmitFrameTime(frameTimeMs);
+                }
             });
         } else {
             fpsCounterElement.innerText = "timestamps :(";
         }
+        benchmarker.EndFrame();
     }
 
     sliderPercentageShown.oninput = (e) => {
@@ -374,6 +387,15 @@ async function Initialize() {
             dataSelection.value = "dataFile";
         });
     };
+
+    let benchmarker = new Benchmarker();
+    benchmarkButton.onclick = (e) => {
+        if (!gpu.timestampsEnabled) {
+            console.log("Can't benchmark without timestamps :(");
+            return;
+        }
+        benchmarker.Start();
+    }
 
     CreateAnimation(draw);
 }

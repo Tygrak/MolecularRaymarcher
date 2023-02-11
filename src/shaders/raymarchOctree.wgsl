@@ -269,24 +269,32 @@ fn insertIntoSortedStack(t: f32, bin: i32) {
     }
 }
 
+const MAP_INDEXES_0 = array(0,1,2,4,5,3,6,7);
+const MAP_INDEXES_1 = array(1,0,5,3,2,7,4,6);
+const MAP_INDEXES_2 = array(2,0,3,6,7,1,4,5);
+const MAP_INDEXES_3 = array(3,2,7,1,6,0,5,4);
+const MAP_INDEXES_4 = array(4,0,5,6,1,2,7,3);
+const MAP_INDEXES_5 = array(5,7,4,1,3,6,0,2);
+const MAP_INDEXES_6 = array(6,7,2,4,0,5,3,1);
+const MAP_INDEXES_7 = array(7,3,6,5,1,2,4,0);
 //todo make this efficient not just if in corners but also when at centers of sides
 fn getFirstIndexUsingOrigin(origin: vec3<f32>, i: i32) -> i32 {
     if (origin.x < 0 && origin.y < 0 && origin.z < 0) {
-        return i;
+        return MAP_INDEXES_0[i];
     } else if (origin.x > 0 && origin.y < 0 && origin.z < 0) {
-        return (i+1)%8;
+        return MAP_INDEXES_1[i];
     } else if (origin.x < 0 && origin.y > 0 && origin.z < 0) {
-        return (i+2)%8;
+        return MAP_INDEXES_2[i];
     } else if (origin.x > 0 && origin.y > 0 && origin.z < 0) {
-        return (i+3)%8;
+        return MAP_INDEXES_3[i];
     } else if (origin.x < 0 && origin.y < 0 && origin.z > 0) {
-        return (i+4)%8;
+        return MAP_INDEXES_4[i];
     } else if (origin.x > 0 && origin.y < 0 && origin.z > 0) {
-        return (i+5)%8;
+        return MAP_INDEXES_5[i];
     } else if (origin.x < 0 && origin.y > 0 && origin.z > 0) {
-        return (i+6)%8;
+        return MAP_INDEXES_6[i];
     } else { //if (origin.x < 0 && origin.y < 0 && origin.z < 0) {
-        return 7-i;
+        return MAP_INDEXES_7[i];
     }
 }
 
@@ -302,7 +310,8 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
         if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5 && intersection.x < closestRealHitT) {
             numIntersected += 8;
-            for (var m : i32 = child(firstId, 0); m < child(firstId, 8); m++) {
+            for (var mi : i32 = 0; mi < 8; mi++) {
+                let m = child(firstId, getFirstIndexUsingOrigin(origin, mi));
                 let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
                 if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5 && intersection2.x < closestRealHitT) {
                     numIntersected += 3;
