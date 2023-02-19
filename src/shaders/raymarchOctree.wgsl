@@ -253,7 +253,7 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom, ad
 
 var<private> start: vec3<f32>;
 var<private> end: f32;
-const stackSize = 10;
+const stackSize = 24;
 var<private> stackT: array<f32, stackSize>;
 var<private> stackBins: array<i32, stackSize>;
 
@@ -451,9 +451,9 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
 		}
 		t = t+d+mix(0, 0.05, drawSettings.debugB);
 	}
-    if (iteration == maxIterations && drawSettings.debugB > 0.5) {
+    if (iteration == maxIterations && drawSettings.debugB > 0.9) {
         resultColor = vec4(10.05, 10.05, 10.95, 1.0);
-    } else if (iteration == maxIterations && drawSettings.debugB <= 0.5) {
+    } else if (iteration == maxIterations && drawSettings.debugB <= 0.9) {
         let sdfResult = dAtomsColor(pos);
         resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+sdfResult.color/2;
     }

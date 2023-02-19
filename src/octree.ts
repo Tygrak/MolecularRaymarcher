@@ -120,7 +120,8 @@ export class Octree {
             if (highestValue < total/9) {
                 break;
             }
-            currCenter = vec3.fromValues(currCenter[0]*0.85+bins[highestIndex].Center()[0]*0.15, currCenter[1]*0.85+bins[highestIndex].Center()[1]*0.15, currCenter[2]*0.85+bins[highestIndex].Center()[2]*0.15);
+            const e = 0.15;
+            currCenter = vec3.fromValues(currCenter[0]*(1-e)+bins[highestIndex].Center()[0]*e, currCenter[1]*(1-e)+bins[highestIndex].Center()[1]*e, currCenter[2]*(1-e)+bins[highestIndex].Center()[2]*e);
             let prevBins = bins;
             bins = this.MakeBinsFromLimitsUsingCenter(min, max, currCenter, margin, atoms, layer, false);
             let stopMargin = margin*2*(5-layer)+0.25;

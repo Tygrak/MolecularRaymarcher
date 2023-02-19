@@ -424,13 +424,18 @@ addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
 });
 
 makeIrregularOctreeCheckbox.addEventListener('change', function(){
+    let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+    let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
     rayMarchQuadOct1cqw.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+    rayMarchQuadOct1cqw.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
     rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     if (dataSelection.value == "1aon") {
         rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+        rayMarchQuadOct1aon.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
         rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
     } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
         rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+        rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
         rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
     }
 });
