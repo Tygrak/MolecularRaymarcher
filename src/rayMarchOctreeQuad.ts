@@ -158,7 +158,7 @@ class RayPipelineSetup {
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure, margins: number, makeIrregularOctree: boolean = true) {
-        let tree: Octree = new Octree(structure.atoms, 4, margins, makeIrregularOctree);
+        let tree: Octree = new Octree(structure.atoms, 3, margins, makeIrregularOctree);
         console.log(tree);
         this.atomsCount = tree.tree.length;
         this.atomsBuffer = device.createBuffer({
