@@ -60,7 +60,16 @@ export class Octree {
     layers: number;
     irregular: boolean;
 
-    constructor(atoms: Atom[], layers: number, margin: number = 1.5, makeIrregular = false) {
+    constructor(atoms: Atom[], layers: number, margin: number = 1.5, makeIrregular = false, automaticOctreeSize = false) {
+        this.limits = this.CalculateLimitsForAtoms(atoms, margin);
+        if (automaticOctreeSize) {
+            layers = 2;
+            let smallestSize = Math.min(this.limits.size[0], Math.min(this.limits.size[1], this.limits.size[2]));
+            while ((smallestSize/(2**layers))-(margin*0.25*(2**layers)) > 1.0-margin) {
+                layers++;
+                console.log((smallestSize/(2**layers))-(margin*0.25*(2**layers)));
+            }
+        }
         this.layers = layers;
         this.irregular = makeIrregular;
         let binsSize = 0;
@@ -70,7 +79,6 @@ export class Octree {
         let atomsCopy = Object.assign([], atoms);
         this.tree = new Array<vec4>();
         this.bins = new Array<OctreeBin>();
-        this.limits = this.CalculateLimitsForAtoms(atoms, margin);
         this.BuildTree(atomsCopy, margin);
     }
 
@@ -108,7 +116,7 @@ export class Octree {
         let currCenter = center;
         let bins = this.MakeBinsFromLimitsUsingCenter(min, max, currCenter, margin, atoms, layer, false);
         let total = bins.reduce((sum, current) => sum+current.atomsInChildNodes, 0);
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 15; i++) {
             let highestIndex = 0;
             let highestValue = bins[0].atomsInChildNodes;
             for (let j = 0; j < bins.length; j++) {

@@ -339,7 +339,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
         binsStackNum--;
         for (var i : i32 = child(curr, 0); i < child(curr, 8); i++) {
             let intersectionI = aabbIntersection(origin, direction, inverseDirection, bins.bins[i].min, bins.bins[i].max);
-            if (intersectionI.x < intersectionI.y && intersectionI.x > -0.25 && intersectionI.x < closestRealHitT) {
+            if (intersectionI.x < intersectionI.y && intersectionI.x > -0.25 && intersectionI.x < closestRealHitT && (i > lastLayerStart || bins.bins[i].end < -1.5)) {
                 numIntersected++;
                 if (i >= lastLayerStart) {
                     var closestT: f32 = miss.t;
@@ -543,7 +543,8 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     var resultColor = startColor;
     var stackPos = 0;
 	for (iteration = 0; iteration < maxIterations; iteration++) {
-		if (t > end+2*drawSettings.atomsScale+drawSettings.kSmoothminScale) {
+        //todo: make transparent really start where last cell ends
+		if (t > end) {
             t = 0.0;
             stackPos++;
             if (stackPos == stackSize || stackBins[stackPos] == -1) {

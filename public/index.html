@@ -20,6 +20,8 @@
             <br>
             <label><input id="makeIrregularOctreeCheckbox" type="checkbox" name="options" value="fixed" checked>Make Irregular Octree</label>
             <br>
+            <label><input id="automaticOctreeSizeCheckbox" type="checkbox" name="options" value="fixed" checked>Automatic Octree Size</label>
+            <br>
             <label style="display: none;"><input id="getRaymarchNeighborsCheckbox" type="checkbox" name="options" value="fixed">Get Raymarch Cell Neighbors</label>
          </div>
          <br>
@@ -90,8 +92,14 @@
          <div class="slidecontainer">
             <label><input type="range" min="0.01" max="4.0" step="0.05" value="0.8" class="slider" id="kSmoothminScale">Smoothmin k</label>
          </div>
+         <div class="slidecontainer">
+            <label><input type="range" min="2" max="6" step="1" value="4" class="slider" id="octreeLayers">Octree Layers</label>
+         </div>
          <div>
             <button id="benchmarkButton">Run Benchmark</button>
+         </div> 
+         <div>
+            <button id="regenerateOctreeButton">Regenerate Octree</button>
          </div> 
          <br>  
          <div>

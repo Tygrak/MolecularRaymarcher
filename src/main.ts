@@ -27,9 +27,12 @@ const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCh
 const addCloseNeighborsToCellsCheckbox = document.getElementById("addCloseNeighborsToCellsCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
+const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSizeCheckbox") as HTMLInputElement;
+const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
+const regenerateOctreeButton = document.getElementById("regenerateOctreeButton") as HTMLButtonElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
@@ -423,20 +426,34 @@ addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     }
 });
 
-makeIrregularOctreeCheckbox.addEventListener('change', function(){
+function regenerateOctree() {
     let sizeScale = parseFloat(sliderImpostorSizeScale.value);
     let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
+    rayMarchQuadOct1cqw.octreeLayers = parseInt(octreeLayersSlider.value);
+    rayMarchQuadOct1cqw.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
     rayMarchQuadOct1cqw.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
     rayMarchQuadOct1cqw.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
     rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     if (dataSelection.value == "1aon") {
+        rayMarchQuadOct1aon.octreeLayers = parseInt(octreeLayersSlider.value);
         rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+        rayMarchQuadOct1aon.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
         rayMarchQuadOct1aon.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
         rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
     } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
+        rayMarchQuadOctLoaded.octreeLayers = parseInt(octreeLayersSlider.value);
         rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+        rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
         rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
         rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
     }
+}
+
+makeIrregularOctreeCheckbox.addEventListener('change', function(){
+    regenerateOctree();
 });
+
+regenerateOctreeButton.onclick = (e) => {
+    regenerateOctree();
+}
 
