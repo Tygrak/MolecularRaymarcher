@@ -354,7 +354,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                             if (closestRealHitT > realHit.t) {
                                 closestRealHitAtom = a;
                                 closestRealHitT = realHit.t;
-                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
+                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19) {
                                     closestRealHitT = 1000000;
                                 }
                             }
@@ -419,7 +419,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                             if (closestRealHitT > realHit.t) {
                                                 closestRealHitAtom = a;
                                                 closestRealHitT = realHit.t;
-                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
+                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19) {
                                                     closestRealHitT = 1000000;
                                                 }
                                             }
@@ -530,7 +530,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     } else if (drawSettings.debugMode == 18) {
         return debugModeDefaultWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos));
     } else if (drawSettings.debugMode == 19) {
-        return debugModeFakeTransparency(resultColor, distanceFade);
+        return debugModeFakeTransparency(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
     } else if (drawSettings.debugMode == 7) {
         return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 8) {
