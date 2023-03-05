@@ -38,9 +38,9 @@ struct DrawSettings {
     kSmoothminScale: f32,
     octreeCreationMargins: f32,
     totalAtoms: f32,
+    treeLayers: f32,
     padding1: f32,
     padding2: f32,
-    padding3: f32,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -352,7 +352,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                         if (hit.t < miss.t) {
                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
                             closestRealHitT = min(realHit.t, closestRealHitT);
-                            if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15) {
+                            if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
                                 closestRealHitT = 1000000;
                             }
                             if (hit.t < closestT) {
@@ -415,7 +415,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                         if (hit.t < miss.t) {
                                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
                                             closestRealHitT = min(realHit.t, closestRealHitT);
-                                            if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15) {
+                                            if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
                                                 closestRealHitT = 1000000;
                                             }
                                             if (hit.t < closestT) {
@@ -542,18 +542,15 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     let startColor = vec4(-0.25, 0.05, 0.25, 1.0);
     var resultColor = startColor;
     var stackPos = 0;
-	for (iteration = 0; iteration < maxIterations; iteration++) {
+	for (iteration = 0; iteration < maxIterations*2; iteration++) {
         //todo: make transparent really start where last cell ends
-		if (t > end) {
-            t = 0.0;
+		if (t > end+2*drawSettings.atomsScale+drawSettings.kSmoothminScale) {
             stackPos++;
             if (stackPos == stackSize || stackBins[stackPos] == -1) {
-                if (stackPos == stackSize && drawSettings.debugB > 0.5) {
-                    break;
-                }
                 break;
             }
-            start = initStart.xyz+rayDirection*stackT[stackPos];
+            start = initStart.xyz+rayDirection*max(stackT[stackPos], t+0.05);
+            t = 0.0;
             intersecting = stackBins[stackPos];
             raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
 		}
@@ -563,14 +560,22 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
         
 		if (d < 0.05) {
             if (drawSettings.debugMode == 15) {
-                resultColor += (dAtomsColor(pos).color/50)*mix(0.1, 3, drawSettings.debugA)*mix(1, 0, clamp((d+0.75), 0, 1));
+                resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*mix(1, 0, clamp((d+0.75), 0, 1));
             } else if (drawSettings.debugMode == 14) {
                 resultColor += (dAtomsColor(pos).color/50)*mix(0.1, 3, drawSettings.debugA);
+            } else if (drawSettings.debugMode == 16) {
+                resultColor += vec4(0.005, 0.005, 0.005, 0.0)*mix(0.1, 3, drawSettings.debugA);
             } else {
                 resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA);
             }
-		}
-		t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
+            if (drawSettings.debugMode == 16) {
+                t = t+0.05;
+            } else {
+                t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
+            }
+		} else {
+            t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
+        }
 	}
     if (distance(resultColor, startColor) < 0.009) {
         return vec4(0.15, 0.0, 0.15, 1.0);
@@ -617,7 +622,12 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
 
     let initStart = start;
 
-    var closestAABB = findIntersectingCellsStack(start, rayDirection);
+    var closestAABB: vec3<f32>;
+    if (drawSettings.treeLayers == 4) {
+        closestAABB = findIntersectingCells(start, rayDirection);
+    } else {
+        closestAABB = findIntersectingCellsStack(start, rayDirection);
+    }
     if (drawSettings.debugMode == 12) {
         return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
     }
@@ -631,7 +641,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
 
-    if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15) {
+    if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
         return raymarchTransparent(initStart, rayDirection);
     }
     return raymarch(initStart, rayDirection);

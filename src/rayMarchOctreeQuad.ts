@@ -14,6 +14,7 @@ class RayPipelineSetup {
     inverseVpUniformBuffer : GPUBuffer;
     cameraPosBuffer : GPUBuffer;
     uniformBindGroup : GPUBindGroup;
+    treeLayers : number = 0;
 
     atomsCount : number;
     atomsBuffer : GPUBuffer;
@@ -160,6 +161,7 @@ class RayPipelineSetup {
     public LoadAtoms(device: GPUDevice, structure: Structure, margins: number, makeIrregularOctree: boolean = true, octreeLayers: number = 4, automaticOctreeSize: boolean = true) {
         let tree: Octree = new Octree(structure.atoms, octreeLayers, margins, makeIrregularOctree, automaticOctreeSize);
         console.log(tree);
+        this.treeLayers = tree.layers;
         this.atomsCount = tree.tree.length;
         this.atomsBuffer = device.createBuffer({
             size: tree.tree.length*4*4,
@@ -264,7 +266,7 @@ export class RayMarchOctreeQuad {
         drawSettingsBuffer[14] = this.kSmoothminScale;
         drawSettingsBuffer[15] = this.octreeMargins;
         drawSettingsBuffer[16] = this.loadedAtoms;
-        drawSettingsBuffer[17] = -1;
+        drawSettingsBuffer[17] = this.pipelineSetupRaymarch.treeLayers;
         drawSettingsBuffer[18] = -1;
         drawSettingsBuffer[19] = -1;
         device.queue.writeBuffer(pipelineSetup.drawSettingsBuffer, 0, drawSettingsBuffer);
