@@ -380,10 +380,15 @@ async function Initialize() {
         LoadData(dataFileInput.files[0], (text: string) => {
             structureLoaded = new Structure(text);
             structureLoaded.InitializeBuffers(device);
+            let sizeScale = parseFloat(sliderImpostorSizeScale.value);
+            let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             impostorRendererLoaded = new ImpostorRenderer(device, gpu.format);
             impostorRendererLoaded.LoadAtoms(device, structureLoaded);
             rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOctLoaded.octreeLayers = parseInt(octreeLayersSlider.value);
             rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
+            rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
+            rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
             rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
             let t1 = performance.now();
             console.log("Loading data from file (" + dataFileInput.files![0].name + "): " + (t1-t0) + "ms");
@@ -432,19 +437,19 @@ function regenerateOctree() {
     rayMarchQuadOct1cqw.octreeLayers = parseInt(octreeLayersSlider.value);
     rayMarchQuadOct1cqw.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
     rayMarchQuadOct1cqw.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
-    rayMarchQuadOct1cqw.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
+    rayMarchQuadOct1cqw.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
     rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     if (dataSelection.value == "1aon") {
         rayMarchQuadOct1aon.octreeLayers = parseInt(octreeLayersSlider.value);
         rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
         rayMarchQuadOct1aon.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
-        rayMarchQuadOct1aon.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
+        rayMarchQuadOct1aon.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
         rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
     } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
         rayMarchQuadOctLoaded.octreeLayers = parseInt(octreeLayersSlider.value);
         rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
         rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
-        rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.05;
+        rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
         rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
     }
 }

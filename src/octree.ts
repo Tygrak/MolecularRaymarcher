@@ -65,6 +65,7 @@ export class Octree {
         if (automaticOctreeSize) {
             layers = 2;
             let smallestSize = Math.min(this.limits.size[0], Math.min(this.limits.size[1], this.limits.size[2]));
+            console.log((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin);
             while ((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin > 1.0) {
                 layers++;
                 console.log((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin);

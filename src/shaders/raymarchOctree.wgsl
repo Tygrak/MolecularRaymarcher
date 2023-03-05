@@ -352,7 +352,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                         if (hit.t < miss.t) {
                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
                             closestRealHitT = min(realHit.t, closestRealHitT);
-                            if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
+                            if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
                                 closestRealHitT = 1000000;
                             }
                             if (hit.t < closestT) {
@@ -375,8 +375,8 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
     start = start+direction*stackT[0];
     let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
     let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
-    //end = max(binSize.x, max(binSize.y, binSize.z));
-    end = intersectionEnd.y-stackT[0];
+    end = max(binSize.x, max(binSize.y, binSize.z));
+    //end = intersectionEnd.y-stackT[0];
     return start;
 }
 
@@ -528,6 +528,8 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         return debugModeRaymarchedAtoms(raymarchedAtoms);
     } else if (drawSettings.debugMode == 12) {
         return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
+    } else if (drawSettings.debugMode == 17) {
+        return debugModeDebug(numRaySphereIntersections, numIntersected, intersecting, stackPos, resultColor, iteration);
     }
     return resultColor;
 }
@@ -569,7 +571,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
                 resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA);
             }
             if (drawSettings.debugMode == 16) {
-                t = t+0.05;
+                t = t+mix(0.025, 0.15, drawSettings.debugB);
             } else {
                 t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
             }
@@ -623,9 +625,9 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     let initStart = start;
 
     var closestAABB: vec3<f32>;
-    if (drawSettings.treeLayers == 4) {
+    /*if (drawSettings.treeLayers == 4) {
         closestAABB = findIntersectingCells(start, rayDirection);
-    } else {
+    } else*/ {
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     if (drawSettings.debugMode == 12) {
