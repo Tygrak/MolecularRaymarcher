@@ -299,13 +299,17 @@ fn debugModeOctree3(numRaySphereIntersections: i32, numIntersected: i32, interse
 	return colormap_haze(f32(numRaySphereIntersections)/(400))/2+colormap_spectral(f32(numIntersected)/100)/2+iAdd;
 }
 
-fn debugModeDebug(numRaySphereIntersections: i32, numIntersected: i32, intersecting: i32, stackPos: i32, resultColor: vec4<f32>, iteration: i32) -> vec4<f32> {
+fn debugModeDebug(numRaySphereIntersections: i32, numIntersected: i32, intersecting: i32, stackPos: i32, resultColor: vec4<f32>, iteration: i32, closestRealHitT: f32) -> vec4<f32> {
 	var iAdd = vec4(0.0, 0.0, 0.0, 0.0);
 	if (intersecting >= 0) {
 		iAdd = vec4(-0.05, -0.05, 0.1, 0.0);
 	}
+	var realHitAdd = vec4(0.0, 0.0, 0.0, 0.0);
+	if (closestRealHitT >= 50000) {
+		realHitAdd = vec4(0.25, -0.05, -0.45, 0.0);
+	}
 	var cOct = vec4(0, (colormap_haze(f32(numRaySphereIntersections)/(400))/4+colormap_spectral(f32(numIntersected)/100)/4).g, 0, 0);
-	return resultColor+vec4(0.5, 0, 0, 0)*(f32(stackPos)/8)+vec4(0, 0.3, 0, 0)*(f32(iteration)/100)+cOct+iAdd;
+	return resultColor+vec4(0.5, 0, 0, 0)*(f32(stackPos)/8)+vec4(0, 0.3, 0, 0)*(f32(iteration)/100)+cOct+iAdd+realHitAdd;
 }
 
 fn debugModeDepth(maxDistance: f32) -> vec4<f32> {
@@ -331,6 +335,17 @@ fn debugModeRaymarchedAtoms(raymarchedAtoms: f32) -> vec4<f32> {
 
 fn debugModeBright(resultColor: vec4<f32>, distanceFade: f32) -> vec4<f32> {
 	return (vec4(abs(0.5-resultColor.x), abs(0.5-resultColor.y), abs(0.5-resultColor.z), 1.0))*(distanceFade);
+}
+
+fn debugModeDefaultWithBase(resultColor: vec4<f32>, distanceFade: f32, closestRealHitT: f32, baseAtomColor: vec4<f32>, dist: f32) -> vec4<f32> {
+	if (closestRealHitT < 50000) {
+		return mix(resultColor*distanceFade, resultColor*distanceFade*0.25+baseAtomColor*distanceFade, 1-clamp(abs(closestRealHitT-dist)/3, 0, 1));
+	}
+	return resultColor*distanceFade;
+}
+
+fn debugModeFakeTransparency(resultColor: vec4<f32>, distanceFade: f32) -> vec4<f32> {
+	return resultColor*distanceFade;
 }
 
 fn debugModeSemilit(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {

@@ -307,7 +307,8 @@ fn getFirstIndexUsingOrigin(origin: vec3<f32>, i: i32) -> i32 {
     }
 }
 
-
+var<private> closestRealHitT = 10000000.0;
+var<private> closestRealHitAtom = 1;
 const binsStackSize = 40;
 var<private> binsStack: array<i32, binsStackSize>;
 fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
@@ -323,7 +324,6 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
         lastLayerStart += i32(pow(8.0, f32(i)));
     }
 
-    var closestRealHitT = 10000000.0;
     let currLayer = 0;
     var bv = 0;
     var binsStackNum = 0;
@@ -351,9 +351,12 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                         }
                         if (hit.t < miss.t) {
                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
-                            closestRealHitT = min(realHit.t, closestRealHitT);
-                            if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
-                                closestRealHitT = 1000000;
+                            if (closestRealHitT > realHit.t) {
+                                closestRealHitAtom = a;
+                                closestRealHitT = realHit.t;
+                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
+                                    closestRealHitT = 1000000;
+                                }
                             }
                             if (hit.t < closestT) {
                                 closestT = hit.t;
@@ -374,9 +377,9 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
     intersecting = stackBins[0];
     start = start+direction*stackT[0];
     let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
-    let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
-    end = max(binSize.x, max(binSize.y, binSize.z));
+    //let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
     //end = intersectionEnd.y-stackT[0];
+    end = max(binSize.x, max(binSize.y, binSize.z));
     return start;
 }
 
@@ -386,7 +389,6 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     let inverseDirection = 1.0/direction;
     resetStack();
 
-    var closestRealHitT = 10000000.0;
     for (var i : i32 = 0; i < 8; i++) {
         var firstId = getFirstIndexUsingOrigin(origin, i);
         let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
@@ -414,9 +416,12 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                         }
                                         if (hit.t < miss.t) {
                                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
-                                            closestRealHitT = min(realHit.t, closestRealHitT);
-                                            if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
-                                                closestRealHitT = 1000000;
+                                            if (closestRealHitT > realHit.t) {
+                                                closestRealHitAtom = a;
+                                                closestRealHitT = realHit.t;
+                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
+                                                    closestRealHitT = 1000000;
+                                                }
                                             }
                                             if (hit.t < closestT) {
                                                 closestT = hit.t;
@@ -437,6 +442,8 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     intersecting = stackBins[0];
     start = start+direction*stackT[0];
     let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
+    //let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
+    //end = intersectionEnd.y-stackT[0];
     end = max(binSize.x, max(binSize.y, binSize.z));
     return start;
 }
@@ -471,6 +478,10 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                     return vec4(0.15, 0.0, 0.15, 1.0);
                 }
                 start = initStart.xyz+rayDirection*stackT[stackPos];
+                //let intersectionEnd = aabbIntersection(start, rayDirection, 1.0/rayDirection, bins.bins[stackPos].min, bins.bins[stackPos].max);
+                //end = intersectionEnd.y;
+                let binSize = bins.bins[stackBins[stackPos]].max-bins.bins[stackBins[stackPos]].min;
+                end = max(binSize.x, max(binSize.y, binSize.z));
                 intersecting = stackBins[stackPos];
                 raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
             } else {
@@ -516,6 +527,10 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         return debugModeNormals(findNormal(pos));
     } else if (drawSettings.debugMode == 6) {
         return debugModeBright(resultColor, distanceFade);
+    } else if (drawSettings.debugMode == 18) {
+        return debugModeDefaultWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos));
+    } else if (drawSettings.debugMode == 19) {
+        return debugModeFakeTransparency(resultColor, distanceFade);
     } else if (drawSettings.debugMode == 7) {
         return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 8) {
@@ -529,7 +544,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     } else if (drawSettings.debugMode == 12) {
         return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
     } else if (drawSettings.debugMode == 17) {
-        return debugModeDebug(numRaySphereIntersections, numIntersected, intersecting, stackPos, resultColor, iteration);
+        return debugModeDebug(numRaySphereIntersections, numIntersected, intersecting, stackPos, resultColor, iteration, closestRealHitT);
     }
     return resultColor;
 }
@@ -552,6 +567,10 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
                 break;
             }
             start = initStart.xyz+rayDirection*max(stackT[stackPos], t+0.05);
+            //let intersectionEnd = aabbIntersection(start, rayDirection, 1.0/rayDirection, bins.bins[stackPos].min, bins.bins[stackPos].max);
+            //end = intersectionEnd.y+0.25;
+            let binSize = bins.bins[stackBins[stackPos]].max-bins.bins[stackBins[stackPos]].min;
+            end = max(binSize.x, max(binSize.y, binSize.z));
             t = 0.0;
             intersecting = stackBins[stackPos];
             raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
