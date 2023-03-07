@@ -33,6 +33,9 @@ const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonEl
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
 const regenerateOctreeButton = document.getElementById("regenerateOctreeButton") as HTMLButtonElement;
+const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputElement;
+const shaderUtilitiesFileInput = document.getElementById("shaderUtilitiesFileInput") as HTMLInputElement;
+const shaderLoadButton = document.getElementById("shaderLoadButton") as HTMLButtonElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
@@ -384,7 +387,7 @@ async function Initialize() {
             let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             impostorRendererLoaded = new ImpostorRenderer(device, gpu.format);
             impostorRendererLoaded.LoadAtoms(device, structureLoaded);
-            rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format, currShaderCode);
             rayMarchQuadOctLoaded.octreeLayers = parseInt(octreeLayersSlider.value);
             rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
@@ -404,6 +407,25 @@ async function Initialize() {
         }
         benchmarker.Start();
     }
+
+    let currShaderCode = "";
+    shaderLoadButton.onclick = (e) => {
+        if (shaderFileInput.files == null || shaderFileInput.files?.length == 0) {
+            console.log("No file selected!");
+            return;
+        }
+        
+        let t0 = performance.now();
+        LoadData(shaderFileInput.files[0], (text: string) => {
+            currShaderCode = text;
+            rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format, text);
+            rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format, text);
+            rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format, text);
+            regenerateOctree();
+            let t1 = performance.now();
+            console.log("Loading shader from file (" + shaderFileInput.files![0].name + "): " + (t1-t0) + "ms");
+        });
+    };
 
     CreateAnimation(draw);
 }

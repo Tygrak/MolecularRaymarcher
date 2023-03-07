@@ -224,7 +224,7 @@ export class RayMarchOctreeQuad {
     automaticOctreeSize: boolean = true;
     octreeLayers: number = 4;
     
-    constructor (device: GPUDevice, format: GPUTextureFormat) {
+    constructor (device: GPUDevice, format: GPUTextureFormat, shader: string = "", utilities: string = "") {
         let positions = new Float32Array([
             -1, -1, 0,
             1, -1, 0,
@@ -237,7 +237,13 @@ export class RayMarchOctreeQuad {
         this.quadPositions = CreateGPUBuffer(device, positions);
         this.quadColors = CreateGPUBuffer(device, colors);
 
-        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shaderRaymarch+"\n"+shaderUtilities);
+        if (shader == "") {
+            shader = shaderRaymarch;
+        }
+        if (utilities == "") {
+            utilities = shaderUtilities;
+        }
+        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shader+"\n"+utilities);
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
