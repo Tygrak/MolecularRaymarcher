@@ -65,7 +65,7 @@ async function Initialize() {
         timestampBuffers = CreateTimestampBuffer(device, 8);
     }
 
-    TestKdTrees();
+    //TestKdTrees();
 
     // create vertex buffers
     structure1cqw = new Structure(require('./data/1cqw.pdb'));
@@ -484,3 +484,28 @@ regenerateOctreeButton.onclick = (e) => {
     regenerateOctree();
 }
 
+if (document != null) {
+    document.addEventListener('keypress', function(keyEvent: KeyboardEvent){
+        if (keyEvent.code == "Digit1") {
+            debugSelection.value = "0";
+        } else if (keyEvent.code == "Digit2") {
+            debugSelection.value = "18";
+        } else if (keyEvent.code == "Digit3") {
+            debugSelection.value = "7";
+        } else if (keyEvent.code == "Digit4") {
+            debugSelection.value = "1";
+        } else if (keyEvent.code == "Digit5") {
+            debugSelection.value = "10";
+        } else if (keyEvent.code == "Digit6") {
+            debugSelection.value = "12";
+        } else if (keyEvent.code == "Digit7") {
+            debugSelection.value = "20";
+        } else if (keyEvent.code == "Digit8") {
+            debugSelection.value = "4";
+        } else if (keyEvent.code == "Digit9") {
+            debugSelection.value = "5";
+        } else if (keyEvent.code == "Digit0") {
+            debugSelection.value = "17";
+        }
+    });
+}

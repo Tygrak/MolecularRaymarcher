@@ -110,59 +110,63 @@ export function CubeData() {
 }
 
 export function CreateBondGeometry(a: Atom, b: Atom, radius: number, arity: number) {
-    const dir = vec3.subtract(vec3.create(), a.GetPosition(), b.GetPosition());
+    return CreateLineGeometry(a.GetPosition(), b.GetPosition(), radius, arity)
+}
+
+export function CreateLineGeometry(a: vec3, b: vec3, radius: number, arity: number = 1) {
+    const dir = vec3.subtract(vec3.create(), a, b);
     const ortho1 = ArbitraryOrthogonalVector(dir);
     const ortho2 = vec3.cross(vec3.create(), dir, ortho1);
     let resultPositions;
     if (arity == 2) {
         const p1 = vec3.fromValues(
-            a.x+ortho1[0]*radius+ortho2[0]*radius+ortho1[0]*radius*2.1, 
-            a.y+ortho1[1]*radius+ortho2[1]*radius+ortho1[1]*radius*2.1, 
-            a.z+ortho1[2]*radius+ortho2[2]*radius+ortho1[2]*radius*2.1);
+            a[0]+ortho1[0]*radius+ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            a[1]+ortho1[1]*radius+ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            a[2]+ortho1[2]*radius+ortho2[2]*radius+ortho1[2]*radius*2.1);
         const p2 = vec3.fromValues(
-            a.x+ortho1[0]*radius-ortho2[0]*radius+ortho1[0]*radius*2.1, 
-            a.y+ortho1[1]*radius-ortho2[1]*radius+ortho1[1]*radius*2.1, 
-            a.z+ortho1[2]*radius-ortho2[2]*radius+ortho1[2]*radius*2.1);
+            a[0]+ortho1[0]*radius-ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            a[1]+ortho1[1]*radius-ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            a[2]+ortho1[2]*radius-ortho2[2]*radius+ortho1[2]*radius*2.1);
         const p3 = vec3.fromValues(
-            a.x-ortho1[0]*radius+ortho1[0]*radius*2.1, 
-            a.y-ortho1[1]*radius+ortho1[1]*radius*2.1, 
-            a.z-ortho1[2]*radius+ortho1[2]*radius*2.1);
+            a[0]-ortho1[0]*radius+ortho1[0]*radius*2.1, 
+            a[1]-ortho1[1]*radius+ortho1[1]*radius*2.1, 
+            a[2]-ortho1[2]*radius+ortho1[2]*radius*2.1);
         const p4 = vec3.fromValues(
-            b.x+ortho1[0]*radius+ortho2[0]*radius+ortho1[0]*radius*2.1, 
-            b.y+ortho1[1]*radius+ortho2[1]*radius+ortho1[1]*radius*2.1, 
-            b.z+ortho1[2]*radius+ortho2[2]*radius+ortho1[2]*radius*2.1);
+            b[0]+ortho1[0]*radius+ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            b[1]+ortho1[1]*radius+ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            b[2]+ortho1[2]*radius+ortho2[2]*radius+ortho1[2]*radius*2.1);
         const p5 = vec3.fromValues(
-            b.x+ortho1[0]*radius-ortho2[0]*radius+ortho1[0]*radius*2.1, 
-            b.y+ortho1[1]*radius-ortho2[1]*radius+ortho1[1]*radius*2.1, 
-            b.z+ortho1[2]*radius-ortho2[2]*radius+ortho1[2]*radius*2.1);
+            b[0]+ortho1[0]*radius-ortho2[0]*radius+ortho1[0]*radius*2.1, 
+            b[1]+ortho1[1]*radius-ortho2[1]*radius+ortho1[1]*radius*2.1, 
+            b[2]+ortho1[2]*radius-ortho2[2]*radius+ortho1[2]*radius*2.1);
         const p6 = vec3.fromValues(
-            b.x-ortho1[0]*radius+ortho1[0]*radius*2.1, 
-            b.y-ortho1[1]*radius+ortho1[1]*radius*2.1, 
-            b.z-ortho1[2]*radius+ortho1[2]*radius*2.1);
+            b[0]-ortho1[0]*radius+ortho1[0]*radius*2.1, 
+            b[1]-ortho1[1]*radius+ortho1[1]*radius*2.1, 
+            b[2]-ortho1[2]*radius+ortho1[2]*radius*2.1);
         const p7 = vec3.fromValues(
-            a.x+ortho1[0]*radius+ortho2[0]*radius-ortho1[0]*radius*2.1, 
-            a.y+ortho1[1]*radius+ortho2[1]*radius-ortho1[1]*radius*2.1, 
-            a.z+ortho1[2]*radius+ortho2[2]*radius-ortho1[2]*radius*2.1);
+            a[0]+ortho1[0]*radius+ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            a[1]+ortho1[1]*radius+ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            a[2]+ortho1[2]*radius+ortho2[2]*radius-ortho1[2]*radius*2.1);
         const p8 = vec3.fromValues(
-            a.x+ortho1[0]*radius-ortho2[0]*radius-ortho1[0]*radius*2.1, 
-            a.y+ortho1[1]*radius-ortho2[1]*radius-ortho1[1]*radius*2.1, 
-            a.z+ortho1[2]*radius-ortho2[2]*radius-ortho1[2]*radius*2.1);
+            a[0]+ortho1[0]*radius-ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            a[1]+ortho1[1]*radius-ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            a[2]+ortho1[2]*radius-ortho2[2]*radius-ortho1[2]*radius*2.1);
         const p9 = vec3.fromValues(
-            a.x-ortho1[0]*radius-ortho1[0]*radius*2.1, 
-            a.y-ortho1[1]*radius-ortho1[1]*radius*2.1, 
-            a.z-ortho1[2]*radius-ortho1[2]*radius*2.1);
+            a[0]-ortho1[0]*radius-ortho1[0]*radius*2.1, 
+            a[1]-ortho1[1]*radius-ortho1[1]*radius*2.1, 
+            a[2]-ortho1[2]*radius-ortho1[2]*radius*2.1);
         const p10 = vec3.fromValues(
-            b.x+ortho1[0]*radius+ortho2[0]*radius-ortho1[0]*radius*2.1, 
-            b.y+ortho1[1]*radius+ortho2[1]*radius-ortho1[1]*radius*2.1, 
-            b.z+ortho1[2]*radius+ortho2[2]*radius-ortho1[2]*radius*2.1);
+            b[0]+ortho1[0]*radius+ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            b[1]+ortho1[1]*radius+ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            b[2]+ortho1[2]*radius+ortho2[2]*radius-ortho1[2]*radius*2.1);
         const p11 = vec3.fromValues(
-            b.x+ortho1[0]*radius-ortho2[0]*radius-ortho1[0]*radius*2.1, 
-            b.y+ortho1[1]*radius-ortho2[1]*radius-ortho1[1]*radius*2.1, 
-            b.z+ortho1[2]*radius-ortho2[2]*radius-ortho1[2]*radius*2.1);
+            b[0]+ortho1[0]*radius-ortho2[0]*radius-ortho1[0]*radius*2.1, 
+            b[1]+ortho1[1]*radius-ortho2[1]*radius-ortho1[1]*radius*2.1, 
+            b[2]+ortho1[2]*radius-ortho2[2]*radius-ortho1[2]*radius*2.1);
         const p12 = vec3.fromValues(
-            b.x-ortho1[0]*radius-ortho1[0]*radius*2.1, 
-            b.y-ortho1[1]*radius-ortho1[1]*radius*2.1, 
-            b.z-ortho1[2]*radius-ortho1[2]*radius*2.1);
+            b[0]-ortho1[0]*radius-ortho1[0]*radius*2.1, 
+            b[1]-ortho1[1]*radius-ortho1[1]*radius*2.1, 
+            b[2]-ortho1[2]*radius-ortho1[2]*radius*2.1);
         resultPositions = new Float32Array([
             ...p1, ...p4, ...p6,
             ...p1, ...p6, ...p4,
@@ -196,29 +200,29 @@ export function CreateBondGeometry(a: Atom, b: Atom, radius: number, arity: numb
         ]);
     } else {
         const p1 = vec3.fromValues(
-            a.x+ortho1[0]*radius+ortho2[0]*radius, 
-            a.y+ortho1[1]*radius+ortho2[1]*radius, 
-            a.z+ortho1[2]*radius+ortho2[2]*radius);
+            a[0]+ortho1[0]*radius+ortho2[0]*radius, 
+            a[1]+ortho1[1]*radius+ortho2[1]*radius, 
+            a[2]+ortho1[2]*radius+ortho2[2]*radius);
         const p2 = vec3.fromValues(
-            a.x+ortho1[0]*radius-ortho2[0]*radius, 
-            a.y+ortho1[1]*radius-ortho2[1]*radius, 
-            a.z+ortho1[2]*radius-ortho2[2]*radius);
+            a[0]+ortho1[0]*radius-ortho2[0]*radius, 
+            a[1]+ortho1[1]*radius-ortho2[1]*radius, 
+            a[2]+ortho1[2]*radius-ortho2[2]*radius);
         const p3 = vec3.fromValues(
-            a.x-ortho1[0]*radius, 
-            a.y-ortho1[1]*radius, 
-            a.z-ortho1[2]*radius);
+            a[0]-ortho1[0]*radius, 
+            a[1]-ortho1[1]*radius, 
+            a[2]-ortho1[2]*radius);
         const p4 = vec3.fromValues(
-            b.x+ortho1[0]*radius+ortho2[0]*radius, 
-            b.y+ortho1[1]*radius+ortho2[1]*radius, 
-            b.z+ortho1[2]*radius+ortho2[2]*radius);
+            b[0]+ortho1[0]*radius+ortho2[0]*radius, 
+            b[1]+ortho1[1]*radius+ortho2[1]*radius, 
+            b[2]+ortho1[2]*radius+ortho2[2]*radius);
         const p5 = vec3.fromValues(
-            b.x+ortho1[0]*radius-ortho2[0]*radius, 
-            b.y+ortho1[1]*radius-ortho2[1]*radius, 
-            b.z+ortho1[2]*radius-ortho2[2]*radius);
+            b[0]+ortho1[0]*radius-ortho2[0]*radius, 
+            b[1]+ortho1[1]*radius-ortho2[1]*radius, 
+            b[2]+ortho1[2]*radius-ortho2[2]*radius);
         const p6 = vec3.fromValues(
-            b.x-ortho1[0]*radius, 
-            b.y-ortho1[1]*radius, 
-            b.z-ortho1[2]*radius);
+            b[0]-ortho1[0]*radius, 
+            b[1]-ortho1[1]*radius, 
+            b[2]-ortho1[2]*radius);
         resultPositions = new Float32Array([
             ...p1, ...p4, ...p6,
             ...p1, ...p6, ...p4,
