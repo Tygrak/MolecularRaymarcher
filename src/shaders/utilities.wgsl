@@ -326,7 +326,19 @@ fn debugModeNormals(normal: vec3<f32>) -> vec4<f32> {
 }
 
 fn debugModeSteps(stackPos: i32, stackSize: i32) -> vec4<f32> {
-	return colormap_temperature(f32(stackPos+1)/f32(stackSize));
+	return colormap_temperature(1-pow(1-f32(stackPos+1)/f32(stackSize), 3));
+}
+
+fn debugModeHideStackPos(resultColor: vec4<f32>, stackPos: i32, toHide: i32, distanceFade: f32) -> vec4<f32> {
+	var color = resultColor*distanceFade;
+	if (stackPos == toHide) {
+		color = vec4(-10.25, -10.05, -10.25, 1.0);
+    }
+    return color;
+}
+
+fn debugModeTEnd(t: f32, end: f32) -> vec4<f32> {
+	return colormap_temperature(t/end);
 }
 
 fn debugModeRaymarchedAtoms(raymarchedAtoms: f32) -> vec4<f32> {

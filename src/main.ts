@@ -501,11 +501,11 @@ if (document != null) {
         } else if (keyEvent.code == "Digit7") {
             debugSelection.value = "20";
         } else if (keyEvent.code == "Digit8") {
-            debugSelection.value = "4";
-        } else if (keyEvent.code == "Digit9") {
             debugSelection.value = "5";
-        } else if (keyEvent.code == "Digit0") {
+        } else if (keyEvent.code == "Digit9") {
             debugSelection.value = "17";
+        } else if (keyEvent.code == "Digit0") {
+            debugSelection.value = "24";
         } else if (keyEvent.code == "Minus") {
             debugSelection.value = "21";
         } else if (keyEvent.code == "Equal") {
