@@ -6,6 +6,8 @@ npm, webpack
 
 # Building
 
+`npm install --save-dev webpack` to install webpack which is required for building
+
 `npm run dev` to build the project
 
 # Running

@@ -506,6 +506,10 @@ if (document != null) {
             debugSelection.value = "5";
         } else if (keyEvent.code == "Digit0") {
             debugSelection.value = "17";
+        } else if (keyEvent.code == "Minus") {
+            debugSelection.value = "21";
+        } else if (keyEvent.code == "Equal") {
+            debugSelection.value = "22";
         }
     });
 }
