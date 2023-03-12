@@ -18,8 +18,8 @@ const dataSelection = document.getElementById("dataSelection") as HTMLSelectElem
 const visualizationSelection = document.getElementById("visualizationSelection") as HTMLSelectElement;
 const debugSelection = document.getElementById("debugSelection") as HTMLSelectElement;
 const sliderPercentageShown = document.getElementById("sliderPercentageShown") as HTMLInputElement;
-const sliderRaymarchingDrawnAmount = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
-const sliderRaymarchingStartPosition = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
+const sliderDebugA = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
+const sliderDebugB = document.getElementById("raymarchingStartPosition") as HTMLInputElement;
 const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as HTMLInputElement;
 const sliderKSmoothminScale = document.getElementById("kSmoothminScale") as HTMLInputElement;
 const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
@@ -28,13 +28,14 @@ const addCloseNeighborsToCellsCheckbox = document.getElementById("addCloseNeighb
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
 const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSizeCheckbox") as HTMLInputElement;
+const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
 const regenerateOctreeButton = document.getElementById("regenerateOctreeButton") as HTMLButtonElement;
 const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputElement;
-const shaderUtilitiesFileInput = document.getElementById("shaderUtilitiesFileInput") as HTMLInputElement;
+//const shaderUtilitiesFileInput = document.getElementById("shaderUtilitiesFileInput") as HTMLInputElement;
 const shaderLoadButton = document.getElementById("shaderLoadButton") as HTMLButtonElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
@@ -51,6 +52,10 @@ let impostorRenderer1aon : ImpostorRenderer;
 let impostorRendererLoaded : ImpostorRenderer;
 
 let device: GPUDevice;
+
+let renderDirty: boolean = true;
+let fullRender: boolean = true;
+let nextFullRenderTime: number = 10000;
 
 async function Initialize() {
     const gpu = await InitGPU(canvasSizeCheckbox.checked);
@@ -205,12 +210,22 @@ async function Initialize() {
             return;
         }
 
-        frameId++;
         const pMatrix = vp.projectionMatrix;
-        if(camera.tick()){
+        if (camera.tick()) {
             vMatrix = camera.matrix;
             mat4.multiply(vpMatrix, pMatrix, vMatrix);
+            renderDirty = true;
+            queueFullRender();
         }
+        if (nextFullRenderTime < performance.now()) {
+            nextFullRenderTime = 100000000;
+            renderDirty = true;
+            fullRender = true;
+        }
+        if (!renderDirty && renderOnlyMovementCheckbox.checked && !benchmarker.running) {
+            return;
+        }
+        frameId++;
 
         let cameraPosition = camera.eye;
         if (benchmarker.running) {
@@ -244,7 +259,7 @@ async function Initialize() {
         } else if (visualizationSelection.value == "impostor") {
             const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
             let vMatrix = mat4.clone(vp.viewMatrix);
-            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
+            let drawAmount = parseFloat(sliderDebugA.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
             if (dataSelection.value == "1cqw") {
                 impostorRenderer1cqw.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
@@ -268,8 +283,8 @@ async function Initialize() {
         } else if (visualizationSelection.value == "raymarchoctree") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
-            let drawAmount = parseFloat(sliderRaymarchingDrawnAmount.value)/100;
-            let drawStart = parseFloat(sliderRaymarchingStartPosition.value)/100;
+            let drawAmount = parseFloat(sliderDebugA.value)/100;
+            let drawStart = parseFloat(sliderDebugB.value)/100;
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
             let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             let debugMode = parseFloat(debugSelection.value);
@@ -278,19 +293,19 @@ async function Initialize() {
                 rayMarchQuadOct1cqw.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.kSmoothminScale = kSmoothminScale;
-                rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, drawAmount, drawStart, sizeScale);
+                rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
             } else if (dataSelection.value == "1aon") {
                 rayMarchQuadOct1aon.debugMode = debugMode;
                 rayMarchQuadOct1aon.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
-                rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, drawAmount, drawStart, sizeScale);
+                rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 rayMarchQuadOctLoaded.debugMode = debugMode;
                 rayMarchQuadOctLoaded.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.kSmoothminScale = kSmoothminScale;
-                rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, drawAmount, drawStart, sizeScale);
+                rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
             }
         }
         renderPass.end();
@@ -322,6 +337,8 @@ async function Initialize() {
         } else {
             fpsCounterElement.innerText = "timestamps :(";
         }
+        renderDirty = false;
+        fullRender = false;
         benchmarker.EndFrame();
     }
 
@@ -336,39 +353,27 @@ async function Initialize() {
             cameraPosition = vec3.fromValues(125, 31.5, 10.5);
         }
         if (dataSelection.value == "1aon" && structure1aon == undefined) {
+            let t0 = performance.now();
             structure1aon = new Structure(require('./data/1aon.pdb'));
             structure1aon.InitializeBuffers(device);
             impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
             
-            let t0 = performance.now();
-            //rayMarchQuad1aon = new RayMarchQuad(device, gpu.format);
-            //rayMarchQuad1aon.LoadAtoms(device, structure1aon);
-            let t1 = performance.now();
-            //console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
-
-            t0 = performance.now();
             rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
             rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
-            rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
-            t1 = performance.now();
+            regenerateOctree();
+            let t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
         if (dataSelection.value == "Loaded" && structureLoaded != undefined) {
+            let t0 = performance.now();
             impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
             
-            let t0 = performance.now();
-            //rayMarchQuad1aon = new RayMarchQuad(device, gpu.format);
-            //rayMarchQuad1aon.LoadAtoms(device, structure1aon);
-            let t1 = performance.now();
-            //console.log("Loading data for raytrace+creating kdtree: " + (t1-t0) + "ms");
-
-            t0 = performance.now();
             rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format);
             rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
-            t1 = performance.now();
+            let t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
     };
@@ -453,6 +458,11 @@ addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     }
 });
 
+function queueFullRender() {
+    renderDirty = true;
+    nextFullRenderTime = performance.now()+0.25;
+}
+
 function regenerateOctree() {
     let sizeScale = parseFloat(sliderImpostorSizeScale.value);
     let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
@@ -474,6 +484,7 @@ function regenerateOctree() {
         rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
         rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
     }
+    queueFullRender();
 }
 
 makeIrregularOctreeCheckbox.addEventListener('change', function(){
@@ -482,6 +493,22 @@ makeIrregularOctreeCheckbox.addEventListener('change', function(){
 
 regenerateOctreeButton.onclick = (e) => {
     regenerateOctree();
+}
+
+sliderDebugA.onchange = (e) => {
+    queueFullRender();
+}
+sliderDebugB.onchange = (e) => {
+    queueFullRender();
+}
+debugSelection.onchange = (e) => {
+    queueFullRender();
+}
+sliderImpostorSizeScale.onchange = (e) => {
+    queueFullRender();
+}
+sliderKSmoothminScale.onchange = (e) => {
+    queueFullRender();
 }
 
 if (document != null) {
@@ -511,5 +538,6 @@ if (document != null) {
         } else if (keyEvent.code == "Equal") {
             debugSelection.value = "22";
         }
+        queueFullRender();
     });
 }

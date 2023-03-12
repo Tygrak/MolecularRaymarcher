@@ -252,7 +252,7 @@ export class RayMarchOctreeQuad {
         this.loadedAtoms = structure.atoms.length;
     }
 
-    private Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number, pipelineSetup: RayPipelineSetup) {
+    private Draw(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, fullrender: boolean,  percentageShown: number, drawStartPosition: number, pipelineSetup: RayPipelineSetup) {
         if (!this.loaded) {
             console.log("Data not loaded!");
             return;
@@ -273,7 +273,7 @@ export class RayMarchOctreeQuad {
         drawSettingsBuffer[15] = this.octreeMargins;
         drawSettingsBuffer[16] = this.loadedAtoms;
         drawSettingsBuffer[17] = this.pipelineSetupRaymarch.treeLayers;
-        drawSettingsBuffer[18] = -1;
+        drawSettingsBuffer[18] = fullrender ? 1 : 0;
         drawSettingsBuffer[19] = -1;
         device.queue.writeBuffer(pipelineSetup.drawSettingsBuffer, 0, drawSettingsBuffer);
         renderPass.setPipeline(pipelineSetup.pipeline);
@@ -285,8 +285,8 @@ export class RayMarchOctreeQuad {
         renderPass.draw(numberOfVerticesToDraw);
     }
 
-    public DrawRaymarch(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, percentageShown: number, drawStartPosition: number, atomsScale: number) {
+    public DrawRaymarch(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, fullrender: boolean, percentageShown: number, drawStartPosition: number, atomsScale: number) {
         this.atomsScale = atomsScale;
-        this.Draw(device, renderPass, mvpMatrix, inverseVpMatrix, cameraPos, percentageShown, drawStartPosition, this.pipelineSetupRaymarch);
+        this.Draw(device, renderPass, mvpMatrix, inverseVpMatrix, cameraPos, fullrender, percentageShown, drawStartPosition, this.pipelineSetupRaymarch);
     }
 }

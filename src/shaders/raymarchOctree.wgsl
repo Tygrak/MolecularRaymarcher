@@ -39,8 +39,8 @@ struct DrawSettings {
     octreeCreationMargins: f32,
     totalAtoms: f32,
     treeLayers: f32,
+    isFullRender: f32,
     padding1: f32,
-    padding2: f32,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -420,8 +420,10 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                             if (closestRealHitT > realHit.t) {
                                 closestRealHitAtom = a;
                                 closestRealHitT = realHit.t;
-                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19) {
-                                    closestRealHitT = 1000000;
+                                if (drawSettings.isFullRender > 0.5) {
+                                    if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19) {
+                                        closestRealHitT = 1000000;
+                                    }
                                 }
                             }
                             if (hit.t < closestT) {
@@ -455,18 +457,28 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
     return start;
 }
 
-const maxIterations = 100;
-
+const maxIterations = 500;
+const resultsStackSize = 6;
+var<private> resultsStackPos = 0;
+var<private> resultsStackLocation = vec3(-100000.0, -100000.0, -100000.0);
+var<private> resultsStack: array<vec4<f32>, resultsStackSize>;
 fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     var maxDistance: f32 = -1.0;
     var raymarchedAtoms: f32 = bins.bins[intersecting].end-bins.bins[intersecting].start;
+    var iterationsMultiplier = 1.0;
+    if (drawSettings.isFullRender < 0.5) {
+        iterationsMultiplier = 0.125;
+    }
 
     var t : f32 = 0.0;
     var pos : vec3<f32> = vec3(0.0);
     var iteration = 0;
     var resultColor = vec4(0.0, 0.0, 0.0, 1.0);
+    if (drawSettings.isFullRender > 0.5) {
+        resultColor = vec4(0.15, 0.0, 0.15, 1.0);
+    }
     var stackPos = 0;
-	for (iteration = 0; iteration < maxIterations; iteration++) {
+	for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
 		if (t > end+drawSettings.kSmoothminScale) {
             if (drawSettings.allowReset > 0.5) {
                 t = 0.0;
@@ -481,6 +493,13 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                     }
                     if (stackPos == stackSize && drawSettings.debugB > 0.5) {
                         return vec4(10.15, 10.0, 0.15, 1.0);
+                    }
+                    if (stackBins[stackPos] == -1) {
+                        if (resultsStackPos == 0) {
+                            return vec4(0.15, 0.0, 0.15, 1.0);
+                        }
+                        pos = resultsStackLocation;
+                        break;
                     }
                     return vec4(0.15, 0.0, 0.15, 1.0);
                 }
@@ -500,12 +519,30 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
 		let d = dAtoms(pos);
         
-		if (d < 0.05) {
-            //todo check if next stacksteps could be better?
-            resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+dAtomsColor(pos).color/2;
+		if (d < 0.05*(1-drawSettings.isFullRender+0.01)) {
+            let color = vec4(-0.25, 0.05, 0.25, 1.0)+dAtomsColor(pos).color/2;
+            if (resultsStackPos == 0) {
+                resultsStackLocation = pos;
+                resultColor = color;
+            } else {
+                if (distance(resultsStackLocation, pos) > mix(-0.001, 0.5, drawSettings.debugB)) {
+                    pos = resultsStackLocation;
+                    break;
+                }
+                resultColor = color;
+            }
+            resultsStack[resultsStackPos] = color;
+            if (resultsStackPos+1 >= resultsStackSize) {
+                break;
+            }
             break;
+            /*if (drawSettings.isFullRender < 0.5) {
+                break;
+            }
+            t = t+end+drawSettings.kSmoothminScale;
+            resultsStackPos++;*/
 		}
-		t = t+d+mix(0, 0.05, drawSettings.debugB);
+		t = t+d+mix(0, 0.05, drawSettings.debugB*(1-drawSettings.isFullRender));
 	}
     if (iteration == maxIterations && drawSettings.debugB > 0.9) {
         resultColor = vec4(10.05, 10.05, 10.95, 1.0);
@@ -570,6 +607,10 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
 fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     var maxDistance: f32 = -1.0;
     var raymarchedAtoms: f32 = bins.bins[intersecting].end-bins.bins[intersecting].start;
+    var iterationsMultiplier = 1.0;
+    if (drawSettings.isFullRender < 0.5) {
+        iterationsMultiplier = 0.05;
+    }
 
     var t : f32 = 0.0;
     var pos : vec3<f32> = vec3(0.0);
@@ -577,9 +618,9 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     let startColor = vec4(-0.25, 0.05, 0.25, 1.0);
     var resultColor = startColor;
     var stackPos = 0;
-	for (iteration = 0; iteration < maxIterations*2; iteration++) {
+	for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
         //todo: make transparent really start where last cell ends
-		if (t > end+2*drawSettings.atomsScale+drawSettings.kSmoothminScale) {
+		if (t > end) {
             stackPos++;
             if (stackPos == stackSize || stackBins[stackPos] == -1) {
                 break;
