@@ -67,11 +67,11 @@ struct SdfResult {
 struct Hit {
     t: f32,
 	intersection: vec3<f32>,
-    normal: vec3<f32>,
+    t2: f32,
     atomNumber: f32,
 }
 
-const miss: Hit = Hit(1e20, vec3(0.0), vec3(0.0), -1);
+const miss: Hit = Hit(1e20, vec3(0.0), 1e20, -1);
 
 //https://iquilezles.org/articles/distfunctions/
 fn opSmoothUnion(d1: f32, d2: f32, k: f32) -> f32 {
@@ -247,8 +247,8 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom, ad
 	if (t < 0.0) {return miss;}
 
 	let intersection = origin + t * direction;
-	let normal = normalize(intersection - center);
-    return Hit(t, intersection, normal, atom.number);
+	let t2 = -b + sqrt(det);
+    return Hit(t, intersection, t2, atom.number);
 }
 
 var<private> start: vec3<f32>;
@@ -412,7 +412,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                     for (var a: i32 = i32(bins.bins[i].start); a < i32(bins.bins[i].end); a++) {
                         let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 1);
                         numRaySphereIntersections++;
-                        if (hit.t > intersectionI.y || hit.t < intersectionI.x) {
+                        if ((hit.t+hit.t2)/2 > intersectionI.y || (hit.t+hit.t2)/2 < intersectionI.x) {
                             continue;
                         }
                         if (hit.t < miss.t) {
@@ -444,19 +444,23 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
 
     intersecting = stackBins[0];
     start = start+direction*stackT[0];
-    let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
-    end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[1]-drawSettings.kSmoothminScale);
+    if (drawSettings.debugB > 0.1) {
+        let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
+        end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[1])+drawSettings.kSmoothminScale;
+    } else {
+        let intersectionEnd = aabbIntersection(start, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
+        end = intersectionEnd.y-stackT[0];
+    }
     if (drawSettings.debugMode == 24) {
         intersecting = stackBins[1];
         start = start+direction*stackT[1];
         let binSize = bins.bins[stackBins[1]].max-bins.bins[stackBins[1]].min;
-        end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[2]-drawSettings.kSmoothminScale);
+        end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[2]);
     }
-    //let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
-    //end = intersectionEnd.y-stackT[0];
     return start;
 }
 
+//https://gitlab.fi.muni.cz/xklepac/webgpu/-/blob/2dd07ae8392306cf79dde93af96f16226a575589/src/shaders/raymarchOctree.wgsl
 const maxIterations = 500;
 const resultsStackSize = 6;
 var<private> resultsStackPos = 0;
@@ -479,7 +483,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     }
     var stackPos = 0;
 	for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
-		if (t > end+drawSettings.kSmoothminScale) {
+		if (t > end) {
             if (drawSettings.allowReset > 0.5) {
                 t = 0.0;
                 stackPos++;
@@ -504,10 +508,13 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                     return vec4(0.15, 0.0, 0.15, 1.0);
                 }
                 start = initStart.xyz+rayDirection*stackT[stackPos];
-                //let intersectionEnd = aabbIntersection(start, rayDirection, 1.0/rayDirection, bins.bins[stackPos].min, bins.bins[stackPos].max);
-                //end = intersectionEnd.y;
-                let binSize = bins.bins[stackBins[stackPos]].max-bins.bins[stackBins[stackPos]].min;
-                end = max(binSize.x, max(binSize.y, binSize.z));
+                if (drawSettings.debugB > 0.1) {
+                    let binSize = bins.bins[stackBins[stackPos]].max-bins.bins[stackBins[stackPos]].min;
+                    end = max(binSize.x, max(binSize.y, binSize.z))+drawSettings.kSmoothminScale;
+                } else {
+                    let intersectionEnd = aabbIntersection(start, rayDirection, 1.0/rayDirection, bins.bins[stackBins[stackPos]].min, bins.bins[stackBins[stackPos]].max);
+                    end = intersectionEnd.y;
+                }
                 intersecting = stackBins[stackPos];
                 raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
             } else {
@@ -618,6 +625,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     let startColor = vec4(-0.25, 0.05, 0.25, 1.0);
     var resultColor = startColor;
     var stackPos = 0;
+    //todo: add limit iterations slider
 	for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
         //todo: make transparent really start where last cell ends
 		if (t > end) {
