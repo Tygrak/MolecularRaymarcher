@@ -29,6 +29,7 @@ const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNei
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
 const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSizeCheckbox") as HTMLInputElement;
 const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCheckbox") as HTMLInputElement;
+const alwaysFullRenderCheckbox = document.getElementById("alwaysFullRenderCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
@@ -224,6 +225,9 @@ async function Initialize() {
         }
         if (!renderDirty && renderOnlyMovementCheckbox.checked && !benchmarker.running) {
             return;
+        }
+        if (alwaysFullRenderCheckbox.checked) {
+            fullRender = true;
         }
         frameId++;
 

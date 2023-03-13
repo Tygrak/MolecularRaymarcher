@@ -253,8 +253,8 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom, ad
 
 var<private> start: vec3<f32>;
 var<private> end: f32;
-const stackSize = 16;
-var<private> stackCurentNum = 0;
+const stackSize = 32;
+var<private> stackCurrentNum = 0;
 var<private> stackT: array<f32, stackSize>;
 var<private> stackBins: array<i32, stackSize>;
 
@@ -266,9 +266,9 @@ fn resetStack() {
 }
 
 fn insertIntoSortedStack(t: f32, bin: i32) {
-    for (var i : i32 = 0; i < stackSize; i++) {
+    for (var i : i32 = 0; i < min(stackSize, stackCurrentNum+1); i++) {
         if (stackT[i] > t) {
-            for (var j : i32 = stackSize-1; j >= i+1; j--) {
+            for (var j : i32 = min(stackSize, stackCurrentNum+1)-1; j >= i+1; j--) {
                 stackT[j] = stackT[j-1];
                 stackBins[j] = stackBins[j-1];
             }
@@ -277,6 +277,7 @@ fn insertIntoSortedStack(t: f32, bin: i32) {
             break;
         }
     }
+    stackCurrentNum++;
 }
 
 const MAP_INDEXES_0 = array(0,1,2,4,5,3,6,7);
@@ -437,9 +438,6 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                     }
                     if (closestT != miss.t) {
                         insertIntoSortedStack(closestT, i);
-                        if (drawSettings.isFullRender < 0.5 && ) {
-
-                        }
                     }
                 } else {
                     binsStack[binsStackNum] = i;
