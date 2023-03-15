@@ -61,6 +61,9 @@ export class ChainMesh {
             const bond = bondsKeys[j];
             bondsPositions.push(...CreateBondGeometry(bond.a, bond.b, 0.03, bondsMap.get(bond)!.arity).positions);
         }
+        if (bondsKeys.length == 0) {
+            bondsPositions.push(...CreateBondGeometry(this.chain.residues[0].atoms[0], this.chain.residues[0].atoms[0], 0.03, 1).positions);
+        }
         this.bondsPositions = new Float32Array(bondsPositions);
         this.bondsColors = new Float32Array(this.bondsPositions.length).map((v) => 0.5); 
         let t2 = performance.now();

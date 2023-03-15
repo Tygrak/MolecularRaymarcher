@@ -1,6 +1,6 @@
 import { vec2, vec3, mat4 } from 'gl-matrix';
 import { CreateBondGeometry, CreateSphereGeometry, CubeData } from './meshHelpers';
-import { LoadData } from './loadData';
+import { IsDataPcd, LoadDataPdb, LoadDataPcd, LoadDataObj, IsDataPdb } from './loadData';
 import { GetAtomType } from './atomDatabase';
 import { Atom } from './atom';
 import { Chain } from './chain';
@@ -15,7 +15,14 @@ export class Structure {
 
     constructor (dataText: string) {
         let t0 = performance.now();
-        let loaded = LoadData(dataText);
+        let loaded;
+        if (IsDataPcd(dataText)) {
+            loaded = LoadDataPcd(dataText, 100);
+        } else if (IsDataPdb(dataText)) {
+            loaded = LoadDataPdb(dataText);
+        } else {
+            loaded = LoadDataObj(dataText, 250);
+        }
         let t1 = performance.now();
         this.atoms = loaded.atoms;
         this.chains = loaded.chains;

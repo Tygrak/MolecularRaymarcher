@@ -23,7 +23,6 @@ export class ImpostorRenderer {
     
     constructor (device: GPUDevice, format: GPUTextureFormat) {
         let quad = CreateQuadGeometry(new Atom(0, 0, 0, "C", "C"));
-        console.log(quad);
         this.quadPositions = CreateGPUBuffer(device, quad.positions);
         this.quadColors = CreateGPUBuffer(device, quad.color);
         this.quadInfos = CreateGPUBuffer(device, quad.info);

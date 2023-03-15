@@ -405,6 +405,7 @@ async function Initialize() {
             let t1 = performance.now();
             console.log("Loading data from file (" + dataFileInput.files![0].name + "): " + (t1-t0) + "ms");
             dataSelection.value = "dataFile";
+            queueFullRender();
         });
     };
 
