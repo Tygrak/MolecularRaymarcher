@@ -88,7 +88,7 @@ async function Initialize() {
     
     let percentageShown = 1;
  
-    const pipeline = device.createRenderPipeline({
+    const basicPipeline = device.createRenderPipeline({
         layout:'auto',
         vertex: {
             module: device.createShaderModule({                    
@@ -160,8 +160,8 @@ async function Initialize() {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
 
-    const uniformBindGroup = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(0),
+    const basicUniformBindGroup = device.createBindGroup({
+        layout: basicPipeline.getBindGroupLayout(0),
         entries: [{
             binding: 0,
             resource: {
@@ -251,8 +251,8 @@ async function Initialize() {
 
         const renderPass = commandEncoder.beginRenderPass(renderPassDescription as GPURenderPassDescriptor);
         if (visualizationSelection.value == "basic") {
-            renderPass.setPipeline(pipeline);
-            renderPass.setBindGroup(0, uniformBindGroup);
+            renderPass.setPipeline(basicPipeline);
+            renderPass.setBindGroup(0, basicUniformBindGroup);
             if (dataSelection.value == "1cqw") {
                 structure1cqw.DrawStructure(renderPass, percentageShown);
             } else if (dataSelection.value == "1aon") {
@@ -268,20 +268,20 @@ async function Initialize() {
             if (dataSelection.value == "1cqw") {
                 impostorRenderer1cqw.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
 
-                renderPass.setPipeline(pipeline);
-                renderPass.setBindGroup(0, uniformBindGroup);
+                renderPass.setPipeline(basicPipeline);
+                renderPass.setBindGroup(0, basicUniformBindGroup);
                 structure1cqw.DrawStructure(renderPass, 1, true);
             } else if (dataSelection.value == "1aon") {
                 impostorRenderer1aon.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
 
-                renderPass.setPipeline(pipeline);
-                renderPass.setBindGroup(0, uniformBindGroup);
+                renderPass.setPipeline(basicPipeline);
+                renderPass.setBindGroup(0, basicUniformBindGroup);
                 structure1aon.DrawStructure(renderPass, 1, true);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 impostorRendererLoaded.Draw(device, renderPass, vpMatrix, vMatrix, cameraPosition, drawAmount, sizeScale);
 
-                renderPass.setPipeline(pipeline);
-                renderPass.setBindGroup(0, uniformBindGroup);
+                renderPass.setPipeline(basicPipeline);
+                renderPass.setBindGroup(0, basicUniformBindGroup);
                 structureLoaded.DrawStructure(renderPass, 1, true);
             }
         } else if (visualizationSelection.value == "raymarchoctree") {
@@ -298,18 +298,21 @@ async function Initialize() {
                 rayMarchQuadOct1cqw.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
+                //rayMarchQuadOct1cqw.DrawGrid(device, renderPass, mvpMatrix);
             } else if (dataSelection.value == "1aon") {
                 rayMarchQuadOct1aon.debugMode = debugMode;
                 rayMarchQuadOct1aon.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
+                //rayMarchQuadOct1aon.DrawGrid(device, renderPass, mvpMatrix);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 rayMarchQuadOctLoaded.debugMode = debugMode;
                 rayMarchQuadOctLoaded.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
+                //rayMarchQuadOctLoaded.DrawGrid(device, renderPass, mvpMatrix);
             }
         }
         renderPass.end();

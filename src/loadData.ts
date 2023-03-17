@@ -168,9 +168,9 @@ export const LoadDataObj = (dataString: string, scale: number = 1) => {
         limitMaxSize = Math.max(limitMaxSize, Math.max(Math.max(atoms[i].x, atoms[i].y), atoms[i].z));
     }
     for (let i = 0; i < atoms.length; i++) {
-        atoms[i].x = (atoms[i].x - (sums.x/atoms.length))*(20/limitMaxSize);
-        atoms[i].y = (atoms[i].y - (sums.y/atoms.length))*(20/limitMaxSize);
-        atoms[i].z = (atoms[i].z - (sums.z/atoms.length))*(20/limitMaxSize);
+        atoms[i].x = atoms[i].x*(20/limitMaxSize);
+        atoms[i].y = atoms[i].y*(20/limitMaxSize);
+        atoms[i].z = atoms[i].z*(20/limitMaxSize);
     }
     for (let i = 0; i < chains.length; i++) {
         const chain = chains[i];
@@ -182,7 +182,7 @@ export const LoadDataObj = (dataString: string, scale: number = 1) => {
 }
 
 const ParseDataLineObj = (line: string) => {
-    let match = line.match(/v (-?\d+\.?\d*(?:e\+?\-?\d+)?) (-?\d+\.?\d*(?:e\+?\-?\d+)?) (-?\d+\.?\d*(?:e\+?\-?\d+)?)/);
+    let match = line.match(/^v +(-?\d+\.?\d*(?:e\+?\-?\d+)?) (-?\d+\.?\d*(?:e\+?\-?\d+)?) (-?\d+\.?\d*(?:e\+?\-?\d+)?)/);
     if (match == null) {
         return null;
     }

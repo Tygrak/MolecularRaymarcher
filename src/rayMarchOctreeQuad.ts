@@ -2,6 +2,7 @@ import { mat4, vec3, vec4 } from "gl-matrix";
 import { GetAtomType } from "./atomDatabase";
 import { CreateGPUBuffer } from "./helper";
 import { Octree } from "./octree";
+import { OctreeMesh } from "./octreeMesh";
 import shaderRaymarch from './shaders/raymarchOctree.wgsl';
 import shaderUtilities from './shaders/utilities.wgsl';
 import { Structure } from "./structure";
@@ -10,6 +11,7 @@ const numberOfVerticesToDraw = 6;
 
 class RayPipelineSetup {
     pipeline : GPURenderPipeline;
+    format : GPUTextureFormat;
     mvpUniformBuffer : GPUBuffer;
     inverseVpUniformBuffer : GPUBuffer;
     cameraPosBuffer : GPUBuffer;
@@ -24,14 +26,17 @@ class RayPipelineSetup {
     drawSettingsBuffer : GPUBuffer;
     drawSettingsBindGroup : GPUBindGroup;
 
+    octreeMesh?: OctreeMesh;
+
     minLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
     maxLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
 
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string) {
+        this.format = format;
         this.pipeline = device.createRenderPipeline({
             layout:'auto',
             vertex: {
-                module: device.createShaderModule({                    
+                module: device.createShaderModule({
                     code: shader
                 }),
                 entryPoint: "vs_main",
@@ -205,6 +210,7 @@ class RayPipelineSetup {
                 },
             ]
         });
+        //this.octreeMesh = new OctreeMesh(device, this.format, tree);
     }
 }
 
@@ -288,5 +294,11 @@ export class RayMarchOctreeQuad {
     public DrawRaymarch(device: GPUDevice, renderPass : GPURenderPassEncoder, mvpMatrix: mat4, inverseVpMatrix: mat4, cameraPos: vec3, fullrender: boolean, percentageShown: number, drawStartPosition: number, atomsScale: number) {
         this.atomsScale = atomsScale;
         this.Draw(device, renderPass, mvpMatrix, inverseVpMatrix, cameraPos, fullrender, percentageShown, drawStartPosition, this.pipelineSetupRaymarch);
+    }
+
+    public DrawGrid(device: GPUDevice, renderPass: GPURenderPassEncoder, mvpMatrix: mat4) {
+        if (this.pipelineSetupRaymarch.octreeMesh != undefined) {
+            this.pipelineSetupRaymarch.octreeMesh.DrawStructure(renderPass, mvpMatrix);
+        }
     }
 }

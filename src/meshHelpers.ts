@@ -244,7 +244,7 @@ export function CreateLineGeometry(a: vec3, b: vec3, radius: number, arity: numb
 }
 
 export function ArbitraryOrthogonalVector(v: vec3) {
-    let arbitraryNonParallelVec = v[0] != 1.0 ? vec3.fromValues(1.0, 0.0, 0.0) : vec3.fromValues(0.0, 1.0, 0.0);
+    let arbitraryNonParallelVec = vec3.normalize(vec3.create(), v)[0] != 1.0 ? vec3.fromValues(1.0, 0.0, 0.0) : vec3.fromValues(0.0, 1.0, 0.0);
     let orthogonal = vec3.cross(vec3.create(), v, arbitraryNonParallelVec);
     return vec3.normalize(orthogonal, orthogonal);
 }
