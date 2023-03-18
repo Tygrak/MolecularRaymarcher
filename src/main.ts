@@ -11,6 +11,7 @@ import { TestKdTrees } from './tests';
 import { ImpostorRenderer } from './impostorRenderer';
 import { RayMarchOctreeQuad } from './rayMarchOctreeQuad';
 import { Benchmarker } from './benchmark';
+import { AxisMesh } from './axisMesh';
 
 const createCamera = require('3d-view-controls');
 
@@ -41,16 +42,17 @@ const shaderLoadButton = document.getElementById("shaderLoadButton") as HTMLButt
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
-let structure1cqw : Structure;
-let structure1aon : Structure;
-let structureLoaded : Structure;
+let structure1cqw: Structure;
+let structure1aon: Structure;
+let structureLoaded: Structure;
 
-let rayMarchQuadOct1cqw : RayMarchOctreeQuad;
-let rayMarchQuadOct1aon : RayMarchOctreeQuad;
-let rayMarchQuadOctLoaded : RayMarchOctreeQuad;
-let impostorRenderer1cqw : ImpostorRenderer;
-let impostorRenderer1aon : ImpostorRenderer;
-let impostorRendererLoaded : ImpostorRenderer;
+let rayMarchQuadOct1cqw: RayMarchOctreeQuad;
+let rayMarchQuadOct1aon: RayMarchOctreeQuad;
+let rayMarchQuadOctLoaded: RayMarchOctreeQuad;
+let impostorRenderer1cqw: ImpostorRenderer;
+let impostorRenderer1aon: ImpostorRenderer;
+let impostorRendererLoaded: ImpostorRenderer;
+let axisMesh: AxisMesh;
 
 let device: GPUDevice;
 
@@ -82,6 +84,8 @@ async function Initialize() {
 
     impostorRenderer1cqw = new ImpostorRenderer(device, gpu.format);
     impostorRenderer1cqw.LoadAtoms(device, structure1cqw);
+
+    axisMesh = new AxisMesh(device, gpu.format);
 
     let kTree = new KdTree(structure1cqw.atoms);
     console.log(kTree);
@@ -193,6 +197,7 @@ async function Initialize() {
             depthStoreOp: "store",
         }
     };
+    //let depthSampler = device.createSampler(GPUSamplerDescriptor)
     Reinitialize();
 
     function CreateAnimation(draw : any) {
@@ -261,6 +266,7 @@ async function Initialize() {
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 structureLoaded.DrawStructure(renderPass, percentageShown);
             }
+            axisMesh.DrawStructure(renderPass, mvpMatrix);
         } else if (visualizationSelection.value == "impostor") {
             const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
             let vMatrix = mat4.clone(vp.viewMatrix);
@@ -285,6 +291,7 @@ async function Initialize() {
                 renderPass.setBindGroup(0, basicUniformBindGroup);
                 structureLoaded.DrawStructure(renderPass, 1, true);
             }
+            axisMesh.DrawStructure(renderPass, mvpMatrix);
         } else if (visualizationSelection.value == "raymarchoctree") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
@@ -315,6 +322,7 @@ async function Initialize() {
                 rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
                 //rayMarchQuadOctLoaded.DrawGrid(device, renderPass, mvpMatrix);
             }
+            axisMesh.DrawStructure(renderPass, mvpMatrix);
         }
         renderPass.end();
 
@@ -343,7 +351,7 @@ async function Initialize() {
                 }
             });
         } else {
-            fpsCounterElement.innerText = "timestamps :(";
+            fpsCounterElement.innerText = "timestamps not enabled :(";
         }
         renderDirty = false;
         fullRender = false;
@@ -372,8 +380,8 @@ async function Initialize() {
             depthStencilAttachment: {
                 view: depthTexture.createView(),
                 depthClearValue: 1.0,
-                depthLoadOp:'clear',
-                depthStoreOp: "store",
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
             }
         };
     }

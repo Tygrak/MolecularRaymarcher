@@ -116,7 +116,7 @@ export function CreateBondGeometry(a: Atom, b: Atom, radius: number, arity: numb
 export function CreateLineGeometry(a: vec3, b: vec3, radius: number, arity: number = 1) {
     const dir = vec3.subtract(vec3.create(), a, b);
     const ortho1 = ArbitraryOrthogonalVector(dir);
-    const ortho2 = vec3.cross(vec3.create(), dir, ortho1);
+    const ortho2 = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), dir, ortho1));
     let resultPositions;
     if (arity == 2) {
         const p1 = vec3.fromValues(
@@ -244,7 +244,7 @@ export function CreateLineGeometry(a: vec3, b: vec3, radius: number, arity: numb
 }
 
 export function ArbitraryOrthogonalVector(v: vec3) {
-    let arbitraryNonParallelVec = vec3.normalize(vec3.create(), v)[0] != 1.0 ? vec3.fromValues(1.0, 0.0, 0.0) : vec3.fromValues(0.0, 1.0, 0.0);
+    let arbitraryNonParallelVec = Math.abs(Math.abs(vec3.normalize(vec3.create(), v)[0])-1.0) > 0.001 ? vec3.fromValues(1.0, 0.0, 0.0) : vec3.fromValues(0.0, 1.0, 0.0);
     let orthogonal = vec3.cross(vec3.create(), v, arbitraryNonParallelVec);
     return vec3.normalize(orthogonal, orthogonal);
 }

@@ -442,6 +442,8 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
     return start;
 }
 
+var<private> depthOutput: f32;
+
 const maxIterations = 500;
 fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     var maxDistance: f32 = -1.0;
@@ -520,6 +522,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     let sphereInitStart = normalize(center-cameraPos.xyz)*limitsMax;
     let cameraDistance = distance(sphereInitStart, pos);
     let distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
+    depthOutput = distance(cameraPos.xyz, pos);
     if (drawSettings.debugMode == 0) {
         //default
         return resultColor*distanceFade;
@@ -659,8 +662,13 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     return resultColor;
 }
 
+struct FragmentOutput {
+    @builtin(frag_depth) depth: f32,
+    @location(0) color: vec4<f32>
+}
+
 @fragment
-fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> @location(0) vec4<f32> {
+fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>) -> FragmentOutput {
     let screenPos = vPos;
 
     // ray direction in normalized device coordinate
@@ -680,7 +688,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
             start = start+rayDirection*boundaryIntersection.x;
         }
     } else if (boundaryIntersection.x >= boundaryIntersection.y) {
-        return vec4(0.15, 0.0, 0.15, 1.0);
+        return FragmentOutput(depthOutput, vec4(0.15, 0.0, 0.15, 1.0));
     }
 
     let initStart = start;
@@ -691,26 +699,27 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     } else {
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
+    
     if (drawSettings.debugMode == 12) {
-        return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
+        return FragmentOutput(depthOutput, debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting));
     }
     if (intersecting == -1) {
         if (drawSettings.debugMode == 2) {
-            return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
+            return FragmentOutput(depthOutput, debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms));
         } else if (drawSettings.debugMode == 3) {
-            return debugModeOctree2(numIntersected, 0, maxIterations);
+            return FragmentOutput(depthOutput, debugModeOctree2(numIntersected, 0, maxIterations));
         }
-        return vec4(0.15, 0.0, 0.15, 1.0);
+        return FragmentOutput(depthOutput, vec4(0.15, 0.0, 0.15, 1.0));
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
 
     if (drawSettings.debugMode == 20) {
-        return debugModeDepth(end*30);
+        return FragmentOutput(depthOutput, debugModeDepth(end*30));
     }
     if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
-        return raymarchTransparent(initStart, rayDirection);
+        return FragmentOutput(depthOutput, raymarchTransparent(initStart, rayDirection));
     }
-    return raymarch(initStart, rayDirection);
+    return FragmentOutput(depthOutput, raymarch(initStart, rayDirection));
 }
 
 //utilities.wgsl inserted here
