@@ -173,12 +173,12 @@ async function Initialize() {
     });
 
     let textureView = gpu.context.getCurrentTexture().createView();
-    const depthTexture = device.createTexture({
+    let depthTexture = device.createTexture({
         size: [gpu.canvas.width, gpu.canvas.height, 1],
         format: "depth24plus",
         usage: GPUTextureUsage.RENDER_ATTACHMENT
     });
-    const renderPassDescription = {
+    let renderPassDescription = {
         colorAttachments: [{
             view: textureView,
             clearValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 }, //background color
@@ -193,6 +193,7 @@ async function Initialize() {
             depthStoreOp: "store",
         }
     };
+    Reinitialize();
 
     function CreateAnimation(draw : any) {
         function step() {
@@ -352,6 +353,39 @@ async function Initialize() {
     sliderPercentageShown.oninput = (e) => {
         percentageShown = parseFloat(sliderPercentageShown.value)/100;
     };
+    
+    function Reinitialize() {
+        textureView = gpu.context.getCurrentTexture().createView();
+        depthTexture = device.createTexture({
+            size: [gpu.canvas.width, gpu.canvas.height, 1],
+            format: "depth24plus",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        });
+        renderPassDescription = {
+            colorAttachments: [{
+                view: textureView,
+                clearValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 }, //background color
+                loadValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 }, 
+                loadOp: 'clear',
+                storeOp: 'store'
+            }],
+            depthStencilAttachment: {
+                view: depthTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp:'clear',
+                depthStoreOp: "store",
+            }
+        };
+    }
+
+    window.addEventListener('resize', function(){
+        Reinitialize();
+    });
+
+    canvasSizeCheckbox.addEventListener('change', function(){
+        //todo
+        Reinitialize();
+    });
 
     dataSelection.oninput = (e) => {
         console.log(dataSelection.value);
@@ -444,15 +478,6 @@ async function Initialize() {
 }
 
 Initialize();
-
-window.addEventListener('resize', function(){
-    //todo: make better, don't vomit errors, just resize things gracefully
-    Initialize();
-});
-
-canvasSizeCheckbox.addEventListener('change', function(){
-    Initialize();
-});
 
 addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
     if (addCloseNeighborsToCellsCheckbox.checked) {
