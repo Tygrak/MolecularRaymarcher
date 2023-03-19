@@ -12,6 +12,7 @@ import { ImpostorRenderer } from './impostorRenderer';
 import { RayMarchOctreeQuad } from './rayMarchOctreeQuad';
 import { Benchmarker } from './benchmark';
 import { AxisMesh } from './axisMesh';
+import { TextureVisualizeQuad } from './textureVisualizeQuad';
 
 const createCamera = require('3d-view-controls');
 
@@ -133,7 +134,7 @@ async function Initialize() {
             topology: "triangle-list",
         },
         depthStencil:{
-            format: "depth24plus",
+            format: "depth32float",
             depthWriteEnabled: true,
             depthCompare: "less"
         }
@@ -178,10 +179,12 @@ async function Initialize() {
 
     let textureView = gpu.context.getCurrentTexture().createView();
     let depthTexture = device.createTexture({
+        label: "DepthTexture",
         size: [gpu.canvas.width, gpu.canvas.height, 1],
-        format: "depth24plus",
-        usage: GPUTextureUsage.RENDER_ATTACHMENT
+        format: "depth32float",
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
     });
+    let depthTextureView = depthTexture.createView({label: "DepthTextureView"});
     let renderPassDescription = {
         colorAttachments: [{
             view: textureView,
@@ -191,12 +194,21 @@ async function Initialize() {
             storeOp: 'store'
         }],
         depthStencilAttachment: {
-            view: depthTexture.createView(),
+            view: depthTextureView,
             depthClearValue: 1.0,
             depthLoadOp:'clear',
-            depthStoreOp: "store",
+            depthStoreOp: 'store',
         }
     };
+    let textureQuadPassDescriptor: GPURenderPassDescriptor = {
+        colorAttachments: [{
+            view: textureView,
+            clearValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store'
+        }],
+    };
+    let textureVisualizeQuad: TextureVisualizeQuad;
     //let depthSampler = device.createSampler(GPUSamplerDescriptor)
     Reinitialize();
 
@@ -325,6 +337,12 @@ async function Initialize() {
             axisMesh.DrawStructure(renderPass, mvpMatrix);
         }
         renderPass.end();
+        //todo:
+        /*const depthRenderPass = commandEncoder.beginRenderPass(textureQuadPassDescriptor as GPURenderPassDescriptor);
+        {
+            textureVisualizeQuad.Draw(depthRenderPass);
+        }
+        depthRenderPass.end();*/
 
         if (gpu.timestampsEnabled) {
             commandEncoder.writeTimestamp(timestampBuffers.querySet, 1);
@@ -363,12 +381,14 @@ async function Initialize() {
     };
     
     function Reinitialize() {
-        textureView = gpu.context.getCurrentTexture().createView();
+        textureView = gpu.context.getCurrentTexture().createView({label: "MainTextureView"});
         depthTexture = device.createTexture({
+            label: "DepthTexture",
             size: [gpu.canvas.width, gpu.canvas.height, 1],
-            format: "depth24plus",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
+            format: "depth32float",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
         });
+        depthTextureView = depthTexture.createView({label: "DepthTextureView"});
         renderPassDescription = {
             colorAttachments: [{
                 view: textureView,
@@ -378,12 +398,21 @@ async function Initialize() {
                 storeOp: 'store'
             }],
             depthStencilAttachment: {
-                view: depthTexture.createView(),
+                view: depthTextureView,
                 depthClearValue: 1.0,
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
             }
         };
+        textureQuadPassDescriptor = {
+            colorAttachments: [{
+                view: textureView,
+                clearValue: { r: 0.2, g: 0.247, b: 0.314, a: 1.0 },
+                loadOp: 'clear',
+                storeOp: 'store'
+            }],
+        };
+        //textureVisualizeQuad = new TextureVisualizeQuad(device, gpu.format, depthTextureView);
     }
 
     window.addEventListener('resize', function(){

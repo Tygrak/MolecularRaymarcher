@@ -97,7 +97,7 @@ export class OctreeMesh {
                 topology: "triangle-list",
             },
             depthStencil:{
-                format: "depth24plus",
+                format: "depth32float",
                 depthWriteEnabled: true,
                 depthCompare: "less"
             }
