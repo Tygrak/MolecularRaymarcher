@@ -319,7 +319,8 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                             if (closestRealHitT > realHit.t) {
                                                 closestRealHitAtom = a;
                                                 closestRealHitT = realHit.t;
-                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19) {
+                                                //todo clean up
+                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19 || drawSettings.debugMode == 27 || drawSettings.debugMode == 28) {
                                                     closestRealHitT = 1000000;
                                                 }
                                             }
@@ -403,7 +404,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                                 closestRealHitAtom = a;
                                 closestRealHitT = realHit.t;
                                 if (drawSettings.isFullRender > 0.5) {
-                                    if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19) {
+                                    if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19 || drawSettings.debugMode == 27 || drawSettings.debugMode == 28) {
                                         closestRealHitT = 1000000;
                                     }
                                 }
@@ -500,6 +501,8 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                 start = initStart.xyz+rayDirection*stackT[stackPos];
                 let intersectionEnd = aabbIntersection(initStart.xyz, rayDirection, 1.0/rayDirection, bins.bins[intersecting].min, bins.bins[intersecting].max);
                 end = intersectionEnd.y-stackT[stackPos];
+                //todo: clean up code.
+                //todo: preprocessor macros? shader variations?
                 //let binSize = bins.bins[intersecting].max-bins.bins[intersecting].min;
                 //end = max(binSize.x, max(binSize.y, binSize.z));
                 raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
@@ -542,6 +545,9 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         return debugModeDefaultWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos));
     } else if (drawSettings.debugMode == 19) {
         return debugModeFakeTransparency(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
+    } else if (drawSettings.debugMode == 28) {
+        //todo fake transparency with const color but somehow scale it according to the result color? (justt grayscale it?)
+        return debugModeFakeTransparency2(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
     } else if (drawSettings.debugMode == 7) {
         return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == 8) {
@@ -598,6 +604,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     let startColor = vec4(-0.25, 0.05, 0.25, 1.0);
     var resultColor = startColor;
     var stackPos = 0;
+    var insideStartT = -10000.0;
     //todo: add limit iterations slider
 	for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
 		pos = start+t*rayDirection;
@@ -609,6 +616,10 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
             } else if (drawSettings.debugMode == 14) {
                 resultColor += (dAtomsColor(pos).color/50)*mix(0.1, 3, drawSettings.debugA);
             } else if (drawSettings.debugMode == 16) {
+                if (insideStartT == -10000.0) {
+                    insideStartT = t;
+                }
+            } else if (drawSettings.debugMode == 27) {
                 resultColor += vec4(0.005, 0.005, 0.005, 0.0)*mix(0.1, 3, drawSettings.debugA);
             } else {
                 resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA);
@@ -619,16 +630,26 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
                 t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
             }
 		} else {
-            t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
-        }
-        if (drawSettings.isFullRender < 0.5) {
-            t += 0.1;
-        }
-		if (t > end) {
-            t = end;
+            if (drawSettings.debugMode == 27) {
+                if (insideStartT != -10000.0) {
+                    resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*(t-insideStartT)*5;
+                    insideStartT = -10000.0;
+                }
+            }
+            //TODO try different smoothmin functions
+            t = t+abs(d);
+            if (drawSettings.isFullRender < 0.5) {
+                t += 0.1;
+            }
         }
         
 		if (t >= end) {
+            if (drawSettings.debugMode == 27) {
+                if (insideStartT != -10000.0) {
+                    resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*(t-insideStartT)*5;
+                    insideStartT = -10000.0;
+                }
+            }
             stackPos++;
             if (stackPos == stackSize || stackBins[stackPos] == -1) {
                 break;
@@ -716,7 +737,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     if (drawSettings.debugMode == 20) {
         return FragmentOutput(depthOutput, debugModeDepth(end*30));
     }
-    if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16) {
+    if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 27) {
         return FragmentOutput(depthOutput, raymarchTransparent(initStart, rayDirection));
     }
     return FragmentOutput(depthOutput, raymarch(initStart, rayDirection));

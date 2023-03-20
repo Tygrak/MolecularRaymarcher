@@ -460,6 +460,39 @@ fn debugModeFakeTransparency(resultColor: vec4<f32>, distanceFade: f32, dist: f3
 	return resultColor*distanceFade*((accumDist/25)*mix(0.5, 1.5, drawSettings.debugA)+0.1);
 }
 
+fn debugModeFakeTransparency2(resultColor: vec4<f32>, distanceFade: f32, dist: f32, initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
+	if (resultColor.r+resultColor.g+resultColor.b < 0.5) {
+		return resultColor;
+	}
+	var accumDist = 1.0;
+	var last = dist;
+	for (var i : i32 = 0; i < stackSize; i++) {
+		if (stackT[i]+2 < dist) {
+			continue;
+		}
+		if (stackT[i] > 50000) {
+			break;
+		}
+		let intersectionEnd = aabbIntersection(initStart, rayDirection, 1.0/rayDirection, bins.bins[stackBins[i]].min, bins.bins[stackBins[i]].max);
+    	let d = intersectionEnd.y-last;
+		let binSize = bins.bins[stackBins[i]].max-bins.bins[stackBins[i]].min;
+		let binSizeLargest = max(binSize.x, max(binSize.y, binSize.z));
+		if (d > 0) {
+			if (d < binSizeLargest*4) {
+				accumDist += d;
+			} else {
+				accumDist += binSizeLargest;
+			}
+		}
+		last = stackT[i];
+	}
+	//let binSize = bins.bins[stackBins[i]].max-bins.bins[stackBins[i]].min;
+	//let size = max(binSize.x, max(binSize.y, binSize.z));
+    //let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
+    //end = intersectionEnd.y-stackT[0];
+	return vec4(0.2, 0.2, 0.2, 1.0)*distanceFade*((accumDist/25)*mix(0.5, 1.5, drawSettings.debugA)+0.1);
+}
+
 fn debugModeSemilit(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {
 	let n: vec3<f32> = normalize(normal);
 	let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
