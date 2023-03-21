@@ -586,27 +586,27 @@ if (document != null) {
         if (keyEvent.code == "Digit1") {
             debugSelection.value = "0";
         } else if (keyEvent.code == "Digit2") {
-            debugSelection.value = "18";
-        } else if (keyEvent.code == "Digit3") {
-            debugSelection.value = "7";
-        } else if (keyEvent.code == "Digit4") {
             debugSelection.value = "1";
+        } else if (keyEvent.code == "Digit3") {
+            debugSelection.value = "2";
+        } else if (keyEvent.code == "Digit4") {
+            debugSelection.value = "3";
         } else if (keyEvent.code == "Digit5") {
-            debugSelection.value = "10";
+            debugSelection.value = "101";
         } else if (keyEvent.code == "Digit6") {
-            debugSelection.value = "12";
+            debugSelection.value = "103";
         } else if (keyEvent.code == "Digit7") {
-            debugSelection.value = "20";
+            debugSelection.value = "104";
         } else if (keyEvent.code == "Digit8") {
-            debugSelection.value = "5";
+            debugSelection.value = "113";
         } else if (keyEvent.code == "Digit9") {
-            debugSelection.value = "17";
+            debugSelection.value = "105";
         } else if (keyEvent.code == "Digit0") {
-            debugSelection.value = "24";
+            debugSelection.value = "107";
         } else if (keyEvent.code == "Minus") {
-            debugSelection.value = "21";
+            debugSelection.value = "130";
         } else if (keyEvent.code == "Equal") {
-            debugSelection.value = "22";
+            debugSelection.value = "131";
         }
         queueFullRender();
     });

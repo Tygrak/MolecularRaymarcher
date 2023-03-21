@@ -162,6 +162,7 @@ fn dAtomsColor(p: vec3<f32>) -> SdfResult {
 fn getAtomColor(w: f32) -> vec4<f32> {
     let atomNumber = w%100.0;
     let aminoAtomType = w/100;
+    //todo: custom colors using override declarations?
     var color = vec4(10.0, 10.0, 10.0, 1.0);
     if (atomNumber < 6.5) {
         color = vec4(0.6, 0.9, 0.3, 1.0); // C
@@ -320,7 +321,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
                                                 closestRealHitAtom = a;
                                                 closestRealHitT = realHit.t;
                                                 //todo clean up
-                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19 || drawSettings.debugMode == 27 || drawSettings.debugMode == 28) {
+                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode >= DM_GroupStart_Transparent) {
                                                     closestRealHitT = 1000000;
                                                 }
                                             }
@@ -347,7 +348,7 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     end = intersectionEnd.y-stackT[0];
     //let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
     //end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[1])+drawSettings.kSmoothminScale;
-    if (drawSettings.debugMode == 24) {
+    if (drawSettings.debugMode == DM_SkipStackPos0) {
         intersecting = stackBins[1];
         start = start+direction*stackT[1];
         let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[1]].min, bins.bins[stackBins[1]].max);
@@ -404,7 +405,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                                 closestRealHitAtom = a;
                                 closestRealHitT = realHit.t;
                                 if (drawSettings.isFullRender > 0.5) {
-                                    if (drawSettings.debugA < 0.15 || drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 19 || drawSettings.debugMode == 27 || drawSettings.debugMode == 28) {
+                                    if (drawSettings.debugA < 0.15 || drawSettings.debugMode >= DM_GroupStart_Transparent) {
                                         closestRealHitT = 1000000;
                                     }
                                 }
@@ -434,7 +435,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
     end = intersectionEnd.y-stackT[0];
     //let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
     //end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[1])+drawSettings.kSmoothminScale;
-    if (drawSettings.debugMode == 24) {
+    if (drawSettings.debugMode == DM_SkipStackPos0) {
         intersecting = stackBins[1];
         start = start+direction*stackT[1];
         let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[1]].min, bins.bins[stackBins[1]].max);
@@ -484,11 +485,11 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                 t = 0.0;
                 stackPos++;
                 if (stackPos == stackSize || stackBins[stackPos] == -1) {
-                    if (drawSettings.debugMode == 2) {
+                    if (drawSettings.debugMode == DM_Octree1) {
                         return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
-                    } else if (drawSettings.debugMode == 3) {
+                    } else if (drawSettings.debugMode == DM_Octree2) {
                         return debugModeOctree2(numIntersected, iteration, maxIterations);
-                    } else if (drawSettings.debugMode == 10) {
+                    } else if (drawSettings.debugMode == DM_StackSteps) {
                         return debugModeSteps(stackPos, stackSize);
                     }
                     if (stackPos == stackSize && drawSettings.debugB > 0.5) {
@@ -526,65 +527,64 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     let cameraDistance = distance(sphereInitStart, pos);
     let distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
     depthOutput = distance(cameraPos.xyz, pos);
-    if (drawSettings.debugMode == 0) {
+    if (drawSettings.debugMode == DM_Default) {
         //default
         return resultColor*distanceFade;
-    } else if (drawSettings.debugMode == 1) {
+    } else if (drawSettings.debugMode == DM_Iterations) {
         return debugModeIterations(iteration*5, maxIterations);
-    } else if (drawSettings.debugMode == 2) {
+    } else if (drawSettings.debugMode == DM_Octree1) {
         return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
-    } else if (drawSettings.debugMode == 3) {
+    } else if (drawSettings.debugMode == DM_Octree2) {
         return debugModeOctree2(numIntersected, iteration, maxIterations);
-    } else if (drawSettings.debugMode == 4) {
-        return debugModeDepth(maxDistance);
-    } else if (drawSettings.debugMode == 5) {
-        return debugModeNormals(findNormal(pos));
-    } else if (drawSettings.debugMode == 6) {
-        return debugModeBright(resultColor, distanceFade);
-    } else if (drawSettings.debugMode == 18) {
-        return debugModeDefaultWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos));
-    } else if (drawSettings.debugMode == 19) {
-        return debugModeFakeTransparency(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
-    } else if (drawSettings.debugMode == 28) {
-        //todo fake transparency with const color but somehow scale it according to the result color? (justt grayscale it?)
-        return debugModeFakeTransparency2(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
-    } else if (drawSettings.debugMode == 7) {
-        return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
-    } else if (drawSettings.debugMode == 8) {
-        return debugModeLit(resultColor, distanceFade, findNormal(pos));
-    } else if (drawSettings.debugMode == 9) {
-        return debugModeGooch(resultColor, distanceFade, findNormal(pos));
-    } else if (drawSettings.debugMode == 10) {
-        return debugModeSteps(stackPos, stackSize);
-    } else if (drawSettings.debugMode == 11) {
-        return debugModeRaymarchedAtoms(raymarchedAtoms);
-    } else if (drawSettings.debugMode == 12) {
+    } else if (drawSettings.debugMode == DM_Octree3) {
         return debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting);
-    } else if (drawSettings.debugMode == 17) {
+    } else if (drawSettings.debugMode == DM_Depth) {
+        return debugModeDepth(maxDistance);
+    } else if (drawSettings.debugMode == DM_Normals) {
+        return debugModeNormals(findNormal(pos));
+    } else if (drawSettings.debugMode == DM_DefaultBright) {
+        return debugModeBright(resultColor, distanceFade);
+    } else if (drawSettings.debugMode == DM_DefaultWithBase) {
+        return debugModeDefaultWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos));
+    } else if (drawSettings.debugMode == DM_TransparentFake1) {
+        return debugModeFakeTransparency(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
+    } else if (drawSettings.debugMode == DM_TransparentFake2) {
+        //todo fake transparency with const color but somehow scale it according to the result color? (justt grayscale it?)
+        //todo: transparency with const color but somehow also scaled by result color (or lighting?)
+        return debugModeFakeTransparency2(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
+    } else if (drawSettings.debugMode == DM_SemiLit) {
+        return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
+    } else if (drawSettings.debugMode == DM_Lit) {
+        return debugModeLit(resultColor, distanceFade, findNormal(pos));
+    } else if (drawSettings.debugMode == DM_LitGooch) {
+        return debugModeGooch(resultColor, distanceFade, findNormal(pos));
+    } else if (drawSettings.debugMode == DM_StackSteps) {
+        return debugModeSteps(stackPos, stackSize);
+    } else if (drawSettings.debugMode == DM_RaymarchedAtoms) {
+        return debugModeRaymarchedAtoms(raymarchedAtoms);
+    } else if (drawSettings.debugMode == DM_DebugCombined) {
         return debugModeDebug(numRaySphereIntersections, numIntersected, intersecting, stackPos, resultColor, iteration, closestRealHitT);
-    } else if (drawSettings.debugMode == 21) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos0) {
         return debugModeHideStackPos(resultColor, stackPos, 0, distanceFade);
-    } else if (drawSettings.debugMode == 22) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos1) {
         return debugModeHideStackPos(resultColor, stackPos, 1, distanceFade);
-    } else if (drawSettings.debugMode == 23) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos2) {
         return debugModeHideStackPos(resultColor, stackPos, 2, distanceFade);
-    } else if (drawSettings.debugMode == 23) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos3) {
         return debugModeHideStackPos(resultColor, stackPos, 3, distanceFade);
-    } else if (drawSettings.debugMode == 53) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos4) {
         return debugModeHideStackPos(resultColor, stackPos, 4, distanceFade);
-    } else if (drawSettings.debugMode == 54) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos5) {
         return debugModeHideStackPos(resultColor, stackPos, 5, distanceFade);
-    } else if (drawSettings.debugMode == 55) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos6) {
         return debugModeHideStackPos(resultColor, stackPos, 6, distanceFade);
-    } else if (drawSettings.debugMode == 56) {
+    } else if (drawSettings.debugMode == DM_BlankStackPos7) {
         return debugModeHideStackPos(resultColor, stackPos, 7, distanceFade);
-    } else if (drawSettings.debugMode == 57) {
-        return debugModeHideStackPos(resultColor, stackPos, 8, distanceFade);
-    } else if (drawSettings.debugMode == 24) {
+    } else if (drawSettings.debugMode == DM_SkipStackPos0) {
         return resultColor*distanceFade; //skip step0
-    } else if (drawSettings.debugMode == 25) {
+    } else if (drawSettings.debugMode == DM_TToEnd) {
         return debugModeTEnd(t, end);
-    } else if (drawSettings.debugMode == 26) {
+    } else if (drawSettings.debugMode == DM_Depth) {
         return debugModeDepth(end*30);
     }
     return resultColor*distanceFade;
@@ -611,26 +611,26 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
 		let d = dAtoms(pos);
 		if (d < 0.05) {
-            if (drawSettings.debugMode == 15) {
+            if (drawSettings.debugMode == DM_Transparent3) {
                 resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*mix(1, 0, clamp((d+0.75), 0, 1));
-            } else if (drawSettings.debugMode == 14) {
+            } else if (drawSettings.debugMode == DM_Transparent2) {
                 resultColor += (dAtomsColor(pos).color/50)*mix(0.1, 3, drawSettings.debugA);
-            } else if (drawSettings.debugMode == 16) {
+            } else if (drawSettings.debugMode == DM_TransparentDistance) {
                 if (insideStartT == -10000.0) {
                     insideStartT = t;
                 }
-            } else if (drawSettings.debugMode == 27) {
+            } else if (drawSettings.debugMode == DM_TransparentConst) {
                 resultColor += vec4(0.005, 0.005, 0.005, 0.0)*mix(0.1, 3, drawSettings.debugA);
             } else {
                 resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA);
             }
-            if (drawSettings.debugMode == 16) {
+            if (drawSettings.debugMode == DM_TransparentConst) {
                 t = t+mix(0.025, 0.15, drawSettings.debugB);
             } else {
                 t = t+abs(d)+mix(0, 0.05, drawSettings.debugB);
             }
 		} else {
-            if (drawSettings.debugMode == 27) {
+            if (drawSettings.debugMode == DM_TransparentDistance) {
                 if (insideStartT != -10000.0) {
                     resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*(t-insideStartT)*5;
                     insideStartT = -10000.0;
@@ -644,7 +644,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
         }
         
 		if (t >= end) {
-            if (drawSettings.debugMode == 27) {
+            if (drawSettings.debugMode == DM_TransparentDistance) {
                 if (insideStartT != -10000.0) {
                     resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*(t-insideStartT)*5;
                     insideStartT = -10000.0;
@@ -721,26 +721,28 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     
-    if (drawSettings.debugMode == 12) {
+    if (drawSettings.debugMode == DM_Octree3) {
         return FragmentOutput(depthOutput, debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting));
     }
     if (intersecting == -1) {
-        if (drawSettings.debugMode == 2) {
+        if (drawSettings.debugMode == DM_Octree1) {
             return FragmentOutput(depthOutput, debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms));
-        } else if (drawSettings.debugMode == 3) {
+        } else if (drawSettings.debugMode == DM_Octree2) {
             return FragmentOutput(depthOutput, debugModeOctree2(numIntersected, 0, maxIterations));
         }
         return FragmentOutput(depthOutput, vec4(0.15, 0.0, 0.15, 1.0));
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
 
-    if (drawSettings.debugMode == 20) {
+    if (drawSettings.debugMode == DM_Depth) {
         return FragmentOutput(depthOutput, debugModeDepth(end*30));
     }
-    if (drawSettings.debugMode == 13 || drawSettings.debugMode == 14 || drawSettings.debugMode == 15 || drawSettings.debugMode == 16 || drawSettings.debugMode == 27) {
+    if (drawSettings.debugMode == DM_Transparent1 || drawSettings.debugMode == DM_Transparent2 || drawSettings.debugMode == DM_Transparent3 
+        || drawSettings.debugMode == DM_TransparentDistance || drawSettings.debugMode == DM_TransparentConst) {
         return FragmentOutput(depthOutput, raymarchTransparent(initStart, rayDirection));
     }
     return FragmentOutput(depthOutput, raymarch(initStart, rayDirection));
 }
 
 //utilities.wgsl inserted here
+//drawModeDefinitions.wgsl inserted here

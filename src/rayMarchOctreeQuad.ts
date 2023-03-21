@@ -5,6 +5,7 @@ import { Octree } from "./octree";
 import { OctreeMesh } from "./octreeMesh";
 import shaderRaymarch from './shaders/raymarchOctree.wgsl';
 import shaderUtilities from './shaders/utilities.wgsl';
+import shaderDefinitions from './shaders/drawModeDefinitions.wgsl';
 import { Structure } from "./structure";
 
 const numberOfVerticesToDraw = 6;
@@ -249,7 +250,7 @@ export class RayMarchOctreeQuad {
         if (utilities == "") {
             utilities = shaderUtilities;
         }
-        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shader+"\n"+utilities);
+        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shader+"\n"+utilities+"\n"+shaderDefinitions);
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
