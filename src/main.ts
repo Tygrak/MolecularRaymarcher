@@ -151,7 +151,7 @@ async function Initialize() {
     if (dataSelection.value != "1cqw") {
         cameraPosition = vec3.fromValues(125, 31.5, 10.5);
     }
-    const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition);
+    let vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition);
     vpMatrix = vp.viewProjectionMatrix;
 
     // add rotation and camera:

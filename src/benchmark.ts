@@ -38,6 +38,7 @@ export class Benchmarker {
         this.running = true;
         this.frameTimes = [];
         this.currentFrame = 0;
+        this.t0 = performance.now();
     }
 
     public GetFramePosition() {
