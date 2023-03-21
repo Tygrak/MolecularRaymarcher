@@ -381,6 +381,8 @@ async function Initialize() {
     };
     
     function Reinitialize() {
+        vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition);
+        vpMatrix = vp.viewProjectionMatrix;
         textureView = gpu.context.getCurrentTexture().createView({label: "MainTextureView"});
         depthTexture = device.createTexture({
             label: "DepthTexture",

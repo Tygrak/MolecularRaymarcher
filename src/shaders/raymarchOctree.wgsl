@@ -596,7 +596,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         return debugModeRaymarchedAtoms(raymarchedAtoms);
     } else if (drawSettings.debugMode == DM_TToEnd) {
         return debugModeTEnd(t, end);
-    } else if (drawSettings.debugMode == DM_Depth) {
+    } else if (drawSettings.debugMode == DM_AllStepsDistance) {
         return debugModeDepth(end*30);
     } else if (drawSettings.debugMode == DM_DebugCombined) {
         return debugModeDebug(numRaySphereIntersections, numIntersected, intersecting, stackPos, resultColor, iteration, closestRealHitT);
@@ -766,7 +766,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
 
-    if (drawSettings.debugMode == DM_Depth) {
+    if (drawSettings.debugMode == DM_FirstStepDistance) {
         return FragmentOutput(depthOutput, debugModeDepth(end*30));
     }
     if (drawSettings.debugMode == DM_Transparent1 || drawSettings.debugMode == DM_Transparent2 || drawSettings.debugMode == DM_Transparent3 
