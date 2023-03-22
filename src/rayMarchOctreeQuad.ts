@@ -252,6 +252,7 @@ export class RayMarchOctreeQuad {
     makeIrregularOctree: boolean = true;
     automaticOctreeSize: boolean = true;
     octreeLayers: number = 4;
+    shaderPreprocessFlags: string[] = ["UseSmoothMinPoly2"];
     
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string = "", utilities: string = "") {
         let positions = new Float32Array([
@@ -330,7 +331,7 @@ export class RayMarchOctreeQuad {
         if (utilities == "") {
             utilities = shaderUtilities;
         }
-        let preprocessedShader = PreprocessShaderWithFlags(shader, ["UseSmoothMinExp"], true);
+        let preprocessedShader = PreprocessShaderWithFlags(shader, this.shaderPreprocessFlags, true);
         return preprocessedShader+"\n"+utilities+"\n"+shaderDefinitions;
     }
 }

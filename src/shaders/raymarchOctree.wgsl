@@ -73,8 +73,6 @@ struct Hit {
 
 const miss: Hit = Hit(1e20, vec3(0.0), 1e20, -1);
 
-//todo add preprocessing that allows switching between these
-
 //https://iquilezles.org/articles/distfunctions/
 //exponential smooth min
 //#if UseSmoothMinExp
@@ -208,19 +206,25 @@ fn dAtomsColor(p: vec3<f32>) -> SdfResult {
     return result;
 }
 
+//todo: add preprocessing that can replace these values
+const atomColorC = vec4(0.6, 0.9, 0.3, 1.0);
+const atomColorN = vec4(0.95, 0.05, 0.25, 1.0);
+const atomColorO = vec4(0.20, 0.05, 0.95, 1.0);
+const atomColorS = vec4(0.995, 0.995, 0.025, 1.0);
+
 fn getAtomColor(w: f32) -> vec4<f32> {
     let atomNumber = w%100.0;
     let aminoAtomType = w/100;
     //todo: custom colors using override declarations?
     var color = vec4(10.0, 10.0, 10.0, 1.0);
     if (atomNumber < 6.5) {
-        color = vec4(0.6, 0.9, 0.3, 1.0); // C
+        color = atomColorC; // C
     } else if (atomNumber < 7.5) {
-        color = vec4(0.95, 0.05, 0.25, 1.0); // N
+        color = atomColorN; // N
     } else if (atomNumber < 8.5) {
-        color = vec4(0.20, 0.05, 0.95, 1.0); // O
+        color = atomColorO; // O
     } else if (atomNumber < 16.5) {
-        color = vec4(0.995, 0.995, 0.025, 1.0); // S
+        color = atomColorS; // S
     }
     if (aminoAtomType > 1) {
         color = color/5+vec4(0.85, 0.85, 0.85, 0);

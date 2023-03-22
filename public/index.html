@@ -134,9 +134,6 @@
          <br>  
          <br>  
          <br>  
-         <br>  
-         <br>  
-         <br>  
          <div>
             <br>  
             Shader
@@ -149,13 +146,37 @@
             <input type="file" id="shaderUtilitiesFileInput" name="shaderUtilitiesFileInput" accept=".wgsl">
             -->
             <button id="shaderLoadButton">Shader Reload</button>
+            <button class="collapsible" onclick="ToggleAdditionalOptions(this)">Additional Options</button>
+            <div class="content" id="additionalOptions">
+               <label>
+                  <select id="smoothminSelection" name="smoothminSelection" style="width: 8rem;">
+                     <option value="UseSmoothMinExp">Exponential</option>
+                     <option value="UseSmoothMinPower">Power</option>
+                     <option value="UseSmoothMinRoot">Root</option>
+                     <option selected value="UseSmoothMinPoly1">Polynomial1</option>
+                     <option selected value="UseSmoothMinPoly2">Polynomial2</option>
+                  </select>
+                  Smoothmin Type
+               </label>
+            </div>
          </div>  
       </div>
       <div class="item2" style="user-select: none;">
          <canvas id="canvas-webgpu" style="max-width: 800;"></canvas>
       </div>
    </div>
-   
+
    <script src="main.bundle.js"></script>
+   <script>
+      function ToggleAdditionalOptions(button){
+         button.classList.toggle('active');
+         let content = document.getElementById("additionalOptions");
+         if (content.style.maxHeight){
+            content.style.maxHeight = null;
+         } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+         } 
+      };
+   </script>
 </body>
 </html>

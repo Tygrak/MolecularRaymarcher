@@ -18,6 +18,7 @@ const createCamera = require('3d-view-controls');
 
 const dataSelection = document.getElementById("dataSelection") as HTMLSelectElement;
 const visualizationSelection = document.getElementById("visualizationSelection") as HTMLSelectElement;
+const smoothminTypeSelection = document.getElementById("smoothminSelection") as HTMLSelectElement;
 const debugSelection = document.getElementById("debugSelection") as HTMLSelectElement;
 const sliderPercentageShown = document.getElementById("sliderPercentageShown") as HTMLInputElement;
 const sliderDebugA = document.getElementById("raymarchingDrawnAmount") as HTMLInputElement;
@@ -507,24 +508,39 @@ async function Initialize() {
             return;
         }
         
-        let t0 = performance.now();
         LoadData(shaderFileInput.files[0], (text: string) => {
+            console.log("Loading shader from file (" + shaderFileInput.files![0].name + ")");
             currShaderCode = text;
-            if (rayMarchQuadOctLoaded != undefined) {
-                rayMarchQuadOctLoaded.ReloadShader(device, text);
-            }
-            if (rayMarchQuadOct1aon != undefined) {
-                rayMarchQuadOct1aon.ReloadShader(device, text);
-            }
-            if (rayMarchQuadOct1cqw != undefined) {
-                rayMarchQuadOct1cqw.ReloadShader(device, text);
-            }
-            //regenerateOctree();
-            queueFullRender();
-            let t1 = performance.now();
-            console.log("Loading shader from file (" + shaderFileInput.files![0].name + "): " + (t1-t0) + "ms");
+            ReloadShaders();
         });
     };
+
+    smoothminTypeSelection.oninput = (e) => {
+        console.log(smoothminTypeSelection.value);
+        ReloadShaders();
+    };
+
+    function ReloadShaders() {
+        let t0 = performance.now();
+        let preprocessFlags: string[] = [];
+        preprocessFlags.push(smoothminTypeSelection.value);
+        //todo: make use of only one raymarchquadoct object and just swap buffers
+        if (rayMarchQuadOctLoaded != undefined) {
+            rayMarchQuadOctLoaded.shaderPreprocessFlags = preprocessFlags;
+            rayMarchQuadOctLoaded.ReloadShader(device, currShaderCode);
+        }
+        if (rayMarchQuadOct1aon != undefined) {
+            rayMarchQuadOct1aon.shaderPreprocessFlags = preprocessFlags;
+            rayMarchQuadOct1aon.ReloadShader(device, currShaderCode);
+        }
+        if (rayMarchQuadOct1cqw != undefined) {
+            rayMarchQuadOct1cqw.shaderPreprocessFlags = preprocessFlags;
+            rayMarchQuadOct1cqw.ReloadShader(device, currShaderCode);
+        }
+        let t1 = performance.now();
+        queueFullRender();
+        console.log("Reloading shaders: " + (t1-t0) + "ms");
+    }
 
     CreateAnimation(draw);
 }
