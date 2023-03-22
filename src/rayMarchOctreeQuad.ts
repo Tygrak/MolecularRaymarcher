@@ -34,7 +34,53 @@ class RayPipelineSetup {
 
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string) {
         this.format = format;
-        this.pipeline = device.createRenderPipeline({
+        this.pipeline = this.CreatePipeline(device, shader);
+
+        this.mvpUniformBuffer = device.createBuffer({
+            size: 64,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        
+        this.inverseVpUniformBuffer = device.createBuffer({
+            size: 64,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+
+        this.cameraPosBuffer = device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+
+        this.atomsCount = 0;
+        this.atomsBuffer = device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        });
+        this.octreeBuffer = device.createBuffer({
+            size: 48,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        });
+        
+        this.drawSettingsBuffer = device.createBuffer({
+            size: 80,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        let bindGroups = this.CreateBindGroups(device);
+        this.uniformBindGroup = bindGroups.uniformBindGroup;
+        this.atomsBindGroup = bindGroups.atomsBindGroup;
+        this.drawSettingsBindGroup = bindGroups.drawSettingsBindGroup;
+    }
+
+    public ReloadShader(device: GPUDevice, shader: string) {
+        this.pipeline = this.CreatePipeline(device, shader);
+        let bindGroups = this.CreateBindGroups(device);
+        this.uniformBindGroup = bindGroups.uniformBindGroup;
+        this.atomsBindGroup = bindGroups.atomsBindGroup;
+        this.drawSettingsBindGroup = bindGroups.drawSettingsBindGroup;
+    }
+
+    private CreatePipeline(device: GPUDevice, shader: string) {
+        return device.createRenderPipeline({
             layout:'auto',
             vertex: {
                 module: device.createShaderModule({
@@ -67,7 +113,7 @@ class RayPipelineSetup {
                 entryPoint: "fs_main",
                 targets: [
                     {
-                        format: format as GPUTextureFormat
+                        format: this.format as GPUTextureFormat
                     }
                 ]
             },
@@ -80,23 +126,10 @@ class RayPipelineSetup {
                 depthCompare: "less"
             }
         });
-
-        this.mvpUniformBuffer = device.createBuffer({
-            size: 64,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-        
-        this.inverseVpUniformBuffer = device.createBuffer({
-            size: 64,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        this.cameraPosBuffer = device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        this.uniformBindGroup = device.createBindGroup({
+    }
+    
+    private CreateBindGroups(device: GPUDevice) {
+        let uniformBindGroup = device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(0),
             entries: [
                 {
@@ -120,16 +153,7 @@ class RayPipelineSetup {
             ]
         });
 
-        this.atomsCount = 0;
-        this.atomsBuffer = device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-        });
-        this.octreeBuffer = device.createBuffer({
-            size: 48,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-        });
-        this.atomsBindGroup = device.createBindGroup({
+        let atomsBindGroup = device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(1),
             entries: [
                 {
@@ -147,11 +171,7 @@ class RayPipelineSetup {
             ]
         });
 
-        this.drawSettingsBuffer = device.createBuffer({
-            size: 80,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-        this.drawSettingsBindGroup = device.createBindGroup({
+        let drawSettingsBindGroup =  device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(2),
             entries: [
                 {
@@ -162,6 +182,7 @@ class RayPipelineSetup {
                 },
             ]
         });
+        return {uniformBindGroup, atomsBindGroup, drawSettingsBindGroup};
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure, margins: number, makeIrregularOctree: boolean = true, octreeLayers: number = 4, automaticOctreeSize: boolean = true) {
@@ -244,13 +265,7 @@ export class RayMarchOctreeQuad {
         this.quadPositions = CreateGPUBuffer(device, positions);
         this.quadColors = CreateGPUBuffer(device, colors);
 
-        if (shader == "") {
-            shader = shaderRaymarch;
-        }
-        if (utilities == "") {
-            utilities = shaderUtilities;
-        }
-        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, shader+"\n"+utilities+"\n"+shaderDefinitions);
+        this.pipelineSetupRaymarch = new RayPipelineSetup(device, format, this.ComposeShader(shader, utilities));
     }
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
@@ -301,5 +316,19 @@ export class RayMarchOctreeQuad {
         if (this.pipelineSetupRaymarch.octreeMesh != undefined) {
             this.pipelineSetupRaymarch.octreeMesh.DrawStructure(renderPass, mvpMatrix);
         }
+    }
+
+    public ReloadShader(device: GPUDevice, shader: string, utilities: string = "") {
+        this.pipelineSetupRaymarch.ReloadShader(device, this.ComposeShader(shader, utilities));
+    }
+
+    public ComposeShader(shader: string, utilities: string = "") {
+        if (shader == "") {
+            shader = shaderRaymarch;
+        }
+        if (utilities == "") {
+            utilities = shaderUtilities;
+        }
+        return shader+"\n"+utilities+"\n"+shaderDefinitions;
     }
 }

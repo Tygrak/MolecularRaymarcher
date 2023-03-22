@@ -80,8 +80,14 @@ async function Initialize() {
     structure1cqw = new Structure(require('./data/1cqw.pdb'));
     structure1cqw.InitializeBuffers(device);
     
+    let t0 = performance.now();
     rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format);
+    let t1 = performance.now();
+    console.log("Initializing raymarch octree quad: " + (t1-t0) + "ms");
+    t0 = performance.now();
     rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
+    t1 = performance.now();
+    console.log("Creating octree and buffers: " + (t1-t0) + "ms");
 
     impostorRenderer1cqw = new ImpostorRenderer(device, gpu.format);
     impostorRenderer1cqw.LoadAtoms(device, structure1cqw);
@@ -504,10 +510,17 @@ async function Initialize() {
         let t0 = performance.now();
         LoadData(shaderFileInput.files[0], (text: string) => {
             currShaderCode = text;
-            rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format, text);
-            rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format, text);
-            rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format, text);
-            regenerateOctree();
+            if (rayMarchQuadOctLoaded != undefined) {
+                rayMarchQuadOctLoaded.ReloadShader(device, text);
+            }
+            if (rayMarchQuadOct1aon != undefined) {
+                rayMarchQuadOct1aon.ReloadShader(device, text);
+            }
+            if (rayMarchQuadOct1cqw != undefined) {
+                rayMarchQuadOct1cqw.ReloadShader(device, text);
+            }
+            //regenerateOctree();
+            queueFullRender();
             let t1 = performance.now();
             console.log("Loading shader from file (" + shaderFileInput.files![0].name + "): " + (t1-t0) + "ms");
         });
