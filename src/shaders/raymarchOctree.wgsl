@@ -77,37 +77,55 @@ const miss: Hit = Hit(1e20, vec3(0.0), 1e20, -1);
 
 //https://iquilezles.org/articles/distfunctions/
 //exponential smooth min
-/*fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
+//#if UseSmoothMinExp
+/*
+fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
     let res = exp2(-(2.0/k)*d1) + exp2(-(2.0/k)*d2);
     return -log2(res)/(2.0/k);
-}*/
+}
+*/
+//#endif UseSmoothMinExp
 
 //power smooth min
-/*fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
+//#if UseSmoothMinPower
+/*
+fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
     let a = pow(d1, (1.0/(k+0.5))); 
     let b = pow(d2, (1.0/(k+0.5)));
     return pow((a*b)/(a+b), 1.0/(1.0/(k+0.5)));
-}*/
+}
+*/
+//#endif UseSmoothMinPower
 
-//root smooth min (k=0.01)
-/*fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
+//root smooth min
+//#if UseSmoothMinRoot
+/*
+fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
     let h = d1-d2;
     return 0.5*((d1+d2) - sqrt(h*h+k*0.1));
-}*/
+}
+*/
+//#endif UseSmoothMinRoot
 
+//#if UseSmoothMinPoly1
 /*
 //polynomial smooth min 1
 fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
     let h = clamp(0.5 + 0.5*(d2-d1)/k, 0.0, 1.0);
     return mix(d2, d1, h) - k*h*(1.0-h); 
-}*/
+}
+*/
+//#endif UseSmoothMinPoly1
 
 //polynomial smooth min 2
 //supposed to be a bit faster -- try more tests, it seems pretty much the same
+//#if UseSmoothMinPoly2
 fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
     let h = max(k-abs(d1-d2), 0.0)/k;
     return min(d1, d2) - h*h*k*(1.0/4.0);
 }
+//#endif UseSmoothMinPoly2
+
 
 //todo: create alternative versions of this function for other smooth minimums too?
 fn opSMinColor(a: f32, b: f32, k: f32) -> vec2<f32> {

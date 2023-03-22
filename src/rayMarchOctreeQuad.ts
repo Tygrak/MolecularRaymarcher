@@ -7,6 +7,7 @@ import shaderRaymarch from './shaders/raymarchOctree.wgsl';
 import shaderUtilities from './shaders/utilities.wgsl';
 import shaderDefinitions from './shaders/drawModeDefinitions.wgsl';
 import { Structure } from "./structure";
+import { PreprocessShaderWithFlags } from "./wgslPreprocessor";
 
 const numberOfVerticesToDraw = 6;
 
@@ -329,6 +330,7 @@ export class RayMarchOctreeQuad {
         if (utilities == "") {
             utilities = shaderUtilities;
         }
-        return shader+"\n"+utilities+"\n"+shaderDefinitions;
+        let preprocessedShader = PreprocessShaderWithFlags(shader, ["UseSmoothMinExp"], true);
+        return preprocessedShader+"\n"+utilities+"\n"+shaderDefinitions;
     }
 }
