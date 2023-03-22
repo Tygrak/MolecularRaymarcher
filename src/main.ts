@@ -33,6 +33,7 @@ const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctree
 const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSizeCheckbox") as HTMLInputElement;
 const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCheckbox") as HTMLInputElement;
 const alwaysFullRenderCheckbox = document.getElementById("alwaysFullRenderCheckbox") as HTMLInputElement;
+const highlightMainChainCheckbox = document.getElementById("highlightMainChainCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
@@ -43,6 +44,16 @@ const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputE
 const shaderLoadButton = document.getElementById("shaderLoadButton") as HTMLButtonElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
+
+const inputCAtomColorR = document.getElementById("CAtomColorR") as HTMLInputElement;
+const inputCAtomColorG = document.getElementById("CAtomColorG") as HTMLInputElement;
+const inputCAtomColorB = document.getElementById("CAtomColorB") as HTMLInputElement;
+const inputNAtomColorR = document.getElementById("NAtomColorR") as HTMLInputElement;
+const inputNAtomColorG = document.getElementById("NAtomColorG") as HTMLInputElement;
+const inputNAtomColorB = document.getElementById("NAtomColorB") as HTMLInputElement;
+const inputOAtomColorR = document.getElementById("OAtomColorR") as HTMLInputElement;
+const inputOAtomColorG = document.getElementById("OAtomColorG") as HTMLInputElement;
+const inputOAtomColorB = document.getElementById("OAtomColorB") as HTMLInputElement;
 
 let structure1cqw: Structure;
 let structure1aon: Structure;
@@ -520,20 +531,42 @@ async function Initialize() {
         ReloadShaders();
     };
 
+    highlightMainChainCheckbox.oninput = (e) => {
+        ReloadShaders();
+    };
+
     function ReloadShaders() {
         let t0 = performance.now();
         let preprocessFlags: string[] = [];
+        if (!highlightMainChainCheckbox.checked) {
+            preprocessFlags.push("DontHighlightMainChain");
+        }
         preprocessFlags.push(smoothminTypeSelection.value);
+        let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
+        let atomColorN = vec3.fromValues(parseFloat(inputNAtomColorR.value), parseFloat(inputNAtomColorG.value), parseFloat(inputNAtomColorB.value));
+        let atomColorO = vec3.fromValues(parseFloat(inputOAtomColorR.value), parseFloat(inputOAtomColorG.value), parseFloat(inputOAtomColorB.value));
+        atomColorC[0] = Number.isFinite(atomColorC[0]) ? atomColorC[0] : 0.5;
+        atomColorC[1] = Number.isFinite(atomColorC[1]) ? atomColorC[1] : 0.5;
+        atomColorC[2] = Number.isFinite(atomColorC[2]) ? atomColorC[2] : 0.5;
+        atomColorN[0] = Number.isFinite(atomColorN[0]) ? atomColorN[0] : 0.5;
+        atomColorN[1] = Number.isFinite(atomColorN[1]) ? atomColorN[1] : 0.5;
+        atomColorN[2] = Number.isFinite(atomColorN[2]) ? atomColorN[2] : 0.5;
+        atomColorO[0] = Number.isFinite(atomColorO[0]) ? atomColorO[0] : 0.5;
+        atomColorO[1] = Number.isFinite(atomColorO[1]) ? atomColorO[1] : 0.5;
+        atomColorO[2] = Number.isFinite(atomColorO[2]) ? atomColorO[2] : 0.5;
         //todo: make use of only one raymarchquadoct object and just swap buffers
         if (rayMarchQuadOctLoaded != undefined) {
+            rayMarchQuadOctLoaded.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO);
             rayMarchQuadOctLoaded.shaderPreprocessFlags = preprocessFlags;
             rayMarchQuadOctLoaded.ReloadShader(device, currShaderCode);
         }
         if (rayMarchQuadOct1aon != undefined) {
+            rayMarchQuadOct1aon.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO);
             rayMarchQuadOct1aon.shaderPreprocessFlags = preprocessFlags;
             rayMarchQuadOct1aon.ReloadShader(device, currShaderCode);
         }
         if (rayMarchQuadOct1cqw != undefined) {
+            rayMarchQuadOct1cqw.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO);
             rayMarchQuadOct1cqw.shaderPreprocessFlags = preprocessFlags;
             rayMarchQuadOct1cqw.ReloadShader(device, currShaderCode);
         }

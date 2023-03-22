@@ -207,10 +207,21 @@ fn dAtomsColor(p: vec3<f32>) -> SdfResult {
 }
 
 //todo: add preprocessing that can replace these values
-const atomColorC = vec4(0.6, 0.9, 0.3, 1.0);
-const atomColorN = vec4(0.95, 0.05, 0.25, 1.0);
-const atomColorO = vec4(0.20, 0.05, 0.95, 1.0);
-const atomColorS = vec4(0.995, 0.995, 0.025, 1.0);
+override atomColorCr = 0.6;
+override atomColorCg = 0.9;
+override atomColorCb = 0.3;
+
+override atomColorNr = 0.95;
+override atomColorNg = 0.05;
+override atomColorNb = 0.25;
+
+override atomColorOr = 0.20;
+override atomColorOg = 0.05;
+override atomColorOb = 0.95;
+
+override atomColorSr = 0.995;
+override atomColorSg = 0.995;
+override atomColorSb = 0.025;
 
 fn getAtomColor(w: f32) -> vec4<f32> {
     let atomNumber = w%100.0;
@@ -218,18 +229,32 @@ fn getAtomColor(w: f32) -> vec4<f32> {
     //todo: custom colors using override declarations?
     var color = vec4(10.0, 10.0, 10.0, 1.0);
     if (atomNumber < 6.5) {
-        color = atomColorC; // C
+        color = vec4(atomColorCr, atomColorCg, atomColorCb, 1.0); // C
     } else if (atomNumber < 7.5) {
-        color = atomColorN; // N
+        color = vec4(atomColorNr, atomColorNg, atomColorNb, 1.0); // N
     } else if (atomNumber < 8.5) {
-        color = atomColorO; // O
+        color = vec4(atomColorOr, atomColorOg, atomColorOb, 1.0); // O
     } else if (atomNumber < 16.5) {
-        color = atomColorS; // S
+        color = vec4(atomColorSr, atomColorSg, atomColorSb, 1.0); // S
     }
     if (aminoAtomType > 1) {
+        //#ifnot DontHighlightMainChain
         color = color/5+vec4(0.85, 0.85, 0.85, 0);
+        //#endifnot DontHighlightMainChain
+        //#if DontHighlightMainChain
+        /*
+        color = color;
+        */
+        //#endif DontHighlightMainChain
     } else {
+        //#ifnot DontHighlightMainChain
         color = color/1.275;
+        //#endifnot DontHighlightMainChain
+        //#if DontHighlightMainChain
+        /*
+        color = color;
+        */
+        //#endif DontHighlightMainChain
     }
     return color;
 }

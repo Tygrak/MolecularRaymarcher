@@ -33,6 +33,11 @@ class RayPipelineSetup {
     minLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
     maxLimits: vec4 = vec4.fromValues(0, 0, 0, 0);
 
+    atomColorC: vec3 = vec3.fromValues(0.6, 0.9, 0.3);
+    atomColorN: vec3 = vec3.fromValues(0.95, 0.05, 0.25);
+    atomColorO: vec3 = vec3.fromValues(0.2, 0.05, 0.95);
+    atomColorS: vec3 = vec3.fromValues(0.995, 0.995, 0.025);
+
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string) {
         this.format = format;
         this.pipeline = this.CreatePipeline(device, shader);
@@ -116,7 +121,21 @@ class RayPipelineSetup {
                     {
                         format: this.format as GPUTextureFormat
                     }
-                ]
+                ],
+                constants: {
+                    atomColorCr: this.atomColorC[0],
+                    atomColorCg: this.atomColorC[1],
+                    atomColorCb: this.atomColorC[2],
+                    atomColorNr: this.atomColorN[0],
+                    atomColorNg: this.atomColorN[1],
+                    atomColorNb: this.atomColorN[2],
+                    atomColorOr: this.atomColorO[0],
+                    atomColorOg: this.atomColorO[1],
+                    atomColorOb: this.atomColorO[2],
+                    atomColorSr: this.atomColorS[0],
+                    atomColorSg: this.atomColorS[1],
+                    atomColorSb: this.atomColorS[2],
+                }
             },
             primitive:{
                 topology: "triangle-list",
@@ -333,5 +352,11 @@ export class RayMarchOctreeQuad {
         }
         let preprocessedShader = PreprocessShaderWithFlags(shader, this.shaderPreprocessFlags, true);
         return preprocessedShader+"\n"+utilities+"\n"+shaderDefinitions;
+    }
+
+    public LoadCustomAtomColors(atomColorC: vec3, atomColorN: vec3, atomColorO: vec3) {
+        this.pipelineSetupRaymarch.atomColorC = atomColorC;
+        this.pipelineSetupRaymarch.atomColorN = atomColorN;
+        this.pipelineSetupRaymarch.atomColorO = atomColorO;
     }
 }
