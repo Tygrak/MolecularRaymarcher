@@ -490,7 +490,7 @@ fn debugModeFakeTransparency2(resultColor: vec4<f32>, distanceFade: f32, dist: f
 	//let size = max(binSize.x, max(binSize.y, binSize.z));
     //let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
     //end = intersectionEnd.y-stackT[0];
-	return vec4(0.2, 0.2, 0.2, 1.0)*distanceFade*((accumDist/25)*mix(0.5, 1.5, drawSettings.debugA)+0.1);
+	return vec4(0.3, 0.2, 0.6, 1.0)*distanceFade*((accumDist/25)*mix(0.5, 1.5, drawSettings.debugA)+0.1);
 }
 
 fn debugModeSemilit(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {

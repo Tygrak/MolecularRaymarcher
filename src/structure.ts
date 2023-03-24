@@ -37,7 +37,7 @@ export class Structure {
             this.chainMeshes.push(new ChainMesh(chain));
         }
         let t2 = performance.now();
-        console.log("Loading data: " + (t1-t0) + "ms");
+        console.log("Loading data: " + (t1-t0) + "ms (" + this.atoms.length + " atoms)");
         console.log("Creating chain meshes: " + (t2-t1) + "ms");
     }
 

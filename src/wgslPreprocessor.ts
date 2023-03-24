@@ -57,7 +57,7 @@ export function PreprocessShaderWithFlags(shader: string, flags: string[], print
         }
     }
 
-    console.log(lines.join("\n"));
+    //console.log(lines.join("\n"));
     return lines.join("\n");
 }
 
