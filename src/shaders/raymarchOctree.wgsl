@@ -619,6 +619,10 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         return debugModeLit(resultColor, distanceFade, findNormal(pos));
     } else if (drawSettings.debugMode == DM_LitGooch) {
         return debugModeGooch(resultColor, distanceFade, findNormal(pos));
+    } else if (drawSettings.debugMode == DM_LitSpecular) {
+        return debugModeLitSpecular(resultColor, rayDirection, distanceFade, findNormal(pos));
+    } else if (drawSettings.debugMode == DM_SemilitWithBase) {
+        return debugModeSemilitWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos), findNormal(pos));
     } else if (drawSettings.debugMode == DM_Iterations) {
         return debugModeIterations(iteration*5, maxIterations);
     } else if (drawSettings.debugMode == DM_Octree1) {

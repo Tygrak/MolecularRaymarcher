@@ -3,6 +3,8 @@ const DM_DefaultWithBase = 1;
 const DM_SemiLit = 2;
 const DM_Lit = 3;
 const DM_LitGooch = 4;
+const DM_LitSpecular = 5;
+const DM_SemilitWithBase = 6;
 const DM_DefaultBright = 11;
 
 const DM_Normals = 101;

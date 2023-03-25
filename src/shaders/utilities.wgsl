@@ -508,6 +508,27 @@ fn debugModeLit(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) ->
 	return vec4(c, 1.0)*(distanceFade);
 }
 
+fn debugModeLitSpecular(resultColor: vec4<f32>, viewDirection: vec3<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {
+	let n: vec3<f32> = normalize(normal);
+	let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
+	var c = max(dot(n, l1), 0)*resultColor.xyz;
+	const shininess = 128;
+    let halfDir = normalize(l1 - viewDirection);
+	let specAngle = max(dot(halfDir, n), 0.0);
+	var spec = pow(specAngle, shininess)*vec3(0.95, 0.95, 0.95);
+	return vec4(c+spec, 1.0)*(distanceFade);
+}
+
+fn debugModeSemilitWithBase(resultColor: vec4<f32>, distanceFade: f32, closestRealHitT: f32, baseAtomColor: vec4<f32>, dist: f32, normal: vec3<f32>) -> vec4<f32> {
+	let n: vec3<f32> = normalize(normal);
+	let l1: vec3<f32> = normalize(vec3(0.05, 1, 0.25));
+	var c = mix(resultColor.xyz*0.5, resultColor.xyz*1.25, (dot(n, l1)+1)/2);
+	if (closestRealHitT < 50000) {
+		return mix(vec4(c, 1.0)*(distanceFade), resultColor*distanceFade*0.25+baseAtomColor*distanceFade, 1-clamp(abs(closestRealHitT-dist)/3, 0, 1));
+	}
+	return vec4(c, 1.0)*(distanceFade);
+}
+
 fn debugModeGooch(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>) -> vec4<f32> {
 	let n: vec3<f32> = normalize(normal);
 	let l1: vec3<f32> = normalize(vec3(0.5, 1, 0.25));
