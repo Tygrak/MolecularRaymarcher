@@ -68,7 +68,7 @@ class RayPipelineSetup {
         });
         
         this.drawSettingsBuffer = device.createBuffer({
-            size: 80,
+            size: 112,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
         let bindGroups = this.CreateBindGroups(device);
@@ -272,6 +272,7 @@ export class RayMarchOctreeQuad {
     automaticOctreeSize: boolean = true;
     octreeLayers: number = 4;
     shaderPreprocessFlags: string[] = ["UseSmoothMinPoly2"];
+    lightDirection: vec3 = vec3.normalize(vec3.create(), vec3.fromValues(0.05, 1, 0.25));
     
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string = "", utilities: string = "") {
         let positions = new Float32Array([
@@ -303,7 +304,7 @@ export class RayMarchOctreeQuad {
         device.queue.writeBuffer(pipelineSetup.mvpUniformBuffer, 0, mvpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.inverseVpUniformBuffer, 0, inverseVpMatrix as ArrayBuffer);
         device.queue.writeBuffer(pipelineSetup.cameraPosBuffer, 0, vec4.fromValues(cameraPos[0], cameraPos[1], cameraPos[2], 1.0) as ArrayBuffer);
-        let drawSettingsBuffer = new Float32Array(20);
+        let drawSettingsBuffer = new Float32Array(24);
         drawSettingsBuffer[0] = percentageShown;
         drawSettingsBuffer[1] = drawStartPosition;
         drawSettingsBuffer[2] = this.atomsScale;
@@ -317,7 +318,11 @@ export class RayMarchOctreeQuad {
         drawSettingsBuffer[16] = this.loadedAtoms;
         drawSettingsBuffer[17] = this.pipelineSetupRaymarch.treeLayers;
         drawSettingsBuffer[18] = fullrender ? 1 : 0;
-        drawSettingsBuffer[19] = -1;
+        drawSettingsBuffer[19] = this.lightDirection[0];
+        drawSettingsBuffer[20] = this.lightDirection[1];
+        drawSettingsBuffer[21] = this.lightDirection[2];
+        drawSettingsBuffer[22] = -1;
+        drawSettingsBuffer[23] = -1;
         device.queue.writeBuffer(pipelineSetup.drawSettingsBuffer, 0, drawSettingsBuffer);
         renderPass.setPipeline(pipelineSetup.pipeline);
         renderPass.setBindGroup(0, pipelineSetup.uniformBindGroup);

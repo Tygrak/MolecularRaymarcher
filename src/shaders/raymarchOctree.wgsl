@@ -40,7 +40,11 @@ struct DrawSettings {
     totalAtoms: f32,
     treeLayers: f32,
     isFullRender: f32,
+    lightDirectionX: f32,
+    lightDirectionY: f32,
+    lightDirectionZ: f32,
     padding1: f32,
+    padding2: f32,
 }
 @binding(0) @group(2) var<uniform> drawSettings : DrawSettings;
 
@@ -604,6 +608,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     let sphereInitStart = normalize(center-cameraPos.xyz)*limitsMax;
     let cameraDistance = distance(sphereInitStart, pos);
     let distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
+    let lightDirection = vec3(drawSettings.lightDirectionX, drawSettings.lightDirectionY, drawSettings.lightDirectionZ);
     depthOutput = distance(cameraPos.xyz, pos);
     //todo: mode with ambient occlusion?
     if (drawSettings.debugMode == DM_Default) {
@@ -614,15 +619,15 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     } else if (drawSettings.debugMode == DM_DefaultWithBase) {
         return debugModeDefaultWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos));
     } else if (drawSettings.debugMode == DM_SemiLit) {
-        return debugModeSemilit(resultColor, distanceFade, findNormal(pos));
+        return debugModeSemilit(resultColor, distanceFade, findNormal(pos), lightDirection);
     } else if (drawSettings.debugMode == DM_Lit) {
-        return debugModeLit(resultColor, distanceFade, findNormal(pos));
+        return debugModeLit(resultColor, distanceFade, findNormal(pos), lightDirection);
     } else if (drawSettings.debugMode == DM_LitGooch) {
-        return debugModeGooch(resultColor, distanceFade, findNormal(pos));
+        return debugModeGooch(resultColor, distanceFade, findNormal(pos), lightDirection);
     } else if (drawSettings.debugMode == DM_LitSpecular) {
-        return debugModeLitSpecular(resultColor, rayDirection, distanceFade, findNormal(pos));
+        return debugModeLitSpecular(resultColor, rayDirection, distanceFade, findNormal(pos), lightDirection);
     } else if (drawSettings.debugMode == DM_SemilitWithBase) {
-        return debugModeSemilitWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos), findNormal(pos));
+        return debugModeSemilitWithBase(resultColor, distanceFade, closestRealHitT, getAtomColor(atoms.atoms[closestRealHitAtom].number), distance(initStart, pos), findNormal(pos), lightDirection);
     } else if (drawSettings.debugMode == DM_Iterations) {
         return debugModeIterations(iteration*5, maxIterations);
     } else if (drawSettings.debugMode == DM_Octree1) {

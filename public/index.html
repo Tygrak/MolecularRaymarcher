@@ -14,14 +14,6 @@
          <div>
             <label><input id="canvasSizeCheckbox" type="checkbox" name="options" value="fixed">Use Fixed Canvas Size</label>
             <br>
-            <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed" checked>Allow Reset Raymarch</label>
-            <br>
-            <label><input id="addCloseNeighborsToCellsCheckbox" type="checkbox" name="options" value="fixed" checked>Add Close Neigbors to Cells</label>
-            <br>
-            <label><input id="makeIrregularOctreeCheckbox" type="checkbox" name="options" value="fixed" checked>Make Irregular Octree</label>
-            <br>
-            <label><input id="automaticOctreeSizeCheckbox" type="checkbox" name="options" value="fixed" checked>Automatic Octree Size</label>
-            <br>
             <label><input id="renderOnlyMovementCheckbox" type="checkbox" name="options" value="fixed" checked>Render Only On Movement</label>
             <br>
             <label><input id="alwaysFullRenderCheckbox" type="checkbox" name="options" value="fixed" checked>Always Full Render</label>
@@ -117,7 +109,7 @@
             <label><input type="range" min="0.01" max="3.0" step="0.05" value="0.8" class="slider" id="kSmoothminScale">Smoothmin k</label>
          </div>
          <div class="slidecontainer">
-            <label><input type="range" min="2" max="6" step="1" value="4" class="slider" id="octreeLayers">Octree Layers</label>
+            <label><input type="range" min="0" max="1" step="0.001" value="0" class="slider" id="lightRotation">Light Rotation</label>
          </div>
          <div>
             <button id="benchmarkButton">Run Benchmark</button>
@@ -179,6 +171,16 @@
                   <input id="OAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
                   RGB for O atoms
                </label>
+               <br>
+               <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed" checked>Allow Reset Raymarch</label>
+               <br>
+               <label><input id="makeIrregularOctreeCheckbox" type="checkbox" name="options" value="fixed" checked>Make Irregular Octree</label>
+               <br>
+               <label><input id="automaticOctreeSizeCheckbox" type="checkbox" name="options" value="fixed" checked>Automatic Octree Size</label>
+               <br>
+               <div class="slidecontainer">
+                  <label><input type="range" min="2" max="6" step="1" value="4" class="slider" id="octreeLayers">Octree Layers</label>
+               </div>
             </div>
          </div>  
       </div>

@@ -27,7 +27,6 @@ const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as 
 const sliderKSmoothminScale = document.getElementById("kSmoothminScale") as HTMLInputElement;
 const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
 const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
-const addCloseNeighborsToCellsCheckbox = document.getElementById("addCloseNeighborsToCellsCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
 const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSizeCheckbox") as HTMLInputElement;
@@ -35,6 +34,7 @@ const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCh
 const alwaysFullRenderCheckbox = document.getElementById("alwaysFullRenderCheckbox") as HTMLInputElement;
 const highlightMainChainCheckbox = document.getElementById("highlightMainChainCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
+const lightRotationSlider = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
@@ -330,11 +330,14 @@ async function Initialize() {
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
             let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             let debugMode = parseFloat(debugSelection.value);
+            let lightRotation = parseFloat(lightRotationSlider.value)*6.28;
+            let lightDirection = vec3.normalize(vec3.create(), vec3.fromValues(0.05+Math.sin(lightRotation), 1, 0.25+Math.cos(lightRotation)));
             if (dataSelection.value == "1cqw") {
                 rayMarchQuadOct1cqw.debugMode = debugMode;
                 rayMarchQuadOct1cqw.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.kSmoothminScale = kSmoothminScale;
+                rayMarchQuadOct1cqw.lightDirection = lightDirection;
                 rayMarchQuadOct1cqw.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
                 //rayMarchQuadOct1cqw.DrawGrid(device, renderPass, mvpMatrix);
             } else if (dataSelection.value == "1aon") {
@@ -342,6 +345,7 @@ async function Initialize() {
                 rayMarchQuadOct1aon.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
+                rayMarchQuadOct1aon.lightDirection = lightDirection;
                 rayMarchQuadOct1aon.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
                 //rayMarchQuadOct1aon.DrawGrid(device, renderPass, mvpMatrix);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
@@ -349,6 +353,7 @@ async function Initialize() {
                 rayMarchQuadOctLoaded.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.kSmoothminScale = kSmoothminScale;
+                rayMarchQuadOctLoaded.lightDirection = lightDirection;
                 rayMarchQuadOctLoaded.DrawRaymarch(device, renderPass, mvpMatrix, inverseVp, cameraPosition, fullRender, drawAmount, drawStart, sizeScale);
                 //rayMarchQuadOctLoaded.DrawGrid(device, renderPass, mvpMatrix);
             }
@@ -580,18 +585,6 @@ async function Initialize() {
 
 Initialize();
 
-addCloseNeighborsToCellsCheckbox.addEventListener('change', function(){
-    if (addCloseNeighborsToCellsCheckbox.checked) {
-        let sizeScale = parseFloat(sliderImpostorSizeScale.value);
-        let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
-        rayMarchQuadOct1cqw.octreeMargins = 0.0+sizeScale+kSmoothminScale*1.0;
-        rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
-    } else {
-        rayMarchQuadOct1cqw.octreeMargins = 0.0;
-        rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
-    }
-});
-
 function queueFullRender() {
     renderDirty = true;
     nextFullRenderTime = performance.now()+0.25;
@@ -638,10 +631,13 @@ sliderDebugB.onchange = (e) => {
 debugSelection.onchange = (e) => {
     queueFullRender();
 }
-sliderImpostorSizeScale.onchange = (e) => {
+sliderImpostorSizeScale.oninput = (e) => {
     queueFullRender();
 }
-sliderKSmoothminScale.onchange = (e) => {
+sliderKSmoothminScale.oninput = (e) => {
+    queueFullRender();
+}
+lightRotationSlider.oninput = (e) => {
     queueFullRender();
 }
 
