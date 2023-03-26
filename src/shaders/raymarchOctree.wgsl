@@ -227,10 +227,17 @@ override atomColorSr = 0.995;
 override atomColorSg = 0.995;
 override atomColorSb = 0.025;
 
+fn getRandomColor(a: f32) -> vec4<f32> {
+    let randomNumber = (6.28*sin(1984.142069*a+69.345)) % 6.28;
+    let color = vec3(abs(sin(randomNumber))+0.05, abs(cos(randomNumber/2))/1.5+0.05, 1-abs(sin(randomNumber)+0.05));
+    return vec4(color, 1.0);
+}
+
 fn getAtomColor(w: f32) -> vec4<f32> {
-    let atomNumber = w%100.0;
-    let aminoAtomType = w/100;
-    //todo: custom colors using override declarations?
+    let numberWithoutType = w%5000000.0;
+    let aminoAtomType = w/5000000.0;
+    let atomNumber = numberWithoutType%100.0;
+    let chainNumber = numberWithoutType/100.0;
     var color = vec4(10.0, 10.0, 10.0, 1.0);
     if (atomNumber < 6.5) {
         color = vec4(atomColorCr, atomColorCg, atomColorCb, 1.0); // C
@@ -241,24 +248,17 @@ fn getAtomColor(w: f32) -> vec4<f32> {
     } else if (atomNumber < 16.5) {
         color = vec4(atomColorSr, atomColorSg, atomColorSb, 1.0); // S
     }
+    //#if UseColorByChainNumber
+    color = getRandomColor(floor(chainNumber));
+    //#endif UseColorByChainNumber
     if (aminoAtomType > 1) {
         //#ifnot DontHighlightMainChain
         color = color/5+vec4(0.85, 0.85, 0.85, 0);
         //#endifnot DontHighlightMainChain
-        //#if DontHighlightMainChain
-        /*
-        color = color;
-        */
-        //#endif DontHighlightMainChain
     } else {
         //#ifnot DontHighlightMainChain
         color = color/1.275;
         //#endifnot DontHighlightMainChain
-        //#if DontHighlightMainChain
-        /*
-        color = color;
-        */
-        //#endif DontHighlightMainChain
     }
     return color;
 }

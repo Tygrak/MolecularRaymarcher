@@ -34,6 +34,7 @@ const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCh
 const alwaysFullRenderCheckbox = document.getElementById("alwaysFullRenderCheckbox") as HTMLInputElement;
 const highlightMainChainCheckbox = document.getElementById("highlightMainChainCheckbox") as HTMLInputElement;
 const cartoonEdgesCheckbox = document.getElementById("cartoonEdgesCheckbox") as HTMLInputElement;
+const colorUsingChainCheckbox = document.getElementById("colorUsingChainCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const lightRotationSlider = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
@@ -504,6 +505,7 @@ async function Initialize() {
             rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
             rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
             rayMarchQuadOctLoaded.LoadAtoms(device, structureLoaded);
+            ReloadShaders();
             let t1 = performance.now();
             console.log("Loading data from file (" + dataFileInput.files![0].name + "): " + (t1-t0) + "ms");
             dataSelection.value = "dataFile";
@@ -538,12 +540,13 @@ async function Initialize() {
         console.log(smoothminTypeSelection.value);
         ReloadShaders();
     };
-
     highlightMainChainCheckbox.oninput = (e) => {
         ReloadShaders();
     };
-
     cartoonEdgesCheckbox.oninput = (e) => {
+        ReloadShaders();
+    };
+    colorUsingChainCheckbox.oninput = (e) => {
         ReloadShaders();
     };
 
@@ -555,6 +558,9 @@ async function Initialize() {
         }
         if (cartoonEdgesCheckbox.checked) {
             preprocessFlags.push("UseCartoonEdges");
+        }
+        if (colorUsingChainCheckbox.checked) {
+            preprocessFlags.push("UseColorByChainNumber");
         }
         preprocessFlags.push(smoothminTypeSelection.value);
         let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
@@ -700,6 +706,9 @@ sliderDebugB.oninput = (e) => {
     queueFullRender();
 }
 debugSelection.onchange = (e) => {
+    queueFullRender();
+}
+visualizationSelection.onchange = (e) => {
     queueFullRender();
 }
 allowResetRaymarchCheckbox.onchange = (e) => {

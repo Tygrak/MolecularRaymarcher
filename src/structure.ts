@@ -23,9 +23,10 @@ export class Structure {
         } else {
             loaded = LoadDataObj(dataText, 250);
         }
-        let t1 = performance.now();
         this.atoms = loaded.atoms;
         this.chains = loaded.chains;
+        this.AddChainIdToAtoms();
+        let t1 = performance.now();
         console.log("Chains:");
         console.log(this.chains);
         //console.log("Atoms:");
@@ -39,6 +40,18 @@ export class Structure {
         let t2 = performance.now();
         console.log("Loading data: " + (t1-t0) + "ms (" + this.atoms.length + " atoms)");
         console.log("Creating chain meshes: " + (t2-t1) + "ms");
+    }
+
+    private AddChainIdToAtoms() {
+        for (let i = 0; i < this.chains.length; i++) {
+            const chain = this.chains[i];
+            for (let j = 0; j < chain.residues.length; j++) {
+                const residue = chain.residues[j];
+                for (let k = 0; k < residue.atoms.length; k++) {
+                    residue.atoms[k].chainId = i;
+                }
+            }
+        }
     }
 
     public InitializeBuffers(device : GPUDevice) {

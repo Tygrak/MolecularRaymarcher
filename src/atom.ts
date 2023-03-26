@@ -7,6 +7,7 @@ export class Atom {
     x: number;
     y: number;
     z: number;
+    chainId: number = 0;
 
     constructor (x: number, y: number, z: number, name: string, residueAtomName: string) {
         this.x = x;
@@ -23,8 +24,9 @@ export class Atom {
     public GetVec4Representation() {
         let typeShift = 0;
         if (this.residueAtomName == "N" || this.residueAtomName == "CA" || this.residueAtomName == "C" || this.residueAtomName == "O") {
-            typeShift = 100;
+            typeShift = 5000000;
         }
+        typeShift += this.chainId*100;
         return vec4.fromValues(this.x, this.y, this.z, GetAtomType(this).number+typeShift);
     }
 
