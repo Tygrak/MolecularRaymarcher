@@ -61,7 +61,7 @@ export const LoadDataPdb = (dataString: string) => {
 
 //todo: read according to this https://www.wwpdb.org/documentation/file-format-content/format33/sect9.html
 const ParseDataLinePdb = (line: string) => {
-    let match = line.match(/ATOM  +\d+ +([\w']+) +(\w+) +(\w+) {0,3}(\d+) +(-?\d+\.\d{1,3}) *(-?\d+\.\d{1,3}) *(-?\d+\.\d{1,3}) *(-?\d{1,3}\.\d{1,2}) *(-?\d{1,3}\.\d{1,2}) +(\w)/);
+    let match = line.match(/ATOM  +\d+ +([\w']+) +(\w+) +(\w+) {0,3}([\d-]+) +(-?\d+\.\d{1,3}) *(-?\d+\.\d{1,3}) *(-?\d+\.\d{1,3}) *(-?\d{1,3}\.\d{1,2}) *(-?\d{1,3}\.\d{1,2}) +(\w)/);
     if (match == null) {
         if (line.match(/^ATOM  /)) {
             console.log("parse warning, can't match line: '"+ line + "'");
