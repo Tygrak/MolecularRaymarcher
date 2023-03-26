@@ -342,6 +342,25 @@ fn colormap_supernova(x: f32) -> vec4<f32> {
     return vec4(colormap_supernova_red(x), colormap_supernova_green(x), colormap_supernova_blue(x), 1.0);
 }
 
+fn getRandomColor(a: f32) -> vec4<f32> {
+    //let randomNumber = (6.28*sin(1984.142069*a+69.345)) % 6.28;
+    let randomNumber = 6.28*fract(sin(dot(vec2(a, a%3), vec2(12.9898, 78.233))) * 43758.5453);
+    let r = abs(sin(randomNumber))+0.15;
+    let g = saturate(abs(cos(randomNumber*6.0))/1.5+0.01+(a%13)/39);
+    let b = abs(1-r-(a%50)/100);
+    let color = vec3(r-g/10, g, b);
+    return vec4(color, 1.0);
+}
+
+//based on https://iquilezles.org/articles/palettes/
+fn getPaletteColor(x: f32) -> vec4<f32> {
+    let t = ((x%10)/10)*0.7+((x%50)/50)*0.2+((x%200)/200)*0.1;
+    let a = vec3(0.5, 0.5, 0.5);				
+    let b = vec3(0.5, 0.5, 0.5);
+    let c = vec3(1.0, 1.0, 1.0);
+    let d = vec3(0.00, 0.33, 0.67);
+    return vec4(a + b*cos(6.28318*(c*t+d)), 1.0);
+}
 
 
 

@@ -333,7 +333,7 @@ async function Initialize() {
             let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             let debugMode = parseFloat(debugSelection.value);
             let lightRotation = parseFloat(lightRotationSlider.value)*6.28;
-            let lightDirection = vec3.normalize(vec3.create(), vec3.fromValues(0.05+Math.sin(lightRotation), 1, 0.25+Math.cos(lightRotation)));
+            let lightDirection = vec3.normalize(vec3.create(), vec3.fromValues(0.05+Math.sin(lightRotation*2), 1*(0.3+(lightRotation/6-0.5)*2), 0.075+Math.cos(lightRotation*2)));
             if (dataSelection.value == "1cqw") {
                 rayMarchQuadOct1cqw.debugMode = debugMode;
                 rayMarchQuadOct1cqw.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;

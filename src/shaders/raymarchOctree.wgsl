@@ -227,12 +227,6 @@ override atomColorSr = 0.995;
 override atomColorSg = 0.995;
 override atomColorSb = 0.025;
 
-fn getRandomColor(a: f32) -> vec4<f32> {
-    let randomNumber = (6.28*sin(1984.142069*a+69.345)) % 6.28;
-    let color = vec3(abs(sin(randomNumber))+0.05, abs(cos(randomNumber/2))/1.5+0.05, 1-abs(sin(randomNumber)+0.05));
-    return vec4(color, 1.0);
-}
-
 fn getAtomColor(w: f32) -> vec4<f32> {
     let numberWithoutType = w%5000000.0;
     let aminoAtomType = w/5000000.0;
@@ -250,6 +244,7 @@ fn getAtomColor(w: f32) -> vec4<f32> {
     }
     //#if UseColorByChainNumber
     color = getRandomColor(floor(chainNumber));
+    //color = getPaletteColor(floor(chainNumber));
     //#endif UseColorByChainNumber
     if (aminoAtomType > 1) {
         //#ifnot DontHighlightMainChain
