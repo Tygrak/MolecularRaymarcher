@@ -4,7 +4,7 @@
 
 struct Atom {
     position: vec3<f32>,
-    number: f32,
+    number: f32, //todo: make atom number also contain info about which chain the atom is part of
 }
 
 struct Atoms {
@@ -541,6 +541,9 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     var pos : vec3<f32> = vec3(0.0);
     var iteration = 0;
     var resultColor = vec4(0.0, 0.0, 0.0, 1.0);
+    //#if UseCartoonEdges
+    var accDist = 0.0;
+    //#endif UseCartoonEdges
     if (drawSettings.isFullRender > 0.5) {
         resultColor = vec4(0.15, 0.0, 0.15, 1.0);
     }
@@ -549,6 +552,10 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         pos = start+t*rayDirection;
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
 		let d = dAtoms(pos);
+        //#if UseCartoonEdges
+        accDist += pow(d, 0.25+drawSettings.debugA*1.05);
+        //accDist += pow(d, 0.7969);
+        //#endif UseCartoonEdges
 		t = t+d;
         if (drawSettings.isFullRender < 0.5) {
             t += 0.1;
@@ -557,6 +564,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
             t = end;
         }
         
+        //todo: increase tolarance on !fullrender
 		//if (d < 0.005+0.05*(1-drawSettings.isFullRender)) {
         if (d < 0.05) {
             resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+dAtomsColor(pos).color/2;
@@ -577,7 +585,14 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                     if (stackPos == stackSize && drawSettings.debugB > 0.5) {
                         return vec4(10.15, 10.0, 0.15, 1.0);
                     }
+                    //#if UseCartoonEdges
+                    /*
+                    return vec4(0.0, 0.0, 0.0, 1.0);
+                    */
+                    //#endif UseCartoonEdges
+                    //#ifnot UseCartoonEdges
                     return vec4(0.15, 0.0, 0.15, 1.0);
+                    //#endifnot UseCartoonEdges
                 }
 
                 intersecting = stackBins[stackPos];
@@ -610,6 +625,13 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     let distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
     let lightDirection = vec3(drawSettings.lightDirectionX, drawSettings.lightDirectionY, drawSettings.lightDirectionZ);
     depthOutput = distance(cameraPos.xyz, pos);
+    //#if UseCartoonEdges
+    if (accDist > 1.7) {
+    //if (accDist > 0.1+drawSettings.debugB*2) {
+        resultColor -= max(f32(accDist-1.7), 0.0)*vec4(0.425, 0.425, 0.425, 0);
+        //resultColor -= max(f32(accDist-(0.1+drawSettings.debugB*2)), 0.0)*vec4(0.425, 0.425, 0.425, 0);
+    }
+    //#endif UseCartoonEdges
     //todo: mode with ambient occlusion?
     if (drawSettings.debugMode == DM_Default) {
         //default

@@ -33,6 +33,7 @@ const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSize
 const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCheckbox") as HTMLInputElement;
 const alwaysFullRenderCheckbox = document.getElementById("alwaysFullRenderCheckbox") as HTMLInputElement;
 const highlightMainChainCheckbox = document.getElementById("highlightMainChainCheckbox") as HTMLInputElement;
+const cartoonEdgesCheckbox = document.getElementById("cartoonEdgesCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const lightRotationSlider = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
@@ -465,6 +466,7 @@ async function Initialize() {
             rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
             rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             regenerateOctree();
+            ReloadShaders();
             let t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
@@ -479,6 +481,7 @@ async function Initialize() {
             let t1 = performance.now();
             console.log("Loading data for raymarch+creating octree: " + (t1-t0) + "ms");
         }
+        queueFullRender();
     };
 
     dataLoadButton.onclick = (e) => {
@@ -540,11 +543,18 @@ async function Initialize() {
         ReloadShaders();
     };
 
+    cartoonEdgesCheckbox.oninput = (e) => {
+        ReloadShaders();
+    };
+
     function ReloadShaders() {
         let t0 = performance.now();
         let preprocessFlags: string[] = [];
         if (!highlightMainChainCheckbox.checked) {
             preprocessFlags.push("DontHighlightMainChain");
+        }
+        if (cartoonEdgesCheckbox.checked) {
+            preprocessFlags.push("UseCartoonEdges");
         }
         preprocessFlags.push(smoothminTypeSelection.value);
         let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
@@ -580,14 +590,75 @@ async function Initialize() {
         console.log("Reloading shaders: " + (t1-t0) + "ms");
     }
 
+    
+    if (document != null) {
+        document.addEventListener('keypress', function(keyEvent: KeyboardEvent){
+            if (keyEvent.code == "Digit1") {
+                debugSelection.value = "0";
+            } else if (keyEvent.code == "Digit2") {
+                debugSelection.value = "1";
+            } else if (keyEvent.code == "Digit3") {
+                debugSelection.value = "2";
+            } else if (keyEvent.code == "Digit4") {
+                debugSelection.value = "3";
+            } else if (keyEvent.code == "Digit5") {
+                debugSelection.value = "101";
+            } else if (keyEvent.code == "Digit6") {
+                debugSelection.value = "103";
+            } else if (keyEvent.code == "Digit7") {
+                debugSelection.value = "104";
+            } else if (keyEvent.code == "Digit8") {
+                debugSelection.value = "113";
+            } else if (keyEvent.code == "Digit9") {
+                debugSelection.value = "105";
+            } else if (keyEvent.code == "Digit0") {
+                debugSelection.value = "107";
+            } else if (keyEvent.code == "Minus") {
+                debugSelection.value = "130";
+            } else if (keyEvent.code == "Equal") {
+                debugSelection.value = "131";
+            } else if (keyEvent.code == "Numpad1") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 1, 0];
+                camera.center = [0, 0, -distance];
+            } else if (keyEvent.code == "Numpad3") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 1, 0];
+                camera.center = [-distance, 0, 0];
+            } else if (keyEvent.code == "Numpad5") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 1, 0];
+                camera.center = [0, 5, 45];
+            } else if (keyEvent.code == "Numpad7") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 0, 1];
+                camera.center = [0, distance, 0];
+            } else if (keyEvent.code == "Numpad9") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 0, 1];
+                camera.center = [0, -distance, 0];
+            }
+            queueFullRender();
+        });
+    }
+
     CreateAnimation(draw);
 }
 
 Initialize();
 
 function queueFullRender() {
-    renderDirty = true;
-    nextFullRenderTime = performance.now()+0.25;
+    //renderDirty = true;
+    if (alwaysFullRenderCheckbox.checked) {
+        nextFullRenderTime = performance.now()+0.25;
+    } else {
+        nextFullRenderTime = performance.now()+1.0;
+    }
 }
 
 function regenerateOctree() {
@@ -622,13 +693,16 @@ regenerateOctreeButton.onclick = (e) => {
     regenerateOctree();
 }
 
-sliderDebugA.onchange = (e) => {
+sliderDebugA.oninput = (e) => {
     queueFullRender();
 }
-sliderDebugB.onchange = (e) => {
+sliderDebugB.oninput = (e) => {
     queueFullRender();
 }
 debugSelection.onchange = (e) => {
+    queueFullRender();
+}
+allowResetRaymarchCheckbox.onchange = (e) => {
     queueFullRender();
 }
 sliderImpostorSizeScale.oninput = (e) => {
@@ -641,33 +715,3 @@ lightRotationSlider.oninput = (e) => {
     queueFullRender();
 }
 
-if (document != null) {
-    document.addEventListener('keypress', function(keyEvent: KeyboardEvent){
-        if (keyEvent.code == "Digit1") {
-            debugSelection.value = "0";
-        } else if (keyEvent.code == "Digit2") {
-            debugSelection.value = "1";
-        } else if (keyEvent.code == "Digit3") {
-            debugSelection.value = "2";
-        } else if (keyEvent.code == "Digit4") {
-            debugSelection.value = "3";
-        } else if (keyEvent.code == "Digit5") {
-            debugSelection.value = "101";
-        } else if (keyEvent.code == "Digit6") {
-            debugSelection.value = "103";
-        } else if (keyEvent.code == "Digit7") {
-            debugSelection.value = "104";
-        } else if (keyEvent.code == "Digit8") {
-            debugSelection.value = "113";
-        } else if (keyEvent.code == "Digit9") {
-            debugSelection.value = "105";
-        } else if (keyEvent.code == "Digit0") {
-            debugSelection.value = "107";
-        } else if (keyEvent.code == "Minus") {
-            debugSelection.value = "130";
-        } else if (keyEvent.code == "Equal") {
-            debugSelection.value = "131";
-        }
-        queueFullRender();
-    });
-}
