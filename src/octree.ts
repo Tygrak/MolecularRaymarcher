@@ -74,7 +74,7 @@ export class Octree {
         }
         this.layers = layers;
         this.irregular = makeIrregular;
-        if (atoms.length > 10000 && makeIrregular == true) {
+        if (atoms.length > 100000 && makeIrregular == true) {
             this.irregular = false;
             console.log("Forcing octree to be regular. (number of atoms: " + atoms.length + ")");
         }
@@ -85,10 +85,14 @@ export class Octree {
         let atomsCopy = Object.assign([], atoms);
         this.tree = new Array<vec4>();
         this.bins = new Array<OctreeBin>();
+        let t0 = performance.now();
         this.BuildTree(atomsCopy, margin);
+        let t1 = performance.now();
+        console.log("Built octree in: " + (t1-t0) + "ms (layers: " + this.layers + ", atoms: " + atoms.length + ", irregular: " + this.irregular + ")");
     }
 
     private BuildTree(atoms: Atom[], margin: number) {
+        atoms = atoms.sort((a, b) => (a.x < b.x ? -1 : 1));
         let limits = this.limits;
         if (this.irregular) {
             this.bins.push(...this.FindOptimalBinsFromLimits(limits.minLimits, limits.maxLimits, limits.center, margin, atoms, 0, false));
@@ -97,7 +101,7 @@ export class Octree {
         }
         let t0 = performance.now();
         for (let layer = 1; layer < this.layers; layer++) {
-            if (atoms.length > 10000 || this.debugLogsEnabled) {
+            if (atoms.length > 100000 || this.debugLogsEnabled) {
                 let t1 = performance.now();
                 console.log("Finished octree layer: " + layer + " (" + (t1-t0) + "ms)");
             }
@@ -153,6 +157,25 @@ export class Octree {
         return bins;
     }
 
+    private binarySearch(atoms: Atom[], targetX: number): number{
+        let left: number = 0;
+        let right: number = atoms.length - 1;
+      
+        let mid: number = Math.floor((left + right) / 2);
+        while (left <= right) {
+            mid = Math.floor((left + right) / 2);
+            if (atoms[mid-1].x > targetX && atoms[mid].x <= targetX) {
+                return mid;
+            } else if (targetX < atoms[mid].x) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+      
+        return mid;
+    }
+
     private MakeBinsFromLimitsUsingCenter(min: vec3, max: vec3, center: vec3, margin: number, atoms: Atom[], layer: number, insert: boolean) {
         let resultBins: OctreeBin[] = [];
         for (let z = 0; z < 2; z++) {
@@ -167,10 +190,14 @@ export class Octree {
                     let b: OctreeBin = new OctreeBin(minX, minY, minZ, maxX, maxY, maxZ);
                     b.layer = layer;
 
+                    let start = this.binarySearch(atoms, b.max[0]+margin);
                     if (this.irregular && layer <= 2) {
                         let resultMin = vec3.fromValues(maxX, maxY, maxZ);
                         let resultMax = vec3.fromValues(minX, minY, minZ);
-                        for (let i = atoms.length-1; i >= 0; i--) {
+                        for (let i = start; i >= 0; i--) {
+                            if (atoms[i].x < b.min[0]-margin) {
+                                break;
+                            }
                             if (b.IsAtomInsideWithMargins(atoms[i], margin)) {
                                 for (let dim = 0; dim < 3; dim++) {
                                     resultMin[dim] = Math.min(atoms[i].GetPosition()[dim], resultMin[dim]);
@@ -192,7 +219,13 @@ export class Octree {
                     if (insert) {
                         b.start = this.tree.length;
                     }
-                    for (let i = atoms.length-1; i >= 0; i--) {
+                    for (let i = start; i >= 0; i--) {
+                        if (atoms[i].x < b.min[0]-margin) {
+                            break;
+                        }
+                        if (!insert && b.atomsInChildNodes > 10) {
+                            break;
+                        }
                         if (b.IsAtomInsideWithMargins(atoms[i], margin)) {
                             b.atomsInChildNodes++;
                             if (insert) {
