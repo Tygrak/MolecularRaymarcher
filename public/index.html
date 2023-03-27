@@ -36,7 +36,7 @@
          </div>
          <div>
             <button id="dataLoadButton">Load Data</button>
-            <input type="file" id="dataFileInput" name="dataFileInput" accept=".data,.txt,.pdb,.pcd,.obj">
+            <input type="file" id="dataFileInput" name="dataFileInput" accept=".data,.txt,.pdb,.pdb1,.pdb2,.pcd,.obj">
          </div>      
          <div>
             <label>
@@ -124,17 +124,6 @@
          <!--Todo: make this stick to bottom of page instead of this hack-->
          <br>  
          <div>
-            <br>  
-            Shader
-            <br>  
-            <input type="file" id="shaderFileInput" name="shaderFileInput" accept=".wgsl">
-            <br>  
-            <!-- Todo: allow reloading utilities file too?
-            Utilities
-            <br>  
-            <input type="file" id="shaderUtilitiesFileInput" name="shaderUtilitiesFileInput" accept=".wgsl">
-            -->
-            <button id="shaderLoadButton">Shader Reload</button>
             <button class="collapsible" onclick="ToggleAdditionalOptions(this)">Additional Options</button>
             <div class="content" id="additionalOptions">
                <label>
@@ -154,21 +143,21 @@
                   <input id="CAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.6" class="smallNumber">
                   <input id="CAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.9" class="smallNumber">
                   <input id="CAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.3" class="smallNumber">
-                  RGB for C atoms
+                  RGB for C
                </label>
                <br>
                <label>
                   <input id="NAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
                   <input id="NAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.05" class="smallNumber">
                   <input id="NAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.25" class="smallNumber">
-                  RGB for N atoms
+                  RGB for N
                </label>
                <br>
                <label>
                   <input id="OAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.2" class="smallNumber">
                   <input id="OAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.05" class="smallNumber">
                   <input id="OAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
-                  RGB for O atoms
+                  RGB for O
                </label>
                <br>
                <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed" checked>Allow Reset Raymarch</label>
@@ -184,6 +173,15 @@
                <div class="slidecontainer">
                   <label><input type="range" min="2" max="6" step="1" value="4" class="slider" id="octreeLayers">Octree Layers</label>
                </div>
+               <br>    
+               <input type="file" id="shaderFileInput" name="shaderFileInput" accept=".wgsl">
+               <br>  
+               <!-- Todo: allow reloading utilities file too?
+               Utilities
+               <br>  
+               <input type="file" id="shaderUtilitiesFileInput" name="shaderUtilitiesFileInput" accept=".wgsl">
+               -->
+               <button id="shaderLoadButton">Shader Reload</button>
             </div>
          </div>  
       </div>

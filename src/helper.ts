@@ -34,7 +34,7 @@ export function CreateViewProjection(aspectRatio = 1.0, cameraPosition:vec3 = [2
     const cameraOption = {
         eye: cameraPosition,
         center: center,
-        zoomMax: 500,
+        zoomMax: 750,
         zoomSpeed: 2
     };
 

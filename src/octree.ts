@@ -59,6 +59,7 @@ export class Octree {
     bins: OctreeBin[];
     layers: number;
     irregular: boolean;
+    debugLogsEnabled: boolean = false;
 
     constructor(atoms: Atom[], layers: number, margin: number = 1.5, makeIrregular = false, automaticOctreeSize = false) {
         this.limits = this.CalculateLimitsForAtoms(atoms, margin);
@@ -73,6 +74,10 @@ export class Octree {
         }
         this.layers = layers;
         this.irregular = makeIrregular;
+        if (atoms.length > 10000 && makeIrregular == true) {
+            this.irregular = false;
+            console.log("Forcing octree to be regular. (number of atoms: " + atoms.length + ")");
+        }
         let binsSize = 0;
         for (let layer = 1; layer <= layers; layer++) {
             binsSize += Math.pow(8, layer);
@@ -90,7 +95,12 @@ export class Octree {
         } else {
             this.bins.push(...this.MakeBinsFromLimitsUsingCenter(limits.minLimits, limits.maxLimits, limits.center, margin, atoms, 0, false));
         }
+        let t0 = performance.now();
         for (let layer = 1; layer < this.layers; layer++) {
+            if (atoms.length > 10000 || this.debugLogsEnabled) {
+                let t1 = performance.now();
+                console.log("Finished octree layer: " + layer + " (" + (t1-t0) + "ms)");
+            }
             let start = this.GetLayerEnd(layer-1);
             let end = this.GetLayerEnd(layer);
             for (let layerBin = start; layerBin < end; layerBin++) {

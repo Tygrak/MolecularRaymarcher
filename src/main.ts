@@ -92,7 +92,6 @@ async function Initialize() {
 
     // create vertex buffers
     structure1cqw = new Structure(require('./data/1cqw.pdb'));
-    structure1cqw.InitializeBuffers(device);
     
     let t0 = performance.now();
     rayMarchQuadOct1cqw = new RayMarchOctreeQuad(device, gpu.format);
@@ -460,7 +459,6 @@ async function Initialize() {
         if (dataSelection.value == "1aon" && structure1aon == undefined) {
             let t0 = performance.now();
             structure1aon = new Structure(require('./data/1aon.pdb'));
-            structure1aon.InitializeBuffers(device);
             impostorRenderer1aon = new ImpostorRenderer(device, gpu.format);
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
             
@@ -494,7 +492,6 @@ async function Initialize() {
         let t0 = performance.now();
         LoadData(dataFileInput.files[0], (text: string) => {
             structureLoaded = new Structure(text);
-            structureLoaded.InitializeBuffers(device);
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
             let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             impostorRendererLoaded = new ImpostorRenderer(device, gpu.format);
@@ -525,7 +522,7 @@ async function Initialize() {
     let currShaderCode = "";
     shaderLoadButton.onclick = (e) => {
         if (shaderFileInput.files == null || shaderFileInput.files?.length == 0) {
-            console.log("No file selected!");
+            ReloadShaders();
             return;
         }
         
@@ -534,20 +531,6 @@ async function Initialize() {
             currShaderCode = text;
             ReloadShaders();
         });
-    };
-
-    smoothminTypeSelection.oninput = (e) => {
-        console.log(smoothminTypeSelection.value);
-        ReloadShaders();
-    };
-    highlightMainChainCheckbox.oninput = (e) => {
-        ReloadShaders();
-    };
-    cartoonEdgesCheckbox.oninput = (e) => {
-        ReloadShaders();
-    };
-    colorUsingChainCheckbox.oninput = (e) => {
-        ReloadShaders();
     };
 
     function ReloadShaders() {
@@ -709,6 +692,15 @@ debugSelection.onchange = (e) => {
     queueFullRender();
 }
 visualizationSelection.onchange = (e) => {
+    if (visualizationSelection.value != "raymarchoctree") {
+        structure1cqw.CreateChainMeshes(device);
+        if (structure1aon != undefined) {
+            structure1aon.CreateChainMeshes(device);
+        }
+        if (structureLoaded != undefined) {
+            structureLoaded.CreateChainMeshes(device);
+        }
+    }
     queueFullRender();
 }
 allowResetRaymarchCheckbox.onchange = (e) => {

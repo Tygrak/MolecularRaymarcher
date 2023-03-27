@@ -33,12 +33,20 @@ export class Structure {
         //console.log(this.atoms);
         //const instanceMesh = CubeData();
         this.chainMeshes = [];
+        console.log("Loading data: " + (t1-t0) + "ms (" + this.atoms.length + " atoms)");
+    }
+
+    public CreateChainMeshes(device : GPUDevice) {
+        if (this.chainMeshes.length >= this.chains.length) {
+            return;
+        }
+        let t1 = performance.now();
         for (let i = 0; i < this.chains.length; i++) {
             const chain = this.chains[i];
             this.chainMeshes.push(new ChainMesh(chain));
         }
+        this.InitializeBuffers(device);
         let t2 = performance.now();
-        console.log("Loading data: " + (t1-t0) + "ms (" + this.atoms.length + " atoms)");
         console.log("Creating chain meshes: " + (t2-t1) + "ms");
     }
 
@@ -54,7 +62,7 @@ export class Structure {
         }
     }
 
-    public InitializeBuffers(device : GPUDevice) {
+    private InitializeBuffers(device : GPUDevice) {
         this.chainMeshes.forEach(cm => cm.InitializeBuffers(device));
     }
 
