@@ -35,6 +35,7 @@ const alwaysFullRenderCheckbox = document.getElementById("alwaysFullRenderCheckb
 const highlightMainChainCheckbox = document.getElementById("highlightMainChainCheckbox") as HTMLInputElement;
 const cartoonEdgesCheckbox = document.getElementById("cartoonEdgesCheckbox") as HTMLInputElement;
 const colorUsingChainCheckbox = document.getElementById("colorUsingChainCheckbox") as HTMLInputElement;
+const centerDistanceFadeCheckbox = document.getElementById("centerDistanceFadeCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const lightRotationSlider = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
@@ -545,6 +546,9 @@ async function Initialize() {
         if (colorUsingChainCheckbox.checked) {
             preprocessFlags.push("UseColorByChainNumber");
         }
+        if (centerDistanceFadeCheckbox.checked) {
+            preprocessFlags.push("UseCenterDistanceFade");
+        }
         preprocessFlags.push(smoothminTypeSelection.value);
         let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
         let atomColorN = vec3.fromValues(parseFloat(inputNAtomColorR.value), parseFloat(inputNAtomColorG.value), parseFloat(inputNAtomColorB.value));
@@ -631,6 +635,26 @@ async function Initialize() {
                 camera.eye = [0, 0, 0];
                 camera.up = [0, 0, 1];
                 camera.center = [0, -distance, 0];
+            } else if (keyEvent.code == "NumpadAdd") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                let normDir = vec3.normalize(vec3.create(), camera.eye);
+                if (Math.abs(camera.eye[0])+Math.abs(camera.eye[1])+Math.abs(camera.eye[2]) < 0.01) {
+                    normDir = vec3.normalize(vec3.create(), camera.center);
+                }
+                let p = vec3.scale(vec3.create(), normDir, distance-5);
+                camera.eye = [0, 0, 0];
+                camera.up = camera.up;
+                camera.center = [p[0], p[1], p[2]];
+            } else if (keyEvent.code == "NumpadSubtract") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                let normDir = vec3.normalize(vec3.create(), camera.eye);
+                if (Math.abs(camera.eye[0])+Math.abs(camera.eye[1])+Math.abs(camera.eye[2]) < 0.01) {
+                    normDir = vec3.normalize(vec3.create(), camera.center);
+                }
+                let p = vec3.scale(vec3.create(), normDir, distance+5);
+                camera.eye = [0, 0, 0];
+                camera.up = camera.up;
+                camera.center = [p[0], p[1], p[2]];
             }
             queueFullRender();
         });

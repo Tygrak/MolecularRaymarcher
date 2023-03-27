@@ -617,7 +617,8 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     let center = drawSettings.minLimit.xyz+limitsSize/2;
     let sphereInitStart = normalize(center-cameraPos.xyz)*limitsMax;
     let cameraDistance = distance(sphereInitStart, pos);
-    let distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
+    var distanceFade = pow(cameraDistance/(limitsMax*1.2), 2.5);
+    //var distanceFade = pow(cameraDistance/(limitsMax*1.2), 1.0+drawSettings.debugA*2);
     let lightDirection = vec3(drawSettings.lightDirectionX, drawSettings.lightDirectionY, drawSettings.lightDirectionZ);
     depthOutput = distance(cameraPos.xyz, pos);
     //#if UseCartoonEdges
@@ -627,7 +628,9 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         //resultColor -= max(f32(accDist-(0.1+drawSettings.debugB*2)), 0.0)*vec4(0.425, 0.425, 0.425, 0);
     }
     //#endif UseCartoonEdges
-    //todo: mode with ambient occlusion?
+    //#if UseCenterDistanceFade
+    distanceFade = distanceFade*mix(0.05, 1.0, saturate(0.01+pow(distance(pos, center)/min(cameraDistance, limitsMax*(drawSettings.debugB*0.95+0.15)), 1.525-1.495*drawSettings.debugA)));
+    //#endif UseCenterDistanceFade
     if (drawSettings.debugMode == DM_Default) {
         //default
         return resultColor*distanceFade;
