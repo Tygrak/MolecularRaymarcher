@@ -29,7 +29,7 @@ body {
 }
 
 .smallNumber {
-   width: 2rem;
+   width: 2.5rem;
 }
 
 select, input[type="text"]{
@@ -60,6 +60,11 @@ select, input[type="text"]{
    overflow: hidden;
    transition: max-height 0.2s ease-out;
    background-color: #1f0e0e;
+}
+
+.content.opened {
+   max-height: 100%;
+   transition: max-height 0.2s ease-out;
 }
 
  

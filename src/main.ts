@@ -57,6 +57,12 @@ const inputNAtomColorB = document.getElementById("NAtomColorB") as HTMLInputElem
 const inputOAtomColorR = document.getElementById("OAtomColorR") as HTMLInputElement;
 const inputOAtomColorG = document.getElementById("OAtomColorG") as HTMLInputElement;
 const inputOAtomColorB = document.getElementById("OAtomColorB") as HTMLInputElement;
+const inputSAtomColorR = document.getElementById("SAtomColorR") as HTMLInputElement;
+const inputSAtomColorG = document.getElementById("SAtomColorG") as HTMLInputElement;
+const inputSAtomColorB = document.getElementById("SAtomColorB") as HTMLInputElement;
+const inputBgColorR = document.getElementById("BgColorR") as HTMLInputElement;
+const inputBgColorG = document.getElementById("BgColorG") as HTMLInputElement;
+const inputBgColorB = document.getElementById("BgColorB") as HTMLInputElement;
 
 let structure1cqw: Structure;
 let structure1aon: Structure;
@@ -553,6 +559,8 @@ async function Initialize() {
         let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
         let atomColorN = vec3.fromValues(parseFloat(inputNAtomColorR.value), parseFloat(inputNAtomColorG.value), parseFloat(inputNAtomColorB.value));
         let atomColorO = vec3.fromValues(parseFloat(inputOAtomColorR.value), parseFloat(inputOAtomColorG.value), parseFloat(inputOAtomColorB.value));
+        let atomColorS = vec3.fromValues(parseFloat(inputSAtomColorR.value), parseFloat(inputSAtomColorG.value), parseFloat(inputSAtomColorB.value));
+        let bgColor = vec3.fromValues(parseFloat(inputBgColorR.value), parseFloat(inputBgColorG.value), parseFloat(inputBgColorB.value));
         atomColorC[0] = Number.isFinite(atomColorC[0]) ? atomColorC[0] : 0.5;
         atomColorC[1] = Number.isFinite(atomColorC[1]) ? atomColorC[1] : 0.5;
         atomColorC[2] = Number.isFinite(atomColorC[2]) ? atomColorC[2] : 0.5;
@@ -562,19 +570,25 @@ async function Initialize() {
         atomColorO[0] = Number.isFinite(atomColorO[0]) ? atomColorO[0] : 0.5;
         atomColorO[1] = Number.isFinite(atomColorO[1]) ? atomColorO[1] : 0.5;
         atomColorO[2] = Number.isFinite(atomColorO[2]) ? atomColorO[2] : 0.5;
+        atomColorS[0] = Number.isFinite(atomColorS[0]) ? atomColorS[0] : 0.5;
+        atomColorS[1] = Number.isFinite(atomColorS[1]) ? atomColorS[1] : 0.5;
+        atomColorS[2] = Number.isFinite(atomColorS[2]) ? atomColorS[2] : 0.5;
+        bgColor[0] = Number.isFinite(bgColor[0]) ? bgColor[0] : 0.15;
+        bgColor[1] = Number.isFinite(bgColor[1]) ? bgColor[1] : 0.00;
+        bgColor[2] = Number.isFinite(bgColor[2]) ? bgColor[2] : 0.15;
         //todo: make use of only one raymarchquadoct object and just swap buffers
         if (rayMarchQuadOctLoaded != undefined) {
-            rayMarchQuadOctLoaded.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO);
+            rayMarchQuadOctLoaded.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
             rayMarchQuadOctLoaded.shaderPreprocessFlags = preprocessFlags;
             rayMarchQuadOctLoaded.ReloadShader(device, currShaderCode);
         }
         if (rayMarchQuadOct1aon != undefined) {
-            rayMarchQuadOct1aon.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO);
+            rayMarchQuadOct1aon.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
             rayMarchQuadOct1aon.shaderPreprocessFlags = preprocessFlags;
             rayMarchQuadOct1aon.ReloadShader(device, currShaderCode);
         }
         if (rayMarchQuadOct1cqw != undefined) {
-            rayMarchQuadOct1cqw.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO);
+            rayMarchQuadOct1cqw.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
             rayMarchQuadOct1cqw.shaderPreprocessFlags = preprocessFlags;
             rayMarchQuadOct1cqw.ReloadShader(device, currShaderCode);
         }

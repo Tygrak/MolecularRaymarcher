@@ -139,27 +139,6 @@
                <br>
                <label><input id="highlightMainChainCheckbox" type="checkbox" name="options" value="fixed" checked>Highlight Main Chain</label>
                <br>
-               <label>
-                  <input id="CAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.6" class="smallNumber">
-                  <input id="CAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.9" class="smallNumber">
-                  <input id="CAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.3" class="smallNumber">
-                  RGB for C
-               </label>
-               <br>
-               <label>
-                  <input id="NAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
-                  <input id="NAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.05" class="smallNumber">
-                  <input id="NAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.25" class="smallNumber">
-                  RGB for N
-               </label>
-               <br>
-               <label>
-                  <input id="OAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.2" class="smallNumber">
-                  <input id="OAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.05" class="smallNumber">
-                  <input id="OAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
-                  RGB for O
-               </label>
-               <br>
                <label><input id="allowResetRaymarchCheckbox" type="checkbox" name="options" value="fixed" checked>Allow Reset Raymarch</label>
                <br>
                <label><input id="makeIrregularOctreeCheckbox" type="checkbox" name="options" value="fixed" checked>Make Irregular Octree</label>
@@ -184,6 +163,44 @@
                <input type="file" id="shaderUtilitiesFileInput" name="shaderUtilitiesFileInput" accept=".wgsl">
                -->
                <button id="shaderLoadButton">Shader Reload</button>
+               <button class="collapsible" onclick="ToggleColorOptions(this)">Color Options</button>
+               <div class="content" id="colorOptions">
+                  <label>
+                     <input id="CAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.6" class="smallNumber">
+                     <input id="CAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.9" class="smallNumber">
+                     <input id="CAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.3" class="smallNumber">
+                     RGB for C
+                  </label>
+                  <br>
+                  <label>
+                     <input id="NAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
+                     <input id="NAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.05" class="smallNumber">
+                     <input id="NAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.25" class="smallNumber">
+                     RGB for N
+                  </label>
+                  <br>
+                  <label>
+                     <input id="OAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.2" class="smallNumber">
+                     <input id="OAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.05" class="smallNumber">
+                     <input id="OAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.95" class="smallNumber">
+                     RGB for O
+                  </label>
+                  <br>
+                  <label>
+                     <input id="SAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.995" class="smallNumber">
+                     <input id="SAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.995" class="smallNumber">
+                     <input id="SAtomColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.025" class="smallNumber">
+                     RGB for S
+                  </label>
+                  <br>
+                  <label>
+                     <input id="BgColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.15" class="smallNumber">
+                     <input id="BgColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.0" class="smallNumber">
+                     <input id="BgColorB" type="number" min="0" max="1" step="0.01" name="options" value="0.15" class="smallNumber">
+                     RGB for Bg
+                  </label>
+                  <br>
+               </div>
             </div>
          </div>  
       </div>
@@ -197,11 +214,13 @@
       function ToggleAdditionalOptions(button){
          button.classList.toggle('active');
          let content = document.getElementById("additionalOptions");
-         if (content.style.maxHeight){
-            content.style.maxHeight = null;
-         } else {
-            content.style.maxHeight = content.scrollHeight + "px";
-         } 
+         content.classList.toggle("opened");
+      };
+      
+      function ToggleColorOptions(button){
+         button.classList.toggle('active');
+         let content = document.getElementById("colorOptions");
+         content.classList.toggle("opened");
       };
    </script>
 </body>

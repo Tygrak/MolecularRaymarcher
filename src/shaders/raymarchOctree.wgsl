@@ -227,6 +227,10 @@ override atomColorSr = 0.995;
 override atomColorSg = 0.995;
 override atomColorSb = 0.025;
 
+override bgColorR = 0.15;
+override bgColorG = 0.0;
+override bgColorB = 0.15;
+
 fn getAtomColor(w: f32) -> vec4<f32> {
     let numberWithoutType = w%5000000.0;
     let aminoAtomType = w/5000000.0;
@@ -540,7 +544,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     var accDist = 0.0;
     //#endif UseCartoonEdges
     if (drawSettings.isFullRender > 0.5) {
-        resultColor = vec4(0.15, 0.0, 0.15, 1.0);
+        resultColor = vec4(bgColorR, bgColorG, bgColorB, 1.0);
     }
     var stackPos = 0;
     for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
@@ -586,7 +590,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                     */
                     //#endif UseCartoonEdges
                     //#ifnot UseCartoonEdges
-                    return vec4(0.15, 0.0, 0.15, 1.0);
+                    return vec4(bgColorR, bgColorG, bgColorB, 1.0);
                     //#endifnot UseCartoonEdges
                 }
 
@@ -773,7 +777,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
 		}
 	}
     if (distance(resultColor, startColor) < 0.009) {
-        return vec4(0.15, 0.0, 0.15, 1.0);
+        return vec4(bgColorR, bgColorG, bgColorB, 1.0);
     }
     /*if (iteration == maxIterations && drawSettings.debugB > 0.9) {
         resultColor = vec4(10.05, 10.05, 10.95, 1.0);
@@ -817,7 +821,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
             start = start+rayDirection*boundaryIntersection.x;
         }
     } else if (boundaryIntersection.x >= boundaryIntersection.y) {
-        return FragmentOutput(depthOutput, vec4(0.15, 0.0, 0.15, 1.0));
+        return FragmentOutput(depthOutput, vec4(bgColorR, bgColorG, bgColorB, 1.0));
     }
 
     let initStart = start;
@@ -838,7 +842,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         } else if (drawSettings.debugMode == DM_Octree2) {
             return FragmentOutput(depthOutput, debugModeOctree2(numIntersected, 0, maxIterations));
         }
-        return FragmentOutput(depthOutput, vec4(0.15, 0.0, 0.15, 1.0));
+        return FragmentOutput(depthOutput, vec4(bgColorR, bgColorG, bgColorB, 1.0));
     }
     //start = start+rayDirection*(closestAABB.x-10.0);
 

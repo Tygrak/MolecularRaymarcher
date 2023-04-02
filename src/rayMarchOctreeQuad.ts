@@ -37,6 +37,7 @@ class RayPipelineSetup {
     atomColorN: vec3 = vec3.fromValues(0.95, 0.05, 0.25);
     atomColorO: vec3 = vec3.fromValues(0.2, 0.05, 0.95);
     atomColorS: vec3 = vec3.fromValues(0.995, 0.995, 0.025);
+    bgColor: vec3 = vec3.fromValues(0.15, 0.0, 0.15);
 
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string) {
         this.format = format;
@@ -135,6 +136,9 @@ class RayPipelineSetup {
                     atomColorSr: this.atomColorS[0],
                     atomColorSg: this.atomColorS[1],
                     atomColorSb: this.atomColorS[2],
+                    bgColorR: this.bgColor[0],
+                    bgColorG: this.bgColor[1],
+                    bgColorB: this.bgColor[2],
                 }
             },
             primitive:{
@@ -359,9 +363,11 @@ export class RayMarchOctreeQuad {
         return preprocessedShader+"\n"+utilities+"\n"+shaderDefinitions;
     }
 
-    public LoadCustomAtomColors(atomColorC: vec3, atomColorN: vec3, atomColorO: vec3) {
+    public LoadCustomAtomColors(atomColorC: vec3, atomColorN: vec3, atomColorO: vec3, atomColorS: vec3, bgColor: vec3) {
         this.pipelineSetupRaymarch.atomColorC = atomColorC;
         this.pipelineSetupRaymarch.atomColorN = atomColorN;
         this.pipelineSetupRaymarch.atomColorO = atomColorO;
+        this.pipelineSetupRaymarch.atomColorS = atomColorS;
+        this.pipelineSetupRaymarch.bgColor = bgColor;
     }
 }
