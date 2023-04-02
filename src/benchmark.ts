@@ -14,7 +14,7 @@ export class Benchmarker {
         this.InitializePositions();
     }
 
-    private InitializePositions() {
+    public InitializePositions() {
         this.positions = [];
         for (let z = -1; z < 2; z += 2) {
             for (let y = -1; y < 2; y += 2) {

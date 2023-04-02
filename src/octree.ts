@@ -93,7 +93,7 @@ export class Octree {
         let t0 = performance.now();
         this.BuildTree(atomsCopy, margin);
         let t1 = performance.now();
-        console.log("Built octree in: " + (t1-t0) + "ms (layers: " + this.layers + ", atoms: " + atoms.length + ", irregular: " + this.irregular + ")");
+        console.log("Built octree in: " + (t1-t0) + "ms (layers: " + this.layers + ", atoms: " + atoms.length + ", irregular: " + this.irregular  + ", kdtreeEsque: " + this.irregular + ")");
     }
 
     private BuildTree(atoms: Atom[], margin: number) {

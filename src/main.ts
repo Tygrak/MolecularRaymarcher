@@ -526,6 +526,16 @@ async function Initialize() {
             console.log("Can't benchmark without timestamps :(");
             return;
         }
+        if (dataSelection.value == "1cqw") {
+            benchmarker.distanceFromOrigin = 50;
+            benchmarker.InitializePositions();
+        } else if (dataSelection.value == "1aon") {
+            benchmarker.distanceFromOrigin = 250;
+            benchmarker.InitializePositions();
+        } else {
+            benchmarker.distanceFromOrigin = vec3.distance(camera.eye, camera.center);
+            benchmarker.InitializePositions();
+        }
         benchmarker.Start();
     }
 
