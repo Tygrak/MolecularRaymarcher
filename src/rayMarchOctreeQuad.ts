@@ -209,8 +209,8 @@ class RayPipelineSetup {
         return {uniformBindGroup, atomsBindGroup, drawSettingsBindGroup};
     }
 
-    public LoadAtoms(device: GPUDevice, structure: Structure, margins: number, makeIrregularOctree: boolean = true, octreeLayers: number = 4, automaticOctreeSize: boolean = true) {
-        let tree: Octree = new Octree(structure.atoms, octreeLayers, margins, makeIrregularOctree, automaticOctreeSize);
+    public LoadAtoms(device: GPUDevice, structure: Structure, margins: number, makeKdesqueOctree: boolean = false,  makeIrregularOctree: boolean = true, octreeLayers: number = 4, automaticOctreeSize: boolean = true) {
+        let tree: Octree = new Octree(structure.atoms, octreeLayers, margins, makeKdesqueOctree, makeIrregularOctree, automaticOctreeSize);
         console.log(tree);
         this.treeLayers = tree.layers;
         this.atomsCount = tree.tree.length;
@@ -272,6 +272,7 @@ export class RayMarchOctreeQuad {
     kSmoothminScale: number = 0.8;
     octreeMargins: number = 2.05;
     loadedAtoms: number = 0;
+    makeKdesqueOctree: boolean = false;
     makeIrregularOctree: boolean = true;
     automaticOctreeSize: boolean = true;
     octreeLayers: number = 4;
@@ -296,7 +297,7 @@ export class RayMarchOctreeQuad {
 
     public LoadAtoms(device: GPUDevice, structure: Structure) {
         this.loaded = true;
-        this.pipelineSetupRaymarch.LoadAtoms(device, structure, this.octreeMargins, this.makeIrregularOctree, this.octreeLayers, this.automaticOctreeSize);
+        this.pipelineSetupRaymarch.LoadAtoms(device, structure, this.octreeMargins, this.makeKdesqueOctree, this.makeIrregularOctree, this.octreeLayers, this.automaticOctreeSize);
         this.loadedAtoms = structure.atoms.length;
     }
 

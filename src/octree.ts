@@ -59,9 +59,10 @@ export class Octree {
     bins: OctreeBin[];
     layers: number;
     irregular: boolean;
+    kdTreeEsque: boolean = true;
     debugLogsEnabled: boolean = false;
 
-    constructor(atoms: Atom[], layers: number, margin: number = 1.5, makeIrregular = false, automaticOctreeSize = false) {
+    constructor(atoms: Atom[], layers: number, margin: number = 1.5, makeKdEsque = false, makeIrregular = false, automaticOctreeSize = false) {
         this.limits = this.CalculateLimitsForAtoms(atoms, margin);
         if (automaticOctreeSize) {
             layers = 2;
@@ -70,10 +71,14 @@ export class Octree {
             while ((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin > 1.0) {
                 layers++;
                 console.log((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin);
+                if (makeKdEsque) {
+                   smallestSize -= 0.15;
+                }
             }
         }
         this.layers = layers;
         this.irregular = makeIrregular;
+        this.kdTreeEsque = makeKdEsque;
         if (atoms.length > 100000 && makeIrregular == true) {
             this.irregular = false;
             console.log("Forcing octree to be regular. (number of atoms: " + atoms.length + ")");
@@ -94,7 +99,9 @@ export class Octree {
     private BuildTree(atoms: Atom[], margin: number) {
         atoms = atoms.sort((a, b) => (a.x < b.x ? -1 : 1));
         let limits = this.limits;
-        if (this.irregular) {
+        if (this.kdTreeEsque) {
+            this.bins.push(...this.MakeKdBinsFromLimits(limits.minLimits, limits.maxLimits, limits.center, margin, atoms, 0));
+        } else if (this.irregular) {
             this.bins.push(...this.FindOptimalBinsFromLimits(limits.minLimits, limits.maxLimits, limits.center, margin, atoms, 0, false));
         } else {
             this.bins.push(...this.MakeBinsFromLimitsUsingCenter(limits.minLimits, limits.maxLimits, limits.center, margin, atoms, 0, false));
@@ -109,7 +116,13 @@ export class Octree {
             let end = this.GetLayerEnd(layer);
             for (let layerBin = start; layerBin < end; layerBin++) {
                 const b = this.bins[layerBin];
-                if (this.irregular && layer <= 2) {
+                if (this.kdTreeEsque) {
+                    if (layer == this.layers-1) {
+                        this.bins.push(...this.MakeBinsFromLimitsUsingCenter(b.min, b.max, b.Center(), margin, atoms, layer, true));
+                    } else {
+                        this.bins.push(...this.MakeKdBinsFromLimits(b.min, b.max, b.Center(), margin, atoms, layer));
+                    }
+                } else if (this.irregular && layer <= 2) {
                     if (layer == this.layers-1) {
                         this.bins.push(...this.FindOptimalBinsFromLimits(b.min, b.max, b.Center(), margin, atoms, layer, true));
                     } else {
@@ -157,12 +170,93 @@ export class Octree {
         return bins;
     }
 
+    private MakeKdBinsFromLimits(min: vec3, max: vec3, center: vec3, margin: number, atoms: Atom[], layer: number) {
+        let bins: OctreeBin[] = [];
+        let parentBin = new OctreeBin(min[0], min[1], min[2], max[0], max[1], max[2]);
+        bins = this.SplitKdBin(parentBin, margin, atoms, layer, 0);
+        let bins2 = [];
+        for (let i = 0; i < bins.length; i++) {
+            bins2.push(...this.SplitKdBin(bins[i], margin, atoms, layer, 1));
+        }
+        let bins3 = [];
+        for (let i = 0; i < bins2.length; i++) {
+            bins3.push(...this.SplitKdBin(bins2[i], margin, atoms, layer, 2));
+        }
+        return bins3;
+    }
+
+    private SplitKdBin(parentBin: OctreeBin, margin: number, atoms: Atom[], layer: number, dim: number) {
+        let bins: OctreeBin[] = [];
+        let insideAtoms: Atom[] = [];
+        //todo: optimize
+        for (let i = atoms.length-1; i >= 0; i--) {
+            if (parentBin.IsAtomInsideWithMargins(atoms[i], margin)) {
+                insideAtoms.push(atoms[i]);
+            }
+        }
+        if (this.irregular && layer <= 2) {
+            let resultMin = vec3.copy(vec3.create(), parentBin.max);
+            let resultMax = vec3.copy(vec3.create(), parentBin.min);
+            for (let i = insideAtoms.length-1; i >= 0; i--) {
+                for (let dim = 0; dim < 3; dim++) {
+                    resultMin[dim] = Math.min(insideAtoms[i].GetPosition()[dim], resultMin[dim]);
+                    resultMax[dim] = Math.max(insideAtoms[i].GetPosition()[dim], resultMax[dim]);
+                }
+            }
+            for (let dim = 0; dim < 3; dim++) {
+                resultMin[dim] = Math.max(parentBin.min[dim], resultMin[dim]-margin);
+                resultMax[dim] = Math.min(parentBin.max[dim], resultMax[dim]+margin);
+            }
+            parentBin.min = resultMin;
+            parentBin.max = resultMax;
+            if (resultMax == parentBin.min) {
+                resultMax = resultMin;
+            }
+        }
+        if (dim == 0) {
+            insideAtoms = insideAtoms.sort((a, b) => (a.x < b.x ? -1 : 1));
+        } else if (dim == 1) {
+            insideAtoms = insideAtoms.sort((a, b) => (a.y < b.y ? -1 : 1));
+        } else {
+            insideAtoms = insideAtoms.sort((a, b) => (a.z < b.z ? -1 : 1));
+        }
+        if (insideAtoms.length <= 0) {
+            bins.push(new OctreeBin(-1000000,-1000000, -1000000, -1000000, -1000000, -1000000));
+            bins.push(new OctreeBin(-1000000,-1000000, -1000000, -1000000, -1000000, -1000000));
+            return bins;
+        }
+        let middle = Math.floor(insideAtoms.length/2);
+        let bin = new OctreeBin(parentBin.min[0], parentBin.min[1], parentBin.min[2], parentBin.max[0], parentBin.max[1], parentBin.max[2]);
+        bin.layer = layer;
+        if (dim == 0) {
+            bin.max[0] = insideAtoms[middle].x;
+        } else if (dim == 1) {
+            bin.max[1] = insideAtoms[middle].y;
+        } else {
+            bin.max[2] = insideAtoms[middle].z;
+        }
+        bin.atomsInChildNodes = middle;
+        bins.push(bin);
+        bin = new OctreeBin(parentBin.min[0], parentBin.min[1], parentBin.min[2], parentBin.max[0], parentBin.max[1], parentBin.max[2]);
+        bin.layer = layer;
+        if (dim == 0) {
+            bin.min[0] = insideAtoms[middle].x;
+        } else if (dim == 1) {
+            bin.min[1] = insideAtoms[middle].y;
+        } else {
+            bin.min[2] = insideAtoms[middle].z;
+        }
+        bin.atomsInChildNodes = atoms.length-middle;
+        bins.push(bin);
+        return bins;
+    }
+
     private binarySearch(atoms: Atom[], targetX: number): number{
         let left: number = 0;
         let right: number = atoms.length - 1;
       
         let mid: number = Math.floor((left + right) / 2);
-        while (left <= right) {
+        while (left <= right && (left+right) > 0) {
             mid = Math.floor((left + right) / 2);
             if (atoms[mid-1].x > targetX && atoms[mid].x <= targetX) {
                 return mid;

@@ -28,6 +28,7 @@ const sliderKSmoothminScale = document.getElementById("kSmoothminScale") as HTML
 const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
 const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
+const makeKdOctreeCheckbox = document.getElementById("makeKdOctreeCheckbox") as HTMLInputElement;
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
 const automaticOctreeSizeCheckbox = document.getElementById("automaticOctreeSizeCheckbox") as HTMLInputElement;
 const renderOnlyMovementCheckbox = document.getElementById("renderOnlyMovementCheckbox") as HTMLInputElement;
@@ -470,6 +471,7 @@ async function Initialize() {
             impostorRenderer1aon.LoadAtoms(device, structure1aon);
             
             rayMarchQuadOct1aon = new RayMarchOctreeQuad(device, gpu.format);
+            rayMarchQuadOct1aon.makeKdesqueOctree = makeKdOctreeCheckbox.checked;
             rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             regenerateOctree();
             ReloadShaders();
@@ -505,6 +507,7 @@ async function Initialize() {
             impostorRendererLoaded.LoadAtoms(device, structureLoaded);
             rayMarchQuadOctLoaded = new RayMarchOctreeQuad(device, gpu.format, currShaderCode);
             rayMarchQuadOctLoaded.octreeLayers = parseInt(octreeLayersSlider.value);
+            rayMarchQuadOctLoaded.makeKdesqueOctree = makeKdOctreeCheckbox.checked;
             rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
             rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
             rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
@@ -693,17 +696,20 @@ function regenerateOctree() {
     let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
     rayMarchQuadOct1cqw.octreeLayers = parseInt(octreeLayersSlider.value);
     rayMarchQuadOct1cqw.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
+    rayMarchQuadOct1cqw.makeKdesqueOctree = makeKdOctreeCheckbox.checked;
     rayMarchQuadOct1cqw.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
     rayMarchQuadOct1cqw.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
     rayMarchQuadOct1cqw.LoadAtoms(device, structure1cqw);
     if (dataSelection.value == "1aon") {
         rayMarchQuadOct1aon.octreeLayers = parseInt(octreeLayersSlider.value);
+        rayMarchQuadOct1aon.makeKdesqueOctree = makeKdOctreeCheckbox.checked;
         rayMarchQuadOct1aon.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
         rayMarchQuadOct1aon.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
         rayMarchQuadOct1aon.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
         rayMarchQuadOct1aon.LoadAtoms(device, structure1aon);
     } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
         rayMarchQuadOctLoaded.octreeLayers = parseInt(octreeLayersSlider.value);
+        rayMarchQuadOctLoaded.makeKdesqueOctree = makeKdOctreeCheckbox.checked;
         rayMarchQuadOctLoaded.makeIrregularOctree = makeIrregularOctreeCheckbox.checked;
         rayMarchQuadOctLoaded.automaticOctreeSize = automaticOctreeSizeCheckbox.checked;
         rayMarchQuadOctLoaded.octreeMargins = 0.2+sizeScale+kSmoothminScale*1.005;
@@ -711,6 +717,10 @@ function regenerateOctree() {
     }
     queueFullRender();
 }
+
+makeKdOctreeCheckbox.addEventListener('change', function(){
+    regenerateOctree();
+});
 
 makeIrregularOctreeCheckbox.addEventListener('change', function(){
     regenerateOctree();
