@@ -79,7 +79,7 @@ export class Octree {
         this.layers = layers;
         this.irregular = makeIrregular;
         this.kdTreeEsque = makeKdEsque;
-        if (atoms.length > 100000 && makeIrregular == true) {
+        if (atoms.length > 100000 && makeIrregular == true && makeKdEsque == false) {
             this.irregular = false;
             console.log("Forcing octree to be regular. (number of atoms: " + atoms.length + ")");
         }
@@ -173,15 +173,28 @@ export class Octree {
     private MakeKdBinsFromLimits(min: vec3, max: vec3, center: vec3, margin: number, atoms: Atom[], layer: number) {
         let bins: OctreeBin[] = [];
         let parentBin = new OctreeBin(min[0], min[1], min[2], max[0], max[1], max[2]);
-        bins = this.SplitKdBin(parentBin, margin, atoms, layer, 0);
+        let start = this.binarySearch(atoms, parentBin.max[0]+margin);
+        let insideAtoms: Atom[] = [];
+        for (let i = start; i >= 0; i--) {
+            if (atoms[i].x < parentBin.min[0]-margin) {
+                break;
+            }
+            if (parentBin.IsAtomInsideWithMargins(atoms[i], margin)) {
+                insideAtoms.push(atoms[i]);
+            }
+        }
+        bins = this.SplitKdBin(parentBin, margin, insideAtoms, layer, 0);
         let bins2 = [];
         for (let i = 0; i < bins.length; i++) {
-            bins2.push(...this.SplitKdBin(bins[i], margin, atoms, layer, 1));
+            bins2.push(...this.SplitKdBin(bins[i], margin, insideAtoms, layer, 1));
         }
         let bins3 = [];
         for (let i = 0; i < bins2.length; i++) {
-            bins3.push(...this.SplitKdBin(bins2[i], margin, atoms, layer, 2));
+            bins3.push(...this.SplitKdBin(bins2[i], margin, insideAtoms, layer, 2));
         }
+        bins3.sort((a, b) => (a.Center()[0] < b.Center()[0] ? -1 : 1));
+        bins3.sort((a, b) => (a.Center()[1] < b.Center()[1] ? -1 : 1));
+        bins3.sort((a, b) => (a.Center()[2] < b.Center()[2] ? -1 : 1));
         return bins3;
     }
 
