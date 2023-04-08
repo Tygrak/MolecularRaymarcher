@@ -580,6 +580,8 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                         return debugModeOctree2(numIntersected, iteration, maxIterations);
                     } else if (drawSettings.debugMode == DM_StackSteps) {
                         return debugModeSteps(stackPos, stackSize);
+                    } else if (drawSettings.debugMode == DM_SmoothminBoundaries) {
+                        return vec4(0.65, 0.1, 0.45, 1.0);
                     }
                     if (stackPos == stackSize && drawSettings.debugB > 0.5) {
                         return vec4(10.15, 10.0, 0.15, 1.0);
@@ -674,6 +676,8 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         return debugModeSteps(stackPos, stackSize);
     } else if (drawSettings.debugMode == DM_RaymarchedAtoms) {
         return debugModeRaymarchedAtoms(raymarchedAtoms);
+    } else if (drawSettings.debugMode == DM_SmoothminBoundaries) {
+        return resultColor*distanceFade;
     } else if (drawSettings.debugMode == DM_TToEnd) {
         return debugModeTEnd(t, end);
     } else if (drawSettings.debugMode == DM_AllStepsDistance) {

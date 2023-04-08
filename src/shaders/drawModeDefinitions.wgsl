@@ -11,14 +11,15 @@ const DM_Normals = 101;
 const DM_Depth = 102;
 const DM_Iterations = 103;
 const DM_StackSteps = 104;
-const DM_RaymarchedAtoms = 104;
 const DM_FirstStepDistance = 105;
 const DM_AllStepsDistance = 106;
 const DM_TToEnd = 107;
+const DM_RaymarchedAtoms = 108;
 const DM_Octree1 = 111;
 const DM_Octree2 = 112;
 const DM_Octree3 = 113;
 const DM_DebugCombined = 119;
+const DM_SmoothminBoundaries = 150;
 
 const DM_BlankStackPos0 = 130;
 const DM_BlankStackPos1 = 131;
