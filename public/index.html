@@ -157,6 +157,10 @@
                <div class="slidecontainer">
                   <label><input type="range" min="2" max="6" step="1" value="4" class="slider" id="octreeLayers">Octree Layers</label>
                </div>
+               <label>
+                  <input id="benchmarkDistance" type="number" min="0" max="10000" step="0.01" name="options" value="0.0">
+                  Benchmark Distance
+               </label>
                <br>    
                <input type="file" id="shaderFileInput" name="shaderFileInput" accept=".wgsl">
                <br>  
@@ -204,6 +208,10 @@
                   </label>
                   <br>
                </div>
+               <!--<button class="collapsible" onclick="ToggleBenchmarkOptions(this)">Benchmark Options</button>
+               <div class="content" id="benchmarkOptions">
+                  
+               </div>-->
                <button id="createUrlButton">Create Url Button</button>
                <div>
                   <p id="urlResult"></p>
@@ -227,6 +235,12 @@
       function ToggleColorOptions(button){
          button.classList.toggle('active');
          let content = document.getElementById("colorOptions");
+         content.classList.toggle("opened");
+      };
+      
+      function ToggleBenchmarkOptions(button){
+         button.classList.toggle('active');
+         let content = document.getElementById("benchmarkOptions");
          content.classList.toggle("opened");
       };
    </script>

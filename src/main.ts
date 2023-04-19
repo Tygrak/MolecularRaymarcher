@@ -42,6 +42,8 @@ const sliderLightRotation = document.getElementById("lightRotation") as HTMLInpu
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
+const inputBenchmarkDistance = document.getElementById("benchmarkDistance") as HTMLInputElement;
+
 const regenerateOctreeButton = document.getElementById("regenerateOctreeButton") as HTMLButtonElement;
 const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputElement;
 //const shaderUtilitiesFileInput = document.getElementById("shaderUtilitiesFileInput") as HTMLInputElement;
@@ -534,11 +536,27 @@ async function Initialize() {
         if (dataSelection.value == "1cqw") {
             benchmarker.distanceFromOrigin = 50;
             benchmarker.InitializePositions();
+            benchmarker.moleculeName = "1cqw";
         } else if (dataSelection.value == "1aon") {
             benchmarker.distanceFromOrigin = 250;
             benchmarker.InitializePositions();
+            benchmarker.moleculeName = "1aon";
         } else {
             benchmarker.distanceFromOrigin = vec3.distance(camera.eye, camera.center);
+            benchmarker.InitializePositions();
+            benchmarker.moleculeName = "loaded";
+            if (dataFileInput.files != null && dataFileInput.files.length > 0) {
+                benchmarker.moleculeName = dataFileInput.files![0].name;
+                if (dataFileInput.files![0].name.indexOf(".pdb") != -1) {
+                    benchmarker.moleculeName = dataFileInput.files![0].name.split(".pdb")[0];
+                }
+            }
+        }
+        benchmarker.canvasSizeX = gpu.canvas.width;
+        benchmarker.canvasSizeY = gpu.canvas.height;
+        let inputDistance = parseFloat(inputBenchmarkDistance.value);
+        if (inputDistance > 2) {
+            benchmarker.distanceFromOrigin = inputDistance;
             benchmarker.InitializePositions();
         }
         benchmarker.Start();

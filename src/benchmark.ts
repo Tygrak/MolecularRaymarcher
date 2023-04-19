@@ -2,12 +2,15 @@ import { vec2, vec3, mat4 } from 'gl-matrix';
 
 export class Benchmarker {
     frameTimes: number[] = [];
-    framesPerPosition: number = 60;
+    framesPerPosition: number = 100;
     currentFrame: number = 0;
     running: boolean = false;
     distanceFromOrigin: number = 50; 
     positions: vec3[];
     t0: number = 0;
+    canvasSizeX: number = 640;
+    canvasSizeY: number = 640;
+    moleculeName: string = "protein";
 
     constructor () {
         this.positions = [];
@@ -73,18 +76,48 @@ export class Benchmarker {
         }
         if (this.currentFrame >= this.framesPerPosition*this.positions.length) {
             this.running = false;
-            console.log("Benchmark finished.\n Total average ms: " + this.frameTimes.reduce((a, b) => a+b)/this.frameTimes.length);
-            let t1 = performance.now();
-            console.log("Total benchmark time: " + (t1-this.t0) + "ms");
-            for (let p = 0; p < this.positions.length; p++) {
-                let sum = 0;
-                for (let i = p*this.framesPerPosition; i < (p+1)*this.framesPerPosition; i++) {
-                    sum += this.frameTimes[i];
-                }
-                let posString = this.positions[p][0].toFixed(3)+","+this.positions[p][1].toFixed(3)+","+this.positions[p][2].toFixed(3);
-                console.log("Position " + p + " (" + posString + ") average ms: " + sum/this.framesPerPosition);
-            }
-            //console.log(this.frameTimes);
+            this.PrintResults();
         }
+    }
+
+    public PrintResults() {
+        let total = this.frameTimes.reduce((a, b) => a+b);
+        console.log("Benchmark finished.\n Total average ms: " + total/this.frameTimes.length);
+        let t1 = performance.now();
+        //console.log("Total benchmark time: " + (t1-this.t0) + "ms");
+        for (let p = 0; p < this.positions.length; p++) {
+            let sum = 0;
+            for (let i = p*this.framesPerPosition; i < (p+1)*this.framesPerPosition; i++) {
+                sum += this.frameTimes[i];
+            }
+            let posString = this.positions[p][0].toFixed(3)+","+this.positions[p][1].toFixed(3)+","+this.positions[p][2].toFixed(3);
+            //console.log("Position " + p + " (" + posString + ") average ms: " + sum/this.framesPerPosition);
+        }
+        let table = "";
+        table += "\\hline\n";
+        table += "\\multicolumn{3}{|c|}{"+this.moleculeName+" ("+this.canvasSizeX+"x"+this.canvasSizeY+")}\\\\\n";
+        table += "\\hline\n";
+        table += "& Average Time & Total Time \\\\\n";
+        table += "\\hline\n";
+        for (let p = 0; p < this.positions.length; p++) {
+            let sum = 0;
+            for (let i = p*this.framesPerPosition; i < (p+1)*this.framesPerPosition; i++) {
+                sum += this.frameTimes[i];
+            }
+            if (p < 8) {
+                table += "Corner " + (p+1) + " & ";
+            } else {
+                table += "Face " + (p-7) + " & ";
+            }
+            table += (sum/this.framesPerPosition).toFixed(3) + "ms & ";
+            table += (sum).toFixed(3) + "ms\\\\\n";
+        }
+        table += "\\hline\n";
+        table += "Total & ";
+        table += (total/this.frameTimes.length).toFixed(3) + "ms & ";
+        table += (total).toFixed(3) + "ms\\\\\n";
+        table += "\\hline\n";
+        console.log(table);
+        //console.log(this.frameTimes);
     }
 }
