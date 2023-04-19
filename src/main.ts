@@ -38,7 +38,7 @@ const cartoonEdgesCheckbox = document.getElementById("cartoonEdgesCheckbox") as 
 const colorUsingChainCheckbox = document.getElementById("colorUsingChainCheckbox") as HTMLInputElement;
 const centerDistanceFadeCheckbox = document.getElementById("centerDistanceFadeCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
-const lightRotationSlider = document.getElementById("lightRotation") as HTMLInputElement;
+const sliderLightRotation = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
@@ -46,6 +46,9 @@ const regenerateOctreeButton = document.getElementById("regenerateOctreeButton")
 const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputElement;
 //const shaderUtilitiesFileInput = document.getElementById("shaderUtilitiesFileInput") as HTMLInputElement;
 const shaderLoadButton = document.getElementById("shaderLoadButton") as HTMLButtonElement;
+
+const createUrlButton = document.getElementById("createUrlButton") as HTMLButtonElement;
+const urlResultElement = document.getElementById("urlResult") as HTMLParagraphElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
 
@@ -83,7 +86,9 @@ let renderDirty: boolean = true;
 let fullRender: boolean = true;
 let nextFullRenderTime: number = 10000;
 
+//todo split application from rendering stuff -- somehow make all the ui be separate, create a core module that does everything
 async function Initialize() {
+    LoadUrlParameters();
     const gpu = await InitGPU(canvasSizeCheckbox.checked);
     device = gpu.device;
 
@@ -339,7 +344,7 @@ async function Initialize() {
             let sizeScale = parseFloat(sliderImpostorSizeScale.value);
             let kSmoothminScale = parseFloat(sliderKSmoothminScale.value);
             let debugMode = parseFloat(debugSelection.value);
-            let lightRotation = parseFloat(lightRotationSlider.value)*6.28;
+            let lightRotation = parseFloat(sliderLightRotation.value)*6.28;
             let lightDirection = vec3.normalize(vec3.create(), vec3.fromValues(0.05+Math.sin(lightRotation*2), 1*(0.3+(lightRotation/6-0.5)*2), 0.075+Math.cos(lightRotation*2)));
             if (dataSelection.value == "1cqw") {
                 rayMarchQuadOct1cqw.debugMode = debugMode;
@@ -728,6 +733,81 @@ function regenerateOctree() {
     queueFullRender();
 }
 
+function CreateUrlWithParameters() {
+    let url = window.location.href;
+    if (url.indexOf("?") != -1) {
+        url = url.split("?")[0];
+    }
+    const urlParams = new URLSearchParams();
+    urlParams.append("visMode", visualizationSelection.value);
+    urlParams.append("debugMode", debugSelection.value);
+    urlParams.append("debugA", sliderDebugA.value);
+    urlParams.append("debugB", sliderDebugB.value);
+    urlParams.append("atomSize", sliderImpostorSizeScale.value);
+    urlParams.append("smoothK", sliderKSmoothminScale.value);
+    urlParams.append("lightRot", sliderLightRotation.value);
+    urlParams.append("highlightMainChain", highlightMainChainCheckbox.value);
+    urlParams.append("allowResetRaymarch", allowResetRaymarchCheckbox.value);
+    urlParams.append("makeKdOctree", makeKdOctreeCheckbox.value);
+    urlParams.append("makeIrregularOctree", makeIrregularOctreeCheckbox.value);
+    urlParams.append("automaticOctreeSize", automaticOctreeSizeCheckbox.value);
+    urlParams.append("cartoonEdges", cartoonEdgesCheckbox.value);
+    urlParams.append("colorByChainNumber", colorUsingChainCheckbox.value);
+    urlParams.append("centerDistanceFade", centerDistanceFadeCheckbox.value);
+    urlResultElement.innerText = url+"?"+urlParams.toString();
+}
+
+function LoadUrlParameters() {
+    const queryString = window.location.search;
+    console.log(queryString);
+    const urlParams = new URLSearchParams(queryString);
+    if (urlParams.has("visMode")) {
+        visualizationSelection.value = urlParams.get("visMode")!;
+    }
+    if (urlParams.has("debugMode")) {
+        debugSelection.value = urlParams.get("debugMode")!;
+    }
+    if (urlParams.has("debugA")) {
+        sliderDebugA.value = urlParams.get("debugA")!;
+    }
+    if (urlParams.has("debugB")) {
+        sliderDebugB.value = urlParams.get("debugB")!;
+    }
+    if (urlParams.has("atomSize")) {
+        sliderImpostorSizeScale.value = urlParams.get("atomSize")!;
+    }
+    if (urlParams.has("smoothK")) {
+        sliderKSmoothminScale.value = urlParams.get("smoothK")!;
+    }
+    if (urlParams.has("lightRot")) {
+        sliderLightRotation.value = urlParams.get("lightRot")!;
+    }
+    if (urlParams.has("highlightMainChain")) {
+        highlightMainChainCheckbox.value = urlParams.get("highlightMainChain")!;
+    }
+    if (urlParams.has("allowResetRaymarch")) {
+        allowResetRaymarchCheckbox.value = urlParams.get("allowResetRaymarch")!;
+    }
+    if (urlParams.has("makeKdOctree")) {
+        makeKdOctreeCheckbox.value = urlParams.get("makeKdOctree")!;
+    }
+    if (urlParams.has("makeIrregularOctree")) {
+        makeIrregularOctreeCheckbox.value = urlParams.get("makeIrregularOctree")!;
+    }
+    if (urlParams.has("automaticOctreeSize")) {
+        automaticOctreeSizeCheckbox.value = urlParams.get("automaticOctreeSize")!;
+    }
+    if (urlParams.has("cartoonEdges")) {
+        cartoonEdgesCheckbox.value = urlParams.get("cartoonEdges")!;
+    }
+    if (urlParams.has("colorByChainNumber")) {
+        colorUsingChainCheckbox.value = urlParams.get("colorByChainNumber")!;
+    }
+    if (urlParams.has("centerDistanceFade")) {
+        centerDistanceFadeCheckbox.value = urlParams.get("centerDistanceFade")!;
+    }
+}
+
 makeKdOctreeCheckbox.addEventListener('change', function(){
     regenerateOctree();
 });
@@ -738,6 +818,10 @@ makeIrregularOctreeCheckbox.addEventListener('change', function(){
 
 regenerateOctreeButton.onclick = (e) => {
     regenerateOctree();
+}
+
+createUrlButton.onclick = (e) => {
+    CreateUrlWithParameters();
 }
 
 sliderDebugA.oninput = (e) => {
@@ -770,7 +854,7 @@ sliderImpostorSizeScale.oninput = (e) => {
 sliderKSmoothminScale.oninput = (e) => {
     queueFullRender();
 }
-lightRotationSlider.oninput = (e) => {
+sliderLightRotation.oninput = (e) => {
     queueFullRender();
 }
 
