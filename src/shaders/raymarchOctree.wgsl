@@ -474,6 +474,10 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                 numIntersected++;
                 if (i >= lastLayerStart) {
                     var closestT: f32 = miss.t;
+                    //#if DontRaytraceAtoms
+                    closestT = intersectionI.x;
+                    //#endif DontRaytraceAtoms
+                    //#ifnot DontRaytraceAtoms
                     for (var a: i32 = i32(bins.bins[i].start); a < i32(bins.bins[i].end); a++) {
                         let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 1);
                         numRaySphereIntersections++;
@@ -499,6 +503,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                             }
                         }
                     }
+                    //#endifnot DontRaytraceAtoms
                     if (closestT != miss.t) {
                         insertIntoSortedStack(closestT, i);
                     }
@@ -831,9 +836,10 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     let initStart = start;
 
     var closestAABB: vec3<f32>;
-    if (drawSettings.treeLayers == 4) {
+    //todo readd and benchmark
+    /*if (drawSettings.treeLayers == 4) {
         closestAABB = findIntersectingCells(start, rayDirection);
-    } else {
+    } else*/ {
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     

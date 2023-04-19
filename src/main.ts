@@ -37,6 +37,7 @@ const highlightMainChainCheckbox = document.getElementById("highlightMainChainCh
 const cartoonEdgesCheckbox = document.getElementById("cartoonEdgesCheckbox") as HTMLInputElement;
 const colorUsingChainCheckbox = document.getElementById("colorUsingChainCheckbox") as HTMLInputElement;
 const centerDistanceFadeCheckbox = document.getElementById("centerDistanceFadeCheckbox") as HTMLInputElement;
+const raytraceAtomsOptimCheckbox = document.getElementById("raytraceAtomsOptimCheckbox") as HTMLInputElement;
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const sliderLightRotation = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
@@ -590,6 +591,9 @@ async function Initialize() {
         }
         if (centerDistanceFadeCheckbox.checked) {
             preprocessFlags.push("UseCenterDistanceFade");
+        }
+        if (!raytraceAtomsOptimCheckbox.checked) {
+            preprocessFlags.push("DontRaytraceAtoms");
         }
         preprocessFlags.push(smoothminTypeSelection.value);
         let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
