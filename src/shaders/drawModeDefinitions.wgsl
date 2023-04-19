@@ -7,6 +7,8 @@ const DM_LitSpecular = 5;
 const DM_SemilitWithBase = 6;
 const DM_DefaultBright = 11;
 
+const DM_GroupStart_Debug = 100;
+
 const DM_Normals = 101;
 const DM_Depth = 102;
 const DM_Iterations = 103;
@@ -31,6 +33,7 @@ const DM_BlankStackPos6 = 136;
 const DM_BlankStackPos7 = 137;
 const DM_SkipStackPos0 = 139;
 
+const DM_GroupEnd_Debug = 199;
 
 const DM_GroupStart_Transparent = 300;
 const DM_Transparent1 = 301;

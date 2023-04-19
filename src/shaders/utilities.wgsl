@@ -562,3 +562,30 @@ fn debugModeGooch(resultColor: vec4<f32>, distanceFade: f32, normal: vec3<f32>, 
 	var c = mix(vec3(0.65, 0.05, 0.65), vec3(0.9, 0.9, 0.05), (ndotl+1)/2)*resultColor.xyz;
 	return vec4(c, 1.0)*(distanceFade);
 }
+
+
+
+fn debugModeColormap(debugMode: f32, value: f32) -> vec4<f32> {
+	if (debugMode == DM_Iterations) {
+		return colormap_hotmetal(value);
+	} else if (debugMode == DM_Octree1) {
+		return colormap_haze(value);
+	} else if (debugMode == DM_Octree2) {
+		return colormap_spectral(value);
+	} else if (debugMode == DM_Octree3) {
+		return colormap_spectral(value)/2+colormap_haze(value)/2;
+	} else if (debugMode == DM_DebugCombined) {
+		return colormap_spectral(value)/4+colormap_haze(value)/4;
+	} else if (debugMode == DM_StackSteps) {
+		return colormap_supernova(value);
+	} else if (debugMode == DM_Depth) {
+		return colormap_eosb(value);
+	} else if (debugMode == DM_AllStepsDistance) {
+		return colormap_eosb(value);
+	} else if (debugMode == DM_TToEnd) {
+		return colormap_temperature(value);
+	} else if (debugMode == DM_FirstStepDistance) {
+		return colormap_eosb(value);
+	}
+	return colormap_hotmetal(value);
+}

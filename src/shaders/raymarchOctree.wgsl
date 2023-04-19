@@ -585,6 +585,8 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
                         return debugModeOctree2(numIntersected, iteration, maxIterations);
                     } else if (drawSettings.debugMode == DM_StackSteps) {
                         return debugModeSteps(stackPos, stackSize);
+                    } else if (drawSettings.debugMode == DM_Iterations) {
+                        return debugModeIterations(iteration*5, maxIterations);
                     } else if (drawSettings.debugMode == DM_SmoothminBoundaries) {
                         return vec4(0.65, 0.1, 0.45, 1.0);
                     }
@@ -819,7 +821,13 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     // convert ray direction from normalized device coordinate to world coordinate
     let rayDirection: vec3<f32> = normalize((inverseVpMatrix * ndcRay).xyz);
     //let rayDirection : vec3<f32> = ndcRay.xyz;
-    start = cameraPos.xyz; 
+    start = cameraPos.xyz;
+
+    if (drawSettings.debugMode >= DM_GroupStart_Debug && drawSettings.debugMode < DM_GroupEnd_Debug) {
+        if (position.x >= 10 && position.x < 110 && position.y >= 4 && position.y <= 8) {
+            return FragmentOutput(depthOutput, debugModeColormap(drawSettings.debugMode, (position.x-1)/100.0));
+        }
+    }
     
     let margin = max(drawSettings.atomsScale, drawSettings.kSmoothminScale);
     let limitsSize = drawSettings.maxLimit.xyz-drawSettings.minLimit.xyz;
