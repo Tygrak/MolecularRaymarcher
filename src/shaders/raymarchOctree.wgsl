@@ -364,6 +364,19 @@ fn getFirstIndexUsingOrigin(origin: vec3<f32>, i: i32) -> i32 {
     }
 }
 
+fn getFirstIndexByDistance(origin: vec3<f32>) -> i32 {
+    var closest: i32 = -1;
+    var closestDistance: f32 = 100000.0;
+    for (var i : i32 = 0; i < 8; i++) {
+        let center = (bins.bins[i].min+bins.bins[i].max)/2;
+        let dist = distance(origin, center);
+        if (dist < closestDistance) {
+            closestDistance = dist;
+            closest = i;
+        }
+    }
+    return closest;
+}
 
 fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     var closestAABBintersection: vec3<f32> = vec3(-1.0);
@@ -397,15 +410,13 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
 											continue;
 										}
                                         if (hit.t < miss.t) {
+                                            //#ifnot DontSkipUsingRealHits
                                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
                                             if (closestRealHitT > realHit.t) {
                                                 closestRealHitAtom = a;
                                                 closestRealHitT = realHit.t;
-                                                //todo clean up
-                                                if (drawSettings.debugA < 0.15 || drawSettings.debugMode >= DM_GroupStart_Transparent) {
-                                                    closestRealHitT = 1000000;
-                                                }
                                             }
+                                            //#endifnot DontSkipUsingRealHits
                                             if (hit.t < closestT) {
                                                 closestT = hit.t;
                                             }
@@ -458,8 +469,18 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
     let currLayer = 0;
     var bv = 0;
     var binsStackNum = 0;
+    //#if FirstIndexBasedOnDistance
+    let closestId = getFirstIndexByDistance(origin);
+    binsStack[0] = closestId;
+    binsStackNum++;
+    //#endif FirstIndexBasedOnDistance
     for (var i : i32 = 0; i < 8; i++) {
         var firstId = getFirstIndexUsingOrigin(origin, i);
+        //#if FirstIndexBasedOnDistance
+        if (firstId == closestId) {
+            continue;
+        }
+        //#endif FirstIndexBasedOnDistance
         binsStack[binsStackNum] = firstId;
         binsStackNum++;
     }
@@ -485,6 +506,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                             continue;
                         }
                         if (hit.t < miss.t) {
+                            //#ifnot DontSkipUsingRealHits
                             let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
                             if (closestRealHitT > realHit.t) {
                                 closestRealHitAtom = a;
@@ -495,6 +517,7 @@ fn findIntersectingCellsStack(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f
                                     }
                                 }
                             }
+                            //#endifnot DontSkipUsingRealHits
                             if (hit.t < closestT) {
                                 closestT = hit.t;
                                 if (hit.t < intersectionI.x) {
@@ -823,15 +846,18 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     //let rayDirection : vec3<f32> = ndcRay.xyz;
     start = cameraPos.xyz;
 
+    //#if ShowDebugColorMap
     if (drawSettings.debugMode >= DM_GroupStart_Debug && drawSettings.debugMode < DM_GroupEnd_Debug) {
         if (position.x >= 10 && position.x < 110 && position.y >= 4 && position.y <= 8) {
             return FragmentOutput(depthOutput, debugModeColormap(drawSettings.debugMode, (position.x-1)/100.0));
         }
     }
+    //#endif ShowDebugColorMap
     
     let margin = max(drawSettings.atomsScale, drawSettings.kSmoothminScale);
     let limitsSize = drawSettings.maxLimit.xyz-drawSettings.minLimit.xyz;
     let limitsMax = max(max(limitsSize.x, limitsSize.y), limitsSize.z);
+    //#ifnot DontUseInitBoundaryOptimization
     let boundaryIntersection : vec2<f32> = aabbIntersection(start, rayDirection, 1.0/rayDirection, drawSettings.minLimit.xyz, drawSettings.maxLimit.xyz);
     if (boundaryIntersection.x < boundaryIntersection.y && boundaryIntersection.x > -30) {
         if (boundaryIntersection.x > 0) {
@@ -840,6 +866,7 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     } else if (boundaryIntersection.x >= boundaryIntersection.y) {
         return FragmentOutput(depthOutput, vec4(bgColorR, bgColorG, bgColorB, 1.0));
     }
+    //#endifnot DontUseInitBoundaryOptimization
 
     let initStart = start;
 
@@ -851,6 +878,15 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     
+    //todo add additionaler options with preprocessor FirstIndexBasedOnDistance and DontUseInitBoundaryOptimization
+    //#if FirstIndexBasedOnDistance
+    if (drawSettings.debugMode == DM_ClosestOctree) {
+        let index = getFirstIndexByDistance(initStart);
+        let center = (bins.bins[index].min+bins.bins[index].max)/2;
+        //return FragmentOutput(depthOutput, debugModeDepth(f32(index*5)*30));
+        return FragmentOutput(depthOutput, debugModeDepth(f32(index*5)*20+distance(center, start)*30));
+    }
+    //#endif FirstIndexBasedOnDistance
     if (drawSettings.debugMode == DM_Octree3) {
         return FragmentOutput(depthOutput, debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting));
     }

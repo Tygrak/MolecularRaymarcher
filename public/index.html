@@ -81,6 +81,7 @@
                   <option value="111">Octree1</option>
                   <option value="112">Octree2</option>
                   <option value="113">Octree3</option>
+                  <option value="118">ClosestOctree</option>
                   <option value="119">Debug</option>
                   <option value="139">SkipStackPos0</option>
 
@@ -144,6 +145,8 @@
                <br>
                <label><input id="raytraceAtomsOptimCheckbox" type="checkbox" name="options" value="fixed" checked>Raytrace Atoms Optim</label>
                <br>
+               <label><input id="skipUsingRealHitOptimCheckbox" type="checkbox" name="options" value="fixed" checked>Skip Using Realhit Optim</label>
+               <br>
                <label><input id="makeKdOctreeCheckbox" type="checkbox" name="options" value="fixed">Make Kd-Esque Octree</label>
                <br>
                <label><input id="makeIrregularOctreeCheckbox" type="checkbox" name="options" value="fixed" checked>Make Irregular Octree</label>
@@ -174,6 +177,8 @@
                <button id="shaderLoadButton">Shader Reload</button>
                <button class="collapsible" onclick="ToggleColorOptions(this)">Color Options</button>
                <div class="content" id="colorOptions">
+                  <label><input id="addDebugColormapCheckbox" type="checkbox" name="options" value="fixed">Add Debug Colormap</label>
+                  <br>
                   <label>
                      <input id="CAtomColorR" type="number" min="0" max="1" step="0.01" name="options" value="0.6" class="smallNumber">
                      <input id="CAtomColorG" type="number" min="0" max="1" step="0.01" name="options" value="0.9" class="smallNumber">

@@ -38,6 +38,10 @@ const cartoonEdgesCheckbox = document.getElementById("cartoonEdgesCheckbox") as 
 const colorUsingChainCheckbox = document.getElementById("colorUsingChainCheckbox") as HTMLInputElement;
 const centerDistanceFadeCheckbox = document.getElementById("centerDistanceFadeCheckbox") as HTMLInputElement;
 const raytraceAtomsOptimCheckbox = document.getElementById("raytraceAtomsOptimCheckbox") as HTMLInputElement;
+const addDebugColormapCheckbox = document.getElementById("addDebugColormapCheckbox") as HTMLInputElement;
+const skipUsingRealHitOptimCheckbox = document.getElementById("skipUsingRealHitOptimCheckbox") as HTMLInputElement;
+
+
 const octreeLayersSlider = document.getElementById("octreeLayers") as HTMLInputElement;
 const sliderLightRotation = document.getElementById("lightRotation") as HTMLInputElement;
 const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonElement;
@@ -594,6 +598,12 @@ async function Initialize() {
         }
         if (!raytraceAtomsOptimCheckbox.checked) {
             preprocessFlags.push("DontRaytraceAtoms");
+        }
+        if (addDebugColormapCheckbox.checked) {
+            preprocessFlags.push("ShowDebugColorMap");
+        }
+        if (!skipUsingRealHitOptimCheckbox.checked) {
+            preprocessFlags.push("DontSkipUsingRealHits");
         }
         preprocessFlags.push(smoothminTypeSelection.value);
         let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));

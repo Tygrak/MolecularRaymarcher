@@ -276,7 +276,7 @@ export class RayMarchOctreeQuad {
     makeIrregularOctree: boolean = true;
     automaticOctreeSize: boolean = true;
     octreeLayers: number = 4;
-    shaderPreprocessFlags: string[] = ["UseSmoothMinPoly2"];
+    shaderPreprocessFlags: string[] = ["UseSmoothMinPoly2", "FirstIndexBasedOnDistance"];
     lightDirection: vec3 = vec3.normalize(vec3.create(), vec3.fromValues(0.05, 1, 0.25));
     
     constructor (device: GPUDevice, format: GPUTextureFormat, shader: string = "", utilities: string = "") {

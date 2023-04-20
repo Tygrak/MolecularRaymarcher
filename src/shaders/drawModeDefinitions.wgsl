@@ -20,6 +20,7 @@ const DM_RaymarchedAtoms = 108;
 const DM_Octree1 = 111;
 const DM_Octree2 = 112;
 const DM_Octree3 = 113;
+const DM_ClosestOctree = 118;
 const DM_DebugCombined = 119;
 const DM_SmoothminBoundaries = 150;
 
