@@ -48,6 +48,8 @@ const dataLoadButton = document.getElementById("dataLoadButton") as HTMLButtonEl
 const dataFileInput = document.getElementById("dataFileInput") as HTMLInputElement;
 const benchmarkButton = document.getElementById("benchmarkButton") as HTMLButtonElement;
 const inputBenchmarkDistance = document.getElementById("benchmarkDistance") as HTMLInputElement;
+const fixedCanvasXInput = document.getElementById("fixedCanvasX") as HTMLInputElement;
+const fixedCanvasYInput = document.getElementById("fixedCanvasY") as HTMLInputElement;
 
 const regenerateOctreeButton = document.getElementById("regenerateOctreeButton") as HTMLButtonElement;
 const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputElement;
@@ -466,7 +468,13 @@ async function Initialize() {
     });
 
     canvasSizeCheckbox.addEventListener('change', function(){
-        //todo
+        if (canvasSizeCheckbox.checked) {
+            gpu.canvas.classList.add("fixedSize");
+            gpu.canvas.width = parseFloat(fixedCanvasXInput.value);
+            gpu.canvas.height = parseFloat(fixedCanvasYInput.value);
+        } else {
+            gpu.canvas.classList.remove("fixedSize");
+        }
         Reinitialize();
     });
 

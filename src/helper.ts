@@ -143,15 +143,14 @@ export function InitCanvas(useFixedSize: boolean) {
             if (useFixedSize) {
                 canvas.width  = Math.min(div.offsetWidth, 640);
                 canvas.height = Math.min(div.offsetHeight, 640);
+                canvas.classList.add("fixedSize");
             } else {
                 canvas.width  = div.offsetWidth;
                 canvas.height = div.offsetHeight;
             }
 
             function windowResize() {
-                if (useFixedSize) {
-                    canvas.width  = Math.min(div.offsetWidth, 640);
-                    canvas.height = Math.min(div.offsetHeight, 640);
+                if (canvas.classList.contains("fixedSize")) {
                 } else {
                     canvas.width  = div.offsetWidth;
                     canvas.height = div.offsetHeight;
