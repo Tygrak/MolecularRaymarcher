@@ -192,8 +192,16 @@ fn dAtomsInBinColor(p: vec3<f32>, binId: i32) -> SdfResult {
     for (var i : i32 = i32(bins.bins[binId].start); i < i32(bins.bins[binId].end); i++) {
         let d = dSphere(p, atoms.atoms[i].position, covalentRadius(atoms.atoms[i].number));
         let smin = opSMinColor(resDistance, d, drawSettings.kSmoothminScale);
+        
+        //#if DontUseSmoothColorBlending
+        if (resDistance > smin.x) {
+            resColor = getAtomColor(atoms.atoms[i].number);
+        }
+        //#endif DontUseSmoothColorBlending
         resDistance = smin.x;
+        //#ifnot DontUseSmoothColorBlending
         resColor = mix(resColor, getAtomColor(atoms.atoms[i].number), smin.y);
+        //#endifnot DontUseSmoothColorBlending
     }
     var result: SdfResult;
     result.distance = resDistance;
@@ -664,6 +672,9 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         //resultColor -= max(f32(accDist-(0.1+drawSettings.debugB*2)), 0.0)*vec4(0.425, 0.425, 0.425, 0);
     }
     //#endif UseCartoonEdges
+    //#if DontUseDistanceFade
+    distanceFade = 1.0;
+    //#endif DontUseDistanceFade
     //#if UseCenterDistanceFade
     distanceFade = distanceFade*mix(0.05, 1.0, saturate(0.01+pow(distance(pos, center)/min(cameraDistance, limitsMax*(drawSettings.debugB*0.95+0.15)), 1.525-1.495*drawSettings.debugA)));
     //#endif UseCenterDistanceFade

@@ -53,6 +53,7 @@ const fixedCanvasYInput = document.getElementById("fixedCanvasY") as HTMLInputEl
 
 const regenerateOctreeButton = document.getElementById("regenerateOctreeButton") as HTMLButtonElement;
 const shaderFileInput = document.getElementById("shaderFileInput") as HTMLInputElement;
+const shaderPreprocessorFlagsInput = document.getElementById("preprocessorFlags") as HTMLInputElement;
 //const shaderUtilitiesFileInput = document.getElementById("shaderUtilitiesFileInput") as HTMLInputElement;
 const shaderLoadButton = document.getElementById("shaderLoadButton") as HTMLButtonElement;
 
@@ -592,6 +593,8 @@ async function Initialize() {
     function ReloadShaders() {
         let t0 = performance.now();
         let preprocessFlags: string[] = [];
+        let additionalFlags = shaderPreprocessorFlagsInput.value.split(/[,.;/ ]/);
+        preprocessFlags.push(...additionalFlags);
         if (!highlightMainChainCheckbox.checked) {
             preprocessFlags.push("DontHighlightMainChain");
         }
