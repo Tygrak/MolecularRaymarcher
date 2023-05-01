@@ -572,6 +572,17 @@ async function Initialize() {
                 }
             }
         }
+        benchmarker.moleculeName += " - ";
+        if (makeIrregularOctreeCheckbox.checked) {
+            benchmarker.moleculeName += "Irregular";
+        } else {
+            benchmarker.moleculeName += "Regular";
+        }
+        if (makeKdOctreeCheckbox.checked) {
+            benchmarker.moleculeName += " Kdesque";
+        } else {
+            benchmarker.moleculeName += " Octree";
+        }
         benchmarker.canvasSizeX = gpu.canvas.width;
         benchmarker.canvasSizeY = gpu.canvas.height;
         let inputDistance = parseFloat(inputBenchmarkDistance.value);
