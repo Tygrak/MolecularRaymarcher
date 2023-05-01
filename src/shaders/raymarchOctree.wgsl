@@ -588,7 +588,10 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
 		let d = dAtoms(pos);
         //#if UseCartoonEdges
-        accDist += pow(d, 0.25+drawSettings.debugA*1.05);
+        accDist += pow(d, 0.25+drawSettings.debugA*0.95);
+        if (accDist > 4) {
+            break;
+        }
         //accDist += pow(d, 0.7969);
         //#endif UseCartoonEdges
 		t = t+d;

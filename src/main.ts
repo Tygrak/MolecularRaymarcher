@@ -96,6 +96,8 @@ let renderDirty: boolean = true;
 let fullRender: boolean = true;
 let nextFullRenderTime: number = 10000;
 
+let drawAxisMesh: boolean = false;
+
 //todo split application from rendering stuff -- somehow make all the ui be separate, create a core module that does everything
 async function Initialize() {
     LoadUrlParameters();
@@ -320,7 +322,9 @@ async function Initialize() {
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 structureLoaded.DrawStructure(renderPass, percentageShown);
             }
-            axisMesh.DrawStructure(renderPass, mvpMatrix);
+            if (drawAxisMesh) {
+                axisMesh.DrawStructure(renderPass, mvpMatrix);
+            }
         } else if (visualizationSelection.value == "impostor") {
             const vp = CreateViewProjection(gpu.canvas.width/gpu.canvas.height, cameraPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
             let vMatrix = mat4.clone(vp.viewMatrix);
@@ -345,7 +349,9 @@ async function Initialize() {
                 renderPass.setBindGroup(0, basicUniformBindGroup);
                 structureLoaded.DrawStructure(renderPass, 1, true);
             }
-            axisMesh.DrawStructure(renderPass, mvpMatrix);
+            if (drawAxisMesh) {
+                axisMesh.DrawStructure(renderPass, mvpMatrix);
+            }
         } else if (visualizationSelection.value == "raymarchoctree") {
             let inverseVp = mat4.create();
             mat4.invert(inverseVp, vpMatrix);
