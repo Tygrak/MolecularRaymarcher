@@ -892,7 +892,6 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     
-    //todo add additionaler options with preprocessor FirstIndexBasedOnDistance and DontUseInitBoundaryOptimization
     //#if FirstIndexBasedOnDistance
     if (drawSettings.debugMode == DM_ClosestOctree) {
         let index = getFirstIndexByDistance(initStart);
@@ -901,15 +900,14 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
         return FragmentOutput(depthOutput, debugModeDepth(f32(index*5)*20+distance(center, start)*30));
     }
     //#endif FirstIndexBasedOnDistance
-    if (drawSettings.debugMode == DM_Octree3) {
+    if (drawSettings.debugMode == DM_Octree1) {
+        return FragmentOutput(depthOutput, debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms));
+    } else if (drawSettings.debugMode == DM_Octree2) {
+        return FragmentOutput(depthOutput, debugModeOctree2(numIntersected, 0, maxIterations));
+    } else if (drawSettings.debugMode == DM_Octree3) {
         return FragmentOutput(depthOutput, debugModeOctree3(numRaySphereIntersections, numIntersected, intersecting));
     }
     if (intersecting == -1) {
-        if (drawSettings.debugMode == DM_Octree1) {
-            return FragmentOutput(depthOutput, debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms));
-        } else if (drawSettings.debugMode == DM_Octree2) {
-            return FragmentOutput(depthOutput, debugModeOctree2(numIntersected, 0, maxIterations));
-        }
         return FragmentOutput(depthOutput, vec4(bgColorR, bgColorG, bgColorB, 1.0));
     }
     //start = start+rayDirection*(closestAABB.x-10.0);

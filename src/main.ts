@@ -600,6 +600,7 @@ async function Initialize() {
         let t0 = performance.now();
         let preprocessFlags: string[] = [];
         let additionalFlags = shaderPreprocessorFlagsInput.value.split(/[,.;/ ]/);
+        additionalFlags = additionalFlags.filter(x => !(/^\s*$/.test(x)));
         preprocessFlags.push(...additionalFlags);
         if (!highlightMainChainCheckbox.checked) {
             preprocessFlags.push("DontHighlightMainChain");
@@ -696,11 +697,21 @@ async function Initialize() {
                 camera.eye = [0, 0, 0];
                 camera.up = [0, 1, 0];
                 camera.center = [0, 0, -distance];
+            } else if (keyEvent.code == "Numpad2") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 1, 0];
+                camera.center = [0, 0, distance];
             } else if (keyEvent.code == "Numpad3") {
                 let distance = vec3.distance(camera.eye, camera.center);
                 camera.eye = [0, 0, 0];
                 camera.up = [0, 1, 0];
                 camera.center = [-distance, 0, 0];
+            } else if (keyEvent.code == "Numpad4") {
+                let distance = vec3.distance(camera.eye, camera.center);
+                camera.eye = [0, 0, 0];
+                camera.up = [0, 1, 0];
+                camera.center = [distance, 0, 0];
             } else if (keyEvent.code == "Numpad5") {
                 let distance = vec3.distance(camera.eye, camera.center);
                 camera.eye = [0, 0, 0];

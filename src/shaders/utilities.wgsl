@@ -381,7 +381,7 @@ fn debugModeOctree2(numIntersected: i32, iteration: i32, maxIterations: i32) -> 
 	if (iteration > 0) {
 		rAdd = 0.2;
 	}
-	return vec4(0.0, -(f32(iteration)/f32(maxIterations)+rAdd), 0.0, 0.0)+colormap_spectral(f32(numIntersected)/150);
+	return colormap_spectral(f32(numIntersected)/150);
 }
 
 fn debugModeOctree3(numRaySphereIntersections: i32, numIntersected: i32, intersecting: i32) -> vec4<f32> {
