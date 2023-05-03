@@ -553,6 +553,10 @@ async function Initialize() {
             console.log("Can't benchmark without timestamps :(");
             return;
         }
+        if (benchmarker.running) {
+            benchmarker.Stop();
+            return;
+        }
         if (dataSelection.value == "1cqw") {
             benchmarker.distanceFromOrigin = 50;
             benchmarker.InitializePositions();

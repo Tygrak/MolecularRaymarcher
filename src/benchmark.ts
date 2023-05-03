@@ -44,6 +44,14 @@ export class Benchmarker {
         this.currentFrame = 0;
         this.t0 = performance.now();
     }
+    
+    public Stop() {
+        this.PrintResults();
+        this.running = false;
+        this.frameTimes = [];
+        this.currentFrame = 0;
+        this.t0 = performance.now();
+    }
 
     public GetFramePosition() {
         let position = Math.floor(this.currentFrame/this.framesPerPosition);
@@ -122,6 +130,7 @@ export class Benchmarker {
         table += (total).toFixed(3) + "ms\\\\\n";
         table += "\\hline\n";
         console.log(table);
+        console.log(this.moleculeName+" ("+this.canvasSizeX+"x"+this.canvasSizeY+"): "+(total/this.frameTimes.length).toFixed(3) + "ms");
         //console.log(this.frameTimes);
     }
 
