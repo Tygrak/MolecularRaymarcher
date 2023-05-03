@@ -67,13 +67,15 @@ export class Octree {
         if (automaticOctreeSize) {
             layers = 2;
             let smallestSize = Math.min(this.limits.size[0], Math.min(this.limits.size[1], this.limits.size[2]));
-            console.log((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin);
-            while ((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin > 1.0) {
+            let weightedSize = ((this.limits.size[0]+this.limits.size[1]+this.limits.size[2])/3+smallestSize)/2;
+            console.log("bounds: " + this.limits.size[0] + ", " + this.limits.size[1] + ", " + this.limits.size[2] + " weighted: " + weightedSize);
+            console.log((weightedSize/(2**layers))-(margin*0.45*(2**layers)));
+            while ((weightedSize/(2**layers))-(margin*0.45*(2**layers)) > -10.0) {
                 layers++;
-                console.log((smallestSize/(2**layers))-(margin*0.4*(2**layers))+margin);
-                if (makeKdEsque) {
-                   smallestSize -= 0.15;
-                }
+                console.log((weightedSize/(2**layers))-(margin*0.45*(2**layers)));
+                /*if (makeKdEsque) {
+                   smallestSize -= 0.1;
+                }*/
             }
         }
         this.layers = layers;
