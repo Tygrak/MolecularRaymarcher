@@ -118,18 +118,19 @@ export function CreateTimestampBuffer(device: GPUDevice, capacity: number = 8) {
 }
 
 export function CheckWebGPU() {
-    let result = 'Great, your current browser supports WebGPU!';
     if (!navigator.gpu) {
-        result = `Your current browser does not support WebGPU! Make sure you are on a system 
-        with WebGPU enabled. Currently, WebGPU is supported in  
-        <a href="https://www.google.com/chrome/canary/">Chrome canary</a>
-        with the flag "enable-unsafe-webgpu" enabled. See the 
+        const notSupportedElement = document.getElementById("overlayNotSupportedWebGPU") as HTMLParagraphElement;
+        let result = `
+        <br>Your current browser does not support WebGPU! The application requires WebGPU to function.
+        <br>Currently, WebGPU is supported in  
+        <a href="https://www.google.com/chrome/canary/">Chrome Canary</a>
+        with the flag "enable-unsafe-webgpu" enabled and in <a href="https://nightly.mozilla.org/">Firefox Nightly</a>. <br>See the 
         <a href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status"> 
-        Implementation Status</a> page for more details.   
-        You can also use your regular Chrome to try a pre-release version of WebGPU via
-        <a href="https://developer.chrome.com/origintrials/#/view_trial/118219490218475521">Origin Trial</a>.                
+        Implementation Status</a> page for more details.           
         `;
         console.log(result);
+        notSupportedElement.innerHTML = result;
+        notSupportedElement.style.display = "block";
         throw('Your current browser does not support WebGPU!');
     } 
     return true;
