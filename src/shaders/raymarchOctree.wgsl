@@ -796,7 +796,6 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
                     insideStartT = -10000.0;
                 }
             }
-            //TODO try different smoothmin functions
             t = t+abs(d);
             if (drawSettings.isFullRender < 0.5) {
                 t += 0.1;
