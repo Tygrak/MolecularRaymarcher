@@ -26,7 +26,6 @@ const sliderDebugB = document.getElementById("raymarchingStartPosition") as HTML
 const sliderImpostorSizeScale = document.getElementById("impostorSizeScale") as HTMLInputElement;
 const sliderKSmoothminScale = document.getElementById("kSmoothminScale") as HTMLInputElement;
 const canvasSizeCheckbox = document.getElementById("canvasSizeCheckbox") as HTMLInputElement;
-const allowResetRaymarchCheckbox = document.getElementById("allowResetRaymarchCheckbox") as HTMLInputElement;
 const getRaymarchCellNeighborsCheckbox = document.getElementById("getRaymarchNeighborsCheckbox") as HTMLInputElement;
 const makeKdOctreeCheckbox = document.getElementById("makeKdOctreeCheckbox") as HTMLInputElement;
 const makeIrregularOctreeCheckbox = document.getElementById("makeIrregularOctreeCheckbox") as HTMLInputElement;
@@ -364,7 +363,6 @@ async function Initialize() {
             let lightDirection = vec3.normalize(vec3.create(), vec3.fromValues(0.05+Math.sin(lightRotation*2), 1*(0.3+(lightRotation/6-0.5)*2), 0.075+Math.cos(lightRotation*2)));
             if (dataSelection.value == "1cqw") {
                 rayMarchQuadOct1cqw.debugMode = debugMode;
-                rayMarchQuadOct1cqw.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1cqw.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1cqw.lightDirection = lightDirection;
@@ -372,7 +370,6 @@ async function Initialize() {
                 //rayMarchQuadOct1cqw.DrawGrid(device, renderPass, mvpMatrix);
             } else if (dataSelection.value == "1aon") {
                 rayMarchQuadOct1aon.debugMode = debugMode;
-                rayMarchQuadOct1aon.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOct1aon.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOct1aon.lightDirection = lightDirection;
@@ -380,7 +377,6 @@ async function Initialize() {
                 //rayMarchQuadOct1aon.DrawGrid(device, renderPass, mvpMatrix);
             } else if (structureLoaded != undefined && dataSelection.value == "dataFile") {
                 rayMarchQuadOctLoaded.debugMode = debugMode;
-                rayMarchQuadOctLoaded.allowResetRaymarch = allowResetRaymarchCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.getRaymarchCellNeighbors = getRaymarchCellNeighborsCheckbox.checked ? 1 : 0;
                 rayMarchQuadOctLoaded.kSmoothminScale = kSmoothminScale;
                 rayMarchQuadOctLoaded.lightDirection = lightDirection;
@@ -822,7 +818,6 @@ function CreateUrlWithParameters() {
     urlParams.append("smoothK", sliderKSmoothminScale.value);
     urlParams.append("lightRot", sliderLightRotation.value);
     urlParams.append("highlightMainChain", highlightMainChainCheckbox.value);
-    urlParams.append("allowResetRaymarch", allowResetRaymarchCheckbox.value);
     urlParams.append("makeKdOctree", makeKdOctreeCheckbox.value);
     urlParams.append("makeIrregularOctree", makeIrregularOctreeCheckbox.value);
     urlParams.append("automaticOctreeSize", automaticOctreeSizeCheckbox.value);
@@ -859,9 +854,6 @@ function LoadUrlParameters() {
     }
     if (urlParams.has("highlightMainChain")) {
         highlightMainChainCheckbox.value = urlParams.get("highlightMainChain")!;
-    }
-    if (urlParams.has("allowResetRaymarch")) {
-        allowResetRaymarchCheckbox.value = urlParams.get("allowResetRaymarch")!;
     }
     if (urlParams.has("makeKdOctree")) {
         makeKdOctreeCheckbox.value = urlParams.get("makeKdOctree")!;
@@ -918,9 +910,6 @@ visualizationSelection.onchange = (e) => {
             structureLoaded.CreateChainMeshes(device);
         }
     }
-    queueFullRender();
-}
-allowResetRaymarchCheckbox.onchange = (e) => {
     queueFullRender();
 }
 sliderImpostorSizeScale.oninput = (e) => {

@@ -609,47 +609,48 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
             break;
 		}
 		if (t >= end) {
-            if (drawSettings.allowReset > 0.5) {
-                t = 0.0;
-                stackPos++;
-                if (stackPos == stackSize || stackBins[stackPos] == -1) {
-                    if (drawSettings.debugMode == DM_Octree1) {
-                        return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
-                    } else if (drawSettings.debugMode == DM_Octree2) {
-                        return debugModeOctree2(numIntersected, iteration, maxIterations);
-                    } else if (drawSettings.debugMode == DM_StackSteps) {
-                        return debugModeSteps(stackPos, stackSize);
-                    } else if (drawSettings.debugMode == DM_Iterations) {
-                        return debugModeIterations(iteration*5, maxIterations);
-                    } else if (drawSettings.debugMode == DM_SmoothminBoundaries) {
-                        return vec4(0.65, 0.1, 0.45, 1.0);
-                    }
-                    if (stackPos == stackSize && drawSettings.debugB > 0.5) {
-                        return vec4(10.15, 10.0, 0.15, 1.0);
-                    }
-                    //#if UseCartoonEdges
-                    /*
-                    return vec4(0.0, 0.0, 0.0, 1.0);
-                    */
-                    //#endif UseCartoonEdges
-                    //#ifnot UseCartoonEdges
-                    return vec4(bgColorR, bgColorG, bgColorB, 1.0);
-                    //#endifnot UseCartoonEdges
+            //#ifnot DontAllowResetRaymarch
+            t = 0.0;
+            stackPos++;
+            if (stackPos == stackSize || stackBins[stackPos] == -1) {
+                if (drawSettings.debugMode == DM_Octree1) {
+                    return debugModeOctree(numRaySphereIntersections, drawSettings.totalAtoms);
+                } else if (drawSettings.debugMode == DM_Octree2) {
+                    return debugModeOctree2(numIntersected, iteration, maxIterations);
+                } else if (drawSettings.debugMode == DM_StackSteps) {
+                    return debugModeSteps(stackPos, stackSize);
+                } else if (drawSettings.debugMode == DM_Iterations) {
+                    return debugModeIterations(iteration*5, maxIterations);
+                } else if (drawSettings.debugMode == DM_SmoothminBoundaries) {
+                    return vec4(0.65, 0.1, 0.45, 1.0);
                 }
-
-                intersecting = stackBins[stackPos];
-                start = initStart.xyz+rayDirection*stackT[stackPos];
-                let intersectionEnd = aabbIntersection(initStart.xyz, rayDirection, 1.0/rayDirection, bins.bins[intersecting].min, bins.bins[intersecting].max);
-                end = intersectionEnd.y-stackT[stackPos];
-                //todo: clean up code.
-                //todo: preprocessor macros? shader variations?
-                //let binSize = bins.bins[intersecting].max-bins.bins[intersecting].min;
-                //end = max(binSize.x, max(binSize.y, binSize.z));
-                raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
-            } else {
-                resultColor = vec4(0.0, 0.0, 0.0, 1.0);
-                break;
+                if (stackPos == stackSize && drawSettings.debugB > 0.5) {
+                    return vec4(10.15, 10.0, 0.15, 1.0);
+                }
+                //#if UseCartoonEdges
+                /*
+                return vec4(0.0, 0.0, 0.0, 1.0);
+                */
+                //#endif UseCartoonEdges
+                //#ifnot UseCartoonEdges
+                return vec4(bgColorR, bgColorG, bgColorB, 1.0);
+                //#endifnot UseCartoonEdges
             }
+
+            intersecting = stackBins[stackPos];
+            start = initStart.xyz+rayDirection*stackT[stackPos];
+            let intersectionEnd = aabbIntersection(initStart.xyz, rayDirection, 1.0/rayDirection, bins.bins[intersecting].min, bins.bins[intersecting].max);
+            end = intersectionEnd.y-stackT[stackPos];
+            //todo: clean up code.
+            //todo: preprocessor macros? shader variations?
+            //let binSize = bins.bins[intersecting].max-bins.bins[intersecting].min;
+            //end = max(binSize.x, max(binSize.y, binSize.z));
+            raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
+            //#endnot DontAllowResetRaymarch
+            //#if DontAllowResetRaymarch
+            resultColor = vec4(0.0, 0.0, 0.0, 1.0);
+            break;
+            //#endif DontAllowResetRaymarch
 		}
 	}
     if (iteration == maxIterations && drawSettings.debugB > 0.9) {
