@@ -6,6 +6,8 @@ This is an web application which renders smooth molecular surfaces using raymarc
 
 The application is controlled with the mouse. Holding the left mouse button allows rotates the camera around the center of the molecule, holding the right mouse button pans the camera. Additionally, a few keybindings are available. The number keys on the numpad allow quick movement of the camera to a few predetermined positions around the molecule -- these keybindings are similar to the ones in Blender. The other number keys above the main part of the keyboard allow quick changing of debug modes.
 
+## Documentation
+
 All the available options in the side menu are described here: [Options](docs/OptionsExplained.md). 
 All the included rendering and debug modes are explained here: [Rendering Modes](docs/RenderingModes.md). 
 A brief overview of the codebase is here: [Code](docs/Code.md). 
