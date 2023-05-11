@@ -74,3 +74,18 @@ fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
 //#endif UseSmoothMinPoly2
 ```
 
+## Available Commands
+
+A variant that checks for the presence of a flag:
+
+```
+//#if FlagName
+//#endif FlagName
+```
+
+A variant that checks that a flag is not present:
+
+```
+//#ifnot FlagName
+//#endifnot FlagName
+```

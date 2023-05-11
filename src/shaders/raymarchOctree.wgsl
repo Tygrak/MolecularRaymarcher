@@ -646,7 +646,7 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
             //let binSize = bins.bins[intersecting].max-bins.bins[intersecting].min;
             //end = max(binSize.x, max(binSize.y, binSize.z));
             raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
-            //#endnot DontAllowResetRaymarch
+            //#endifnot DontAllowResetRaymarch
             //#if DontAllowResetRaymarch
             resultColor = vec4(0.0, 0.0, 0.0, 1.0);
             break;
