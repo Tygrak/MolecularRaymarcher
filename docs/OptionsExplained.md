@@ -151,6 +151,14 @@ When enabled colors of the atoms will not be smoothly blended between the closes
 
 Disables the distance fade depth cue. When enabled far away atoms will not be darkened and close atoms will not be brightened.
 
+#### CreateSliceX CreateSliceY CreateSliceZ
+
+Slices the molecule in part. This can allow seeing inside the molecule. The position of the slice is controlled with DebugA. To get good results disable "Skip Using Definitive Hit Optim". Unoptimized performance.
+
+#### CreateSlabX CreateSlabY CreateSlabZ
+
+Creates a slab from the molecule. This can allow seeing inside the molecule. The position of the slab is controlled with DebugA. To get good results disable "Skip Using Definitive Hit Optim". Unoptimized performance.
+
 #### DontAllowResetRaymarch
 
 When enabled the raymarching process will not conclude at the end of the first raymarched cell. Changing this requires reloading shaders.
@@ -158,4 +166,5 @@ When enabled the raymarching process will not conclude at the end of the first r
 #### FirstIndexBasedOnDistance
 
 Experimental option that tries to optimize the raytracing stage by finding the closest octree cell to traverse first. There is already a way that tries to find the closest octree cell in another less accurate way. Does not seem to improve performance.
+
 

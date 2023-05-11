@@ -12,7 +12,7 @@ export function PreprocessShaderWithFlags(shader: string, flags: string[], print
             insideIfFlags.push(match[1]);
             lastIfLine = lineNumber;
             if (unusedFlags.includes(match[1])) {
-                unusedFlags.splice(unusedFlags.indexOf(match[1], 1));
+                unusedFlags.splice(unusedFlags.indexOf(match[1]), 1);
             }
         } else if ((match = lines[lineNumber].match(/^ *\/\/#endif (\S+)/)) != null) {
             if (insideIfFlags.includes(match[1])) {
@@ -27,7 +27,7 @@ export function PreprocessShaderWithFlags(shader: string, flags: string[], print
             insideIfnotFlags.push(match[1]);
             lastIfLine = lineNumber;
             if (unusedFlags.includes(match[1])) {
-                unusedFlags.splice(unusedFlags.indexOf(match[1], 1));
+                unusedFlags.splice(unusedFlags.indexOf(match[1]), 1);
             }
         } else if ((match = lines[lineNumber].match(/^ *\/\/#endifnot (\S+)/)) != null) {
             if (insideIfnotFlags.includes(match[1])) {

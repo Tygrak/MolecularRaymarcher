@@ -1,5 +1,5 @@
 import { InitGPU, CreateGPUBuffer, CreateTransforms, CreateViewProjection, CreateTimestampBuffer, LoadData} from './helper';
-import shader from './shaders/shader.wgsl';
+import shader from './shaders/basic.wgsl';
 import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
 import $, { data } from 'jquery';

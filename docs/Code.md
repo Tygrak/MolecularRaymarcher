@@ -107,6 +107,15 @@ Contains code for calculating the resulting colors for the various rendering and
 
 Contains constants which define which number corresponds to which draw mode. These same numbers are (and need to be) in the draw mode input inside `index.html`.
 
+#### basic.wgsl
+
+Contains the shader for the basic sticks-and-balls visualization.
+
+#### impostor.wgsl
+
+Contains the shader for the sticks-and-balls visualization using impostor spheres drawn on quads.
+
+
 
 
 

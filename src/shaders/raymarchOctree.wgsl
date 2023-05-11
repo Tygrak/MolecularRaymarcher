@@ -210,7 +210,26 @@ fn dAtomsInBinColor(p: vec3<f32>, binId: i32) -> SdfResult {
 }
 
 fn dAtoms(p: vec3<f32>) -> f32 {
-    return dAtomsInBin(p, intersecting);
+    var resDistance = dAtomsInBin(p, intersecting);
+    //#if CreateSliceX
+	resDistance = max(p.x+mix(drawSettings.minLimit.x-6, drawSettings.maxLimit.x+6, drawSettings.debugA), resDistance);
+    //#endif CreateSliceX
+    //#if CreateSliceY
+	resDistance = max(p.y+mix(drawSettings.minLimit.y-6, drawSettings.maxLimit.y+6, drawSettings.debugA), resDistance);
+    //#endif CreateSliceY
+    //#if CreateSliceZ
+	resDistance = max(p.z+mix(drawSettings.minLimit.z-6, drawSettings.maxLimit.z+6, drawSettings.debugA), resDistance);
+    //#endif CreateSliceZ
+    //#if CreateSlabX
+	resDistance = max(abs(p.x-mix(drawSettings.minLimit.x-6, drawSettings.maxLimit.x+6, drawSettings.debugA))-7, resDistance);
+    //#endif CreateSlabX
+    //#if CreateSlabY
+	resDistance = max(abs(p.y-mix(drawSettings.minLimit.y-6, drawSettings.maxLimit.y+6, drawSettings.debugA))-7, resDistance);
+    //#endif CreateSlabY
+    //#if CreateSlabZ
+	resDistance = max(abs(p.z-mix(drawSettings.minLimit.z-6, drawSettings.maxLimit.z+6, drawSettings.debugA))-7, resDistance);
+    //#endif CreateSlabZ
+    return resDistance;
 }
 
 fn dAtomsColor(p: vec3<f32>) -> SdfResult {
@@ -316,7 +335,7 @@ fn raySphereIntersection(origin: vec3<f32>, direction: vec3<f32>, atom: Atom, ad
 
 var<private> start: vec3<f32>;
 var<private> end: f32;
-const stackSize = 32;
+const stackSize = 48;
 var<private> stackCurrentNum = 0;
 var<private> stackT: array<f32, stackSize>;
 var<private> stackBins: array<i32, stackSize>;
