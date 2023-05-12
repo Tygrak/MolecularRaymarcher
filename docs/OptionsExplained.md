@@ -1,10 +1,12 @@
 ## Options
 
-This page explains the available options in the web application. On the left side of the application is a sidebar which contains all the available options. 
+This section explains the available options in the web application. On the left side of the application is a sidebar which contains all the available options. 
+
+### Main Options
 
 #### Render Only On Movement checkbox
 
-With this checkbox enabled, the viewport is not continuously redrawn. Instead the scene is rendered only when the camera is moved.
+With this checkbox enabled, the viewport is not continuously redrawn. Instead, the scene is rendered only when the camera is moved.
 
 #### Always Full Render checkbox
 
@@ -22,7 +24,7 @@ The application can be switched to use a very simple sticks-and-balls model usin
 
 #### Rendering Mode selection
 
-Allows switching to different rendering modes. The rendering modes are documented here: [Rendering Modes](RenderingModes.md). 
+Allows switching to different rendering modes. All the available rendering modes are documented in the Rendering Modes section of this documentation. 
 
 #### Atom Size Scale slider
 
@@ -58,15 +60,15 @@ Allows selecting between 4 different types of smooth minimum. The non-polynomial
 
 #### Highlight Main Chain checkbox
 
-When enabled the amino-acid chains are highlighted with brighter colors. Changing this requires reloading shaders.
+When enabled, the amino-acid chains are highlighted with brighter colors. Changing this requires reloading shaders.
 
 #### Raytrace Atoms Optim checkbox
 
-When enabled ray-sphere intersections are used during the octree traversal to speed up the algorithm. Changing this requires reloading shaders.
+When enabled, ray-sphere intersections are used during the octree traversal to speed up the algorithm. Changing this requires reloading shaders.
 
 #### Skip Using Definitive Hit Optim checkbox
 
-When enabled if a ray-sphere intersection is found during octree traversal, additionally a check for a definitive hit is done to speed up the algorithm. Changing this requires reloading shaders.
+When enabled, if a ray-sphere intersection is found during octree traversal, additionally a check for a definitive hit is done to speed up the algorithm. Changing this requires reloading shaders.
 
 #### Make Kd-Esque Octree checkbox
 
@@ -102,7 +104,7 @@ Allows setting the exact distance from the center of the molecule during the ben
 
 #### Transparency/Debug A slider
 
-Controls small things in the final shader. The most important thing this controls is the brightness for the transparent modes. Otherwise mostly used for debugging.
+Controls small things in the final shader. The most important thing this controls is the brightness for the transparent modes. Otherwise, mostly used for debugging.
 
 #### Debug B slider
 
@@ -110,7 +112,7 @@ Controls small things in the final shader. Mostly used for debugging.
 
 #### Use Fixed Canvas Size checkbox
 
-When enabled the canvas will be resized to the resolution given in the two inputs below the checkbox. If disabled the canvas will get resized dynamically.
+When enabled, the canvas will be resized to the resolution given in the two inputs below the checkbox. If disabled, the canvas will get resized dynamically.
 
 
 ### Shader Reload
@@ -121,7 +123,7 @@ Above the button is an input field which can be used to input any additional pre
 
 ### Color Options
 
-The color options is another drop down inside the Additional Options drop down.
+The color options are contained inside the Additional Options drop down and allow changing the colors used to render the resulting images.
 
 #### Add Debug Colormap checkbox
 
@@ -141,19 +143,19 @@ Creates a URL which can be used to share the website with the currently applied 
 
 ### Preprocessor Options
 
-This section contains the available preprocessor options which do not have their own checkboxes, as they are not important enough.
+This section contains the available preprocessor options, which do not have their own checkboxes, as they are not important enough.
 
 #### DontUseSmoothColorBlending
 
-When enabled colors of the atoms will not be smoothly blended between the closest atoms.
+When enabled, colors of the atoms will not be smoothly blended between the closest atoms.
 
 #### DontUseDistanceFade
 
-Disables the distance fade depth cue. When enabled far away atoms will not be darkened and close atoms will not be brightened.
+Disables the distance fade depth cue. When enabled, far away atoms will not be darkened and close atoms will not be brightened.
 
 #### CreateSliceX CreateSliceY CreateSliceZ
 
-Slices the molecule in part. This can allow seeing inside the molecule. The position of the slice is controlled with DebugA. To get good results disable "Skip Using Definitive Hit Optim". Unoptimized performance.
+Slices the molecule in part. This can allow seeing inside the molecule. The position of the slice is controlled with DebugA. To get good results, disable "Skip Using Definitive Hit Optim". The performance of this option is not optimized.
 
 #### CreateSlabX CreateSlabY CreateSlabZ
 
@@ -161,10 +163,9 @@ Creates a slab from the molecule. This can allow seeing inside the molecule. The
 
 #### DontAllowResetRaymarch
 
-When enabled the raymarching process will not conclude at the end of the first raymarched cell. Changing this requires reloading shaders.
+When enabled, the raymarching process will not conclude at the end of the first raymarched cell. Changing this requires reloading shaders.
 
 #### FirstIndexBasedOnDistance
 
-Experimental option that tries to optimize the raytracing stage by finding the closest octree cell to traverse first. There is already a way that tries to find the closest octree cell in another less accurate way. Does not seem to improve performance.
-
+Experimental option that tries to optimize the raytracing stage by finding the closest octree cell to traverse first. By default, the application uses a different method that tries to find the closest octree cell in another, less accurate way. Does not seem to improve performance.
 

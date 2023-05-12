@@ -48,7 +48,7 @@ Colors are based on the colors of the nearest atoms for steps which are inside t
 
 #### Transparent3
 
-The same as Transparent1 but brightness accumulation is reduced when close to the boundary of the volume to try prevent a fresnel like effect. Step size when inside the volume is based on the negative distance from the volume.
+The same as Transparent1, but brightness accumulation is reduced when close to the boundary of the volume to try prevent a Fresnel like effect. Step size when inside the volume is based on the negative distance from the volume.
 
 #### TransparentDistance
 
@@ -64,7 +64,7 @@ Transparency/thickness is estimated from potential hit information found during 
 
 #### TransparentFake2
 
-Same as TransparentFake1 but with monochromatic coloring.
+Same as TransparentFake1, but with monochromatic coloring.
 
 ### Debug Modes
 
@@ -80,7 +80,7 @@ Shows the depth -- the distance from the camera to the hit point.
 
 #### FirstStepDistance
 
-Shows the distance that was traveled inside the first cell that was raymarchedfrom the initial potential hit position.
+Shows the distance that was traveled inside the first cell that was raymarched from the initial potential hit position.
 
 #### AllStepsDistance
 
