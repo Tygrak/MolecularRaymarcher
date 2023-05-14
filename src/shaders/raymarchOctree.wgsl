@@ -403,6 +403,7 @@ fn getFirstIndexByDistance(origin: vec3<f32>) -> i32 {
     return closest;
 }
 
+//findIntersectingCellsStack optimized for 4 octree layers
 fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     var closestAABBintersection: vec3<f32> = vec3(-1.0);
     let binsAmount = arrayLength(&bins.bins);
@@ -463,8 +464,82 @@ fn findIntersectingCells(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
     start = start+direction*stackT[0];
     let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
     end = intersectionEnd.y-stackT[0];
-    //let binSize = bins.bins[stackBins[0]].max-bins.bins[stackBins[0]].min;
-    //end = min(max(binSize.x, max(binSize.y, binSize.z)), stackT[1])+drawSettings.kSmoothminScale;
+    if (drawSettings.debugMode == DM_SkipStackPos0) {
+        intersecting = stackBins[1];
+        start = start+direction*stackT[1];
+        let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[1]].min, bins.bins[stackBins[1]].max);
+        end = intersectionEnd.y-stackT[1];
+    }
+    return start;
+}
+
+//findIntersectingCellsStack optimized for 5 octree layers
+fn findIntersectingCells5(origin: vec3<f32>, direction: vec3<f32>) -> vec3<f32> {
+    var closestAABBintersection: vec3<f32> = vec3(-1.0);
+    let binsAmount = arrayLength(&bins.bins);
+    let inverseDirection = 1.0/direction;
+    resetStack();
+
+    for (var i : i32 = 0; i < 8; i++) {
+        var firstId = getFirstIndexUsingOrigin(origin, i);
+        let intersection = aabbIntersection(origin, direction, inverseDirection, bins.bins[firstId].min, bins.bins[firstId].max);
+        if (intersection.x < intersection.y && intersection.x > -15.0 && bins.bins[firstId].end < -1.5 && intersection.x < closestRealHitT) {
+            numIntersected += 8;
+            for (var mi : i32 = 0; mi < 8; mi++) {
+                let m = child(firstId, getFirstIndexUsingOrigin(origin, mi));
+                let intersection2 = aabbIntersection(origin, direction, inverseDirection, bins.bins[m].min, bins.bins[m].max);
+                if (intersection2.x < intersection2.y && intersection2.x > -10.0 && bins.bins[m].end < -1.5 && intersection2.x < closestRealHitT) {
+                    numIntersected += 3;
+                    for (var n : i32 = child(m, 0); n < child(m, 8); n++) {
+                        let intersection3 = aabbIntersection(origin, direction, inverseDirection, bins.bins[n].min, bins.bins[n].max);
+                        if (intersection3.x < intersection3.y && intersection3.x > -5.0 && bins.bins[n].end < -1.5 && intersection3.x < closestRealHitT) {
+                            numIntersected += 2;
+                            for (var l : i32 = child(n, 0); l < child(n, 8); l++) {
+                                let intersection4 = aabbIntersection(origin, direction, inverseDirection, bins.bins[l].min, bins.bins[l].max);
+                                if (intersection4.x < intersection4.y && intersection4.x > -0.25 && intersection4.x < closestRealHitT) {
+                                    numIntersected += 1;
+                                    for (var j : i32 = child(l, 0); j < child(l, 8); j++) {
+                                        let intersectionFinal = aabbIntersection(origin, direction, inverseDirection, bins.bins[j].min, bins.bins[j].max);
+                                        if (intersectionFinal.x < intersectionFinal.y && intersectionFinal.x > -0.25 && intersectionFinal.x < closestRealHitT) {
+                                            numIntersected++;
+                                            var closestT: f32 = miss.t;
+                                            for (var a: i32 = i32(bins.bins[j].start); a < i32(bins.bins[j].end); a++) {
+                                                let hit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 1);
+                                                numRaySphereIntersections++;
+                                                if (hit.t > intersectionFinal.y || hit.t2 < intersectionFinal.x) {
+                                                    continue;
+                                                }
+                                                if (hit.t < miss.t) {
+                                                    //#ifnot DontSkipUsingRealHits
+                                                    let realHit: Hit = raySphereIntersection(origin, direction, atoms.atoms[a], 0);
+                                                    if (closestRealHitT > realHit.t) {
+                                                        closestRealHitAtom = a;
+                                                        closestRealHitT = realHit.t;
+                                                    }
+                                                    //#endifnot DontSkipUsingRealHits
+                                                    if (hit.t < closestT) {
+                                                        closestT = hit.t;
+                                                    }
+                                                }
+                                            }
+                                            if (closestT != miss.t) {
+                                                insertIntoSortedStack(closestT, j);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    intersecting = stackBins[0];
+    start = start+direction*stackT[0];
+    let intersectionEnd = aabbIntersection(origin, direction, inverseDirection, bins.bins[stackBins[0]].min, bins.bins[stackBins[0]].max);
+    end = intersectionEnd.y-stackT[0];
     if (drawSettings.debugMode == DM_SkipStackPos0) {
         intersecting = stackBins[1];
         start = start+direction*stackT[1];
@@ -893,10 +968,15 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     let initStart = start;
 
     var closestAABB: vec3<f32>;
-    //with 4 tree layers use a version of the octree traversal without the stack, it is quite a bit faster
+    //#ifnot DisableStacklessOctreeTraversal
+    //with 4 or 5 tree layers use a version of the octree traversal without the stack, it is quite a bit faster
     if (drawSettings.treeLayers == 4) {
         closestAABB = findIntersectingCells(start, rayDirection);
-    } else {
+    } else if (drawSettings.treeLayers == 5) {
+        closestAABB = findIntersectingCells5(start, rayDirection);
+    } else 
+    //#endifnot DisableStacklessOctreeTraversal
+    {
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     
@@ -904,7 +984,6 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     if (drawSettings.debugMode == DM_ClosestOctree) {
         let index = getFirstIndexByDistance(initStart);
         let center = (bins.bins[index].min+bins.bins[index].max)/2;
-        //return FragmentOutput(depthOutput, debugModeDepth(f32(index*5)*30));
         return FragmentOutput(depthOutput, debugModeDepth(f32(index*5)*20+distance(center, start)*30));
     }
     //#endif FirstIndexBasedOnDistance

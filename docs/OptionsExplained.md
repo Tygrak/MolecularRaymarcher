@@ -169,3 +169,6 @@ When enabled, the raymarching process will not conclude at the end of the first 
 
 Experimental option that tries to optimize the raytracing stage by finding the closest octree cell to traverse first. By default, the application uses a different method that tries to find the closest octree cell in another, less accurate way. Does not seem to improve performance.
 
+#### DisableStacklessOctreeTraversal
+
+When using an octree with 4 or 5 layers, by default an optimized version of the octree traversal algorithm, that does not need a stack, is used. This version is substantially faster. This preprocessor option can be used to disable it. 
