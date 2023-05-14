@@ -54,7 +54,6 @@ export function CubeData() {
     ]);
 
     const colors = new Float32Array([
-        // front - blue
         0, 0, 1,
         0, 0, 1,
         0, 0, 1,
@@ -62,7 +61,6 @@ export function CubeData() {
         0, 0, 1,
         0, 0, 1,
 
-        // right - red
         1, 0, 0,
         1, 0, 0,
         1, 0, 0,
@@ -70,7 +68,6 @@ export function CubeData() {
         1, 0, 0,
         1, 0, 0,
 
-        //back - yellow
         1, 1, 0,
         1, 1, 0,
         1, 1, 0,
@@ -78,7 +75,6 @@ export function CubeData() {
         1, 1, 0,
         1, 1, 0,
 
-        //left - aqua
         0, 1, 1,
         0, 1, 1,
         0, 1, 1,
@@ -86,7 +82,6 @@ export function CubeData() {
         0, 1, 1,
         0, 1, 1,
 
-        // top - green
         0, 1, 0,
         0, 1, 0,
         0, 1, 0,
@@ -94,7 +89,6 @@ export function CubeData() {
         0, 1, 0,
         0, 1, 0,
 
-        // bottom - fuchsia
         1, 0, 1,
         1, 0, 1,
         1, 0, 1,

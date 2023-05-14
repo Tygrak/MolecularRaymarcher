@@ -19,12 +19,9 @@ struct VertexOutput {
 
 @vertex
 fn vs_main(@builtin(vertex_index) index: u32, @location(0) pos: vec4<f32>, @location(1) color: vec4<f32>, @location(2) atomInfo: vec2<f32>) -> VertexOutput {
-    //atomInfo x=number, y=covalentRadius 
     let mvp = mvpMatrix;
     let v = vMatrix;
     let cPos = cameraPos;
-    //let cameraRight : vec4<f32> = vec4(1, 0, 0, 0);
-    //let cameraUp : vec4<f32> = vec4(0, 1, 0, 0);
     let cameraRight = vec4(1, 0, 0, 0)*vMatrix;
     let cameraUp = vec4(0, 1, 0, 0)*vMatrix;
     var output: VertexOutput;
@@ -69,8 +66,5 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) color: vec4<f32
     var pos = worldPos;//-vec4(0, 0, 1, 0)*vMatrix*drawSettings.atomScale;
     pos = mvpMatrix * pos;
     output.depth = position.z;
-    //output.depth = position.z-drawSettings.atomScale/10000.0;
-    //output.depth = 0.5;
-    //output.color = vec4(0, 0, abs(pos.z-position.z), 1.0);
     return output;
 }

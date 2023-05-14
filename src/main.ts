@@ -56,6 +56,7 @@ const createUrlButton = document.getElementById("createUrlButton") as HTMLButton
 const urlResultElement = document.getElementById("urlResult") as HTMLParagraphElement;
 
 const fpsCounterElement = document.getElementById("fpsCounter") as HTMLParagraphElement;
+const overlayMessageElement = document.getElementById("overlayMessage") as HTMLParagraphElement;
 
 const inputCAtomColorR = document.getElementById("CAtomColorR") as HTMLInputElement;
 const inputCAtomColorG = document.getElementById("CAtomColorG") as HTMLInputElement;
@@ -89,6 +90,8 @@ let device: GPUDevice;
 
 let renderDirty: boolean = true;
 let fullRender: boolean = true;
+let reloadingShaders: boolean = false;
+let reloadingShadersT0: number = 0;
 let nextFullRenderTime: number = 10000;
 
 let drawAxisMesh: boolean = false;
@@ -107,8 +110,6 @@ async function Initialize() {
     if (gpu.timestampsEnabled) {
         timestampBuffers = CreateTimestampBuffer(device, 8);
     }
-
-    //TestKdTrees();
 
     // create vertex buffers
     structure1cqw = new Structure(require('./data/1cqw.pdb'));
@@ -379,12 +380,6 @@ async function Initialize() {
         }
         renderPass.end();
 
-        /*const depthRenderPass = commandEncoder.beginRenderPass(textureQuadPassDescriptor as GPURenderPassDescriptor);
-        {
-            textureVisualizeQuad.Draw(depthRenderPass);
-        }
-        depthRenderPass.end();*/
-
         if (gpu.timestampsEnabled) {
             commandEncoder.writeTimestamp(timestampBuffers.querySet, 1);
             commandEncoder.resolveQuerySet(timestampBuffers.querySet, 0, 2, timestampBuffers.queryBuffer, 0);
@@ -410,7 +405,14 @@ async function Initialize() {
                 }
             });
         } else {
-            fpsCounterElement.innerText = "timestamps not enabled :(";
+            fpsCounterElement.innerText = "timestamps not enabled";
+        }
+
+        if (reloadingShaders) {
+            let reloadingShadersT1 = performance.now();
+            overlayMessageElement.style.display = "none";
+            reloadingShaders = false;
+            console.log("Reloading shaders (to render): " + (reloadingShadersT1-reloadingShadersT0) + "ms");
         }
         renderDirty = false;
         fullRender = false;
@@ -455,7 +457,6 @@ async function Initialize() {
                 storeOp: 'store'
             }],
         };
-        //textureVisualizeQuad = new TextureVisualizeQuad(device, gpu.format, depthTextureView);
     }
 
     window.addEventListener('resize', function(){
@@ -600,71 +601,80 @@ async function Initialize() {
     };
 
     function ReloadShaders() {
-        let t0 = performance.now();
-        let preprocessFlags: string[] = [];
-        let additionalFlags = shaderPreprocessorFlagsInput.value.split(/[,.;/ ]/);
-        additionalFlags = additionalFlags.filter(x => !(/^\s*$/.test(x)));
-        preprocessFlags.push(...additionalFlags);
-        if (!highlightMainChainCheckbox.checked) {
-            preprocessFlags.push("DontHighlightMainChain");
+        if (reloadingShaders) {
+            return;
         }
-        if (cartoonEdgesCheckbox.checked) {
-            preprocessFlags.push("UseCartoonEdges");
-        }
-        if (colorUsingChainCheckbox.checked) {
-            preprocessFlags.push("UseColorByChainNumber");
-        }
-        if (centerDistanceFadeCheckbox.checked) {
-            preprocessFlags.push("UseCenterDistanceFade");
-        }
-        if (!raytraceAtomsOptimCheckbox.checked) {
-            preprocessFlags.push("DontRaytraceAtoms");
-        }
-        if (addDebugColormapCheckbox.checked) {
-            preprocessFlags.push("ShowDebugColorMap");
-        }
-        if (!skipUsingRealHitOptimCheckbox.checked) {
-            preprocessFlags.push("DontSkipUsingRealHits");
-        }
-        preprocessFlags.push(smoothminTypeSelection.value);
-        let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
-        let atomColorN = vec3.fromValues(parseFloat(inputNAtomColorR.value), parseFloat(inputNAtomColorG.value), parseFloat(inputNAtomColorB.value));
-        let atomColorO = vec3.fromValues(parseFloat(inputOAtomColorR.value), parseFloat(inputOAtomColorG.value), parseFloat(inputOAtomColorB.value));
-        let atomColorS = vec3.fromValues(parseFloat(inputSAtomColorR.value), parseFloat(inputSAtomColorG.value), parseFloat(inputSAtomColorB.value));
-        let bgColor = vec3.fromValues(parseFloat(inputBgColorR.value), parseFloat(inputBgColorG.value), parseFloat(inputBgColorB.value));
-        atomColorC[0] = Number.isFinite(atomColorC[0]) ? atomColorC[0] : 0.5;
-        atomColorC[1] = Number.isFinite(atomColorC[1]) ? atomColorC[1] : 0.5;
-        atomColorC[2] = Number.isFinite(atomColorC[2]) ? atomColorC[2] : 0.5;
-        atomColorN[0] = Number.isFinite(atomColorN[0]) ? atomColorN[0] : 0.5;
-        atomColorN[1] = Number.isFinite(atomColorN[1]) ? atomColorN[1] : 0.5;
-        atomColorN[2] = Number.isFinite(atomColorN[2]) ? atomColorN[2] : 0.5;
-        atomColorO[0] = Number.isFinite(atomColorO[0]) ? atomColorO[0] : 0.5;
-        atomColorO[1] = Number.isFinite(atomColorO[1]) ? atomColorO[1] : 0.5;
-        atomColorO[2] = Number.isFinite(atomColorO[2]) ? atomColorO[2] : 0.5;
-        atomColorS[0] = Number.isFinite(atomColorS[0]) ? atomColorS[0] : 0.5;
-        atomColorS[1] = Number.isFinite(atomColorS[1]) ? atomColorS[1] : 0.5;
-        atomColorS[2] = Number.isFinite(atomColorS[2]) ? atomColorS[2] : 0.5;
-        bgColor[0] = Number.isFinite(bgColor[0]) ? bgColor[0] : 0.15;
-        bgColor[1] = Number.isFinite(bgColor[1]) ? bgColor[1] : 0.00;
-        bgColor[2] = Number.isFinite(bgColor[2]) ? bgColor[2] : 0.15;
-        if (rayMarchQuadOctLoaded != undefined) {
-            rayMarchQuadOctLoaded.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
-            rayMarchQuadOctLoaded.shaderPreprocessFlags = preprocessFlags;
-            rayMarchQuadOctLoaded.ReloadShader(device, currShaderCode);
-        }
-        if (rayMarchQuadOct1aon != undefined) {
-            rayMarchQuadOct1aon.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
-            rayMarchQuadOct1aon.shaderPreprocessFlags = preprocessFlags;
-            rayMarchQuadOct1aon.ReloadShader(device, currShaderCode);
-        }
-        if (rayMarchQuadOct1cqw != undefined) {
-            rayMarchQuadOct1cqw.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
-            rayMarchQuadOct1cqw.shaderPreprocessFlags = preprocessFlags;
-            rayMarchQuadOct1cqw.ReloadShader(device, currShaderCode);
-        }
-        let t1 = performance.now();
-        queueFullRender();
-        console.log("Reloading shaders: " + (t1-t0) + "ms");
+        overlayMessageElement.innerHTML = "<br>Reloading Shaders<br>Please Wait";
+        overlayMessageElement.style.display = "block";
+        reloadingShaders = true;
+        setTimeout(() => {
+            let t0 = performance.now();
+            reloadingShadersT0 = performance.now();
+            let preprocessFlags: string[] = [];
+            let additionalFlags = shaderPreprocessorFlagsInput.value.split(/[,.;/ ]/);
+            additionalFlags = additionalFlags.filter(x => !(/^\s*$/.test(x)));
+            preprocessFlags.push(...additionalFlags);
+            if (!highlightMainChainCheckbox.checked) {
+                preprocessFlags.push("DontHighlightMainChain");
+            }
+            if (cartoonEdgesCheckbox.checked) {
+                preprocessFlags.push("UseCartoonEdges");
+            }
+            if (colorUsingChainCheckbox.checked) {
+                preprocessFlags.push("UseColorByChainNumber");
+            }
+            if (centerDistanceFadeCheckbox.checked) {
+                preprocessFlags.push("UseCenterDistanceFade");
+            }
+            if (!raytraceAtomsOptimCheckbox.checked) {
+                preprocessFlags.push("DontRaytraceAtoms");
+            }
+            if (addDebugColormapCheckbox.checked) {
+                preprocessFlags.push("ShowDebugColorMap");
+            }
+            if (!skipUsingRealHitOptimCheckbox.checked) {
+                preprocessFlags.push("DontSkipUsingRealHits");
+            }
+            preprocessFlags.push(smoothminTypeSelection.value);
+            let atomColorC = vec3.fromValues(parseFloat(inputCAtomColorR.value), parseFloat(inputCAtomColorG.value), parseFloat(inputCAtomColorB.value));
+            let atomColorN = vec3.fromValues(parseFloat(inputNAtomColorR.value), parseFloat(inputNAtomColorG.value), parseFloat(inputNAtomColorB.value));
+            let atomColorO = vec3.fromValues(parseFloat(inputOAtomColorR.value), parseFloat(inputOAtomColorG.value), parseFloat(inputOAtomColorB.value));
+            let atomColorS = vec3.fromValues(parseFloat(inputSAtomColorR.value), parseFloat(inputSAtomColorG.value), parseFloat(inputSAtomColorB.value));
+            let bgColor = vec3.fromValues(parseFloat(inputBgColorR.value), parseFloat(inputBgColorG.value), parseFloat(inputBgColorB.value));
+            atomColorC[0] = Number.isFinite(atomColorC[0]) ? atomColorC[0] : 0.5;
+            atomColorC[1] = Number.isFinite(atomColorC[1]) ? atomColorC[1] : 0.5;
+            atomColorC[2] = Number.isFinite(atomColorC[2]) ? atomColorC[2] : 0.5;
+            atomColorN[0] = Number.isFinite(atomColorN[0]) ? atomColorN[0] : 0.5;
+            atomColorN[1] = Number.isFinite(atomColorN[1]) ? atomColorN[1] : 0.5;
+            atomColorN[2] = Number.isFinite(atomColorN[2]) ? atomColorN[2] : 0.5;
+            atomColorO[0] = Number.isFinite(atomColorO[0]) ? atomColorO[0] : 0.5;
+            atomColorO[1] = Number.isFinite(atomColorO[1]) ? atomColorO[1] : 0.5;
+            atomColorO[2] = Number.isFinite(atomColorO[2]) ? atomColorO[2] : 0.5;
+            atomColorS[0] = Number.isFinite(atomColorS[0]) ? atomColorS[0] : 0.5;
+            atomColorS[1] = Number.isFinite(atomColorS[1]) ? atomColorS[1] : 0.5;
+            atomColorS[2] = Number.isFinite(atomColorS[2]) ? atomColorS[2] : 0.5;
+            bgColor[0] = Number.isFinite(bgColor[0]) ? bgColor[0] : 0.15;
+            bgColor[1] = Number.isFinite(bgColor[1]) ? bgColor[1] : 0.00;
+            bgColor[2] = Number.isFinite(bgColor[2]) ? bgColor[2] : 0.15;
+            if (rayMarchQuadOctLoaded != undefined) {
+                rayMarchQuadOctLoaded.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
+                rayMarchQuadOctLoaded.shaderPreprocessFlags = preprocessFlags;
+                rayMarchQuadOctLoaded.ReloadShader(device, currShaderCode);
+            }
+            if (rayMarchQuadOct1aon != undefined) {
+                rayMarchQuadOct1aon.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
+                rayMarchQuadOct1aon.shaderPreprocessFlags = preprocessFlags;
+                rayMarchQuadOct1aon.ReloadShader(device, currShaderCode);
+            }
+            if (rayMarchQuadOct1cqw != undefined) {
+                rayMarchQuadOct1cqw.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
+                rayMarchQuadOct1cqw.shaderPreprocessFlags = preprocessFlags;
+                rayMarchQuadOct1cqw.ReloadShader(device, currShaderCode);
+            }
+            let t1 = performance.now();
+            queueFullRender();
+            console.log("Reloading shaders: " + (t1-t0) + "ms");
+        }, 50);
     }
 
     
@@ -760,7 +770,6 @@ async function Initialize() {
 Initialize();
 
 function queueFullRender() {
-    //renderDirty = true;
     if (alwaysFullRenderCheckbox.checked) {
         nextFullRenderTime = performance.now()+0.25;
     } else {

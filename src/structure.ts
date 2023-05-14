@@ -31,7 +31,6 @@ export class Structure {
         console.log(this.chains);
         //console.log("Atoms:");
         //console.log(this.atoms);
-        //const instanceMesh = CubeData();
         this.chainMeshes = [];
         console.log("Loading data: " + (t1-t0) + "ms (" + this.atoms.length + " atoms)");
     }
@@ -82,7 +81,6 @@ export class Structure {
             if (i == chainsShown-1) {
                 chainPercentageShown = 1-(chainsShown-this.chainMeshes.length*percentageShown);
             }
-            //let numberOfVerticesToDraw = chainMesh.atomsNumberOfVertices;
             let numberOfVerticesToDraw = Math.round(chainMesh.atomsNumberOfVertices*chainPercentageShown)-Math.round(chainMesh.atomsNumberOfVertices*chainPercentageShown)%3;
             if (!bondsOnly) {
                 renderPass.setVertexBuffer(0, chainMesh.atomsVertexBuffer!);

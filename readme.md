@@ -33,5 +33,6 @@ To build the application, `npm` needs to be installed first.
 
 Open `index.html`, which is contained in the folder `public` in the browser. A browser with WebGPU support is needed. New versions of Chrome, starting with Chrome 113, support WebGPU by default. The full implementation status for other browsers can be found [here](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status).
 
+Use the flag `--disable-dawn-features=disallow_unsafe_apis` when starting Chrome Canary to enable timestamps, which allows getting accurate frametimes.
 
 [//]: # (Used sources: https://github.com/jack1232/WebGPU-Step-By-Step as starting point, https://github.com/alaingalvan/webgpu-seed, https://github.com/austinEng/webgpu-samples)

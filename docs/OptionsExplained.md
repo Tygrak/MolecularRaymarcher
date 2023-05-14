@@ -155,11 +155,11 @@ Disables the distance fade depth cue. When enabled, far away atoms will not be d
 
 #### CreateSliceX CreateSliceY CreateSliceZ
 
-Slices the molecule in part. This can allow seeing inside the molecule. The position of the slice is controlled with DebugA. To get good results, disable "Skip Using Definitive Hit Optim". The performance of this option is not optimized.
+Slices the molecule in part. This can allow seeing inside the molecule. The position of the slice is controlled with DebugA. To get good results, disable "Skip Using Definitive Hit Optim". The performance of this option is not optimized. Does not work correctly with cartoon edges.
 
 #### CreateSlabX CreateSlabY CreateSlabZ
 
-Creates a slab from the molecule. This can allow seeing inside the molecule. The position of the slab is controlled with DebugA. To get good results disable "Skip Using Definitive Hit Optim". Unoptimized performance.
+Creates a slab from the molecule. This can allow seeing inside the molecule. The position of the slab is controlled with DebugA. To get good results disable "Skip Using Definitive Hit Optim". Unoptimized performance. Does not work correctly with cartoon edges.
 
 #### DontAllowResetRaymarch
 

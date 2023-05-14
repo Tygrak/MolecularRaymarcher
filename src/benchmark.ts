@@ -95,15 +95,11 @@ export class Benchmarker {
     public PrintResults() {
         let total = this.frameTimes.reduce((a, b) => a+b);
         console.log("Benchmark finished.\n Total average ms: " + total/this.frameTimes.length);
-        let t1 = performance.now();
-        //console.log("Total benchmark time: " + (t1-this.t0) + "ms");
         for (let p = 0; p < this.positions.length; p++) {
             let sum = 0;
             for (let i = p*this.framesPerPosition; i < (p+1)*this.framesPerPosition; i++) {
                 sum += this.frameTimes[i];
             }
-            let posString = this.positions[p][0].toFixed(3)+","+this.positions[p][1].toFixed(3)+","+this.positions[p][2].toFixed(3);
-            //console.log("Position " + p + " (" + posString + ") average ms: " + sum/this.framesPerPosition);
         }
         let table = "";
         table += "\\hline\n";
