@@ -4,15 +4,11 @@ import "./site.css";
 import { vec3, mat4 } from 'gl-matrix';
 import $, { data } from 'jquery';
 import { Structure } from './structure';
-import { RayMarchQuad } from './rayMarchQuad';
 import { Atom } from './atom';
-import { KdTree } from './kdtree';
-import { TestKdTrees } from './tests';
 import { ImpostorRenderer } from './impostorRenderer';
 import { RayMarchOctreeQuad } from './rayMarchOctreeQuad';
 import { Benchmarker } from './benchmark';
 import { AxisMesh } from './axisMesh';
-import { TextureVisualizeQuad } from './textureVisualizeQuad';
 
 const createCamera = require('3d-view-controls');
 
@@ -130,9 +126,6 @@ async function Initialize() {
     impostorRenderer1cqw.LoadAtoms(device, structure1cqw);
 
     axisMesh = new AxisMesh(device, gpu.format);
-
-    let kTree = new KdTree(structure1cqw.atoms);
-    console.log(kTree);
     
     let percentageShown = 1;
  
@@ -251,8 +244,7 @@ async function Initialize() {
             storeOp: 'store'
         }],
     };
-    let textureVisualizeQuad: TextureVisualizeQuad;
-    //let depthSampler = device.createSampler(GPUSamplerDescriptor)
+    
     Reinitialize();
 
     function CreateAnimation(draw : any) {
@@ -386,7 +378,7 @@ async function Initialize() {
             axisMesh.DrawStructure(renderPass, mvpMatrix);
         }
         renderPass.end();
-        //todo:
+
         /*const depthRenderPass = commandEncoder.beginRenderPass(textureQuadPassDescriptor as GPURenderPassDescriptor);
         {
             textureVisualizeQuad.Draw(depthRenderPass);
@@ -655,7 +647,6 @@ async function Initialize() {
         bgColor[0] = Number.isFinite(bgColor[0]) ? bgColor[0] : 0.15;
         bgColor[1] = Number.isFinite(bgColor[1]) ? bgColor[1] : 0.00;
         bgColor[2] = Number.isFinite(bgColor[2]) ? bgColor[2] : 0.15;
-        //todo: make use of only one raymarchquadoct object and just swap buffers
         if (rayMarchQuadOctLoaded != undefined) {
             rayMarchQuadOctLoaded.LoadCustomAtomColors(atomColorC, atomColorN, atomColorO, atomColorS, bgColor);
             rayMarchQuadOctLoaded.shaderPreprocessFlags = preprocessFlags;

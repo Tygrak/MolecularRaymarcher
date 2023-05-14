@@ -2,7 +2,6 @@ import { mat4, vec3, vec4 } from "gl-matrix";
 import { Atom } from "./atom";
 import { GetAtomType } from "./atomDatabase";
 import { CreateGPUBuffer } from "./helper";
-import { KdTree } from "./kdtree";
 import { CreateQuadGeometry } from "./meshHelpers";
 import shader from './shaders/impostor.wgsl';
 import { Structure } from "./structure";

@@ -78,8 +78,6 @@ export class Chain {
         for (let i = 0; i < toCheck.length-1; i++) {
             const resFirst = toCheck[i];
             const resSecond = toCheck[i+1];
-            //todo:
-            // if ((resSecond.sequenceNumber == (resFirst.sequenceNumber + 1)) || ((resSecond.sequenceNumber == (resFirst.sequenceNumber) && (resSecond.getInsertionCode() == (resFirst.getInsertionCode() + 1))))) {
             if (resSecond.sequenceNumber == (resFirst.sequenceNumber + 1)) {
                 const firstAtom = resFirst.FindAtom("O3'");
                 const secondAtom = resSecond.FindAtom("P");

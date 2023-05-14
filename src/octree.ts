@@ -205,7 +205,7 @@ export class Octree {
     private SplitKdBin(parentBin: OctreeBin, margin: number, atoms: Atom[], layer: number, dim: number) {
         let bins: OctreeBin[] = [];
         let insideAtoms: Atom[] = [];
-        //todo: optimize
+        //could possibly be optimized further
         for (let i = atoms.length-1; i >= 0; i--) {
             if (parentBin.IsAtomInsideWithMargins(atoms[i], margin)) {
                 insideAtoms.push(atoms[i]);

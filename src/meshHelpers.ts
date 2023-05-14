@@ -249,7 +249,6 @@ export function ArbitraryOrthogonalVector(v: vec3) {
     return vec3.normalize(orthogonal, orthogonal);
 }
 
-//todo: change to take in atom?
 export function CreateQuadGeometry(atom: Atom) {
     let v = vec3.fromValues(atom.x, atom.y, atom.z);
     let resultPositions = new Float32Array([

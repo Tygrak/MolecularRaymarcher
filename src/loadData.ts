@@ -59,7 +59,6 @@ export const LoadDataPdb = (dataString: string) => {
     return {atoms: atoms, chains: chains};
 }
 
-//todo: read according to this https://www.wwpdb.org/documentation/file-format-content/format33/sect9.html
 const ParseDataLinePdb = (line: string) => {
     let match = line.match(/ATOM  +\d+ +([\w']+) +(\w+) +(\w+) {0,3}([\d-]+) +(-?\d+\.\d{1,3}) *(-?\d+\.\d{1,3}) *(-?\d+\.\d{1,3}) *(-?\d{1,3}\.\d{1,2}) *(-?\d{1,3}\.\d{1,2}) +(\w)/);
     if (match == null) {
@@ -77,8 +76,6 @@ const ParseDataLinePdb = (line: string) => {
     const atom = new Atom(position[0], position[1], position[2], atomName, residueAtomName);
     return {residueAtomName, residueName, chainName, residueId, atomName, position, atom};
 }
-
-//todo read binary compressed pcd
 
 export const IsDataPcd = (dataString: string) => {
     let lines = dataString.split("\n");

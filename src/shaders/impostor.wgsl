@@ -66,7 +66,6 @@ fn fs_main(@builtin(position) position : vec4<f32>, @location(0) color: vec4<f32
     if (dist > 1.0) {
         discard;
     }
-    //todo: update z pos
     var pos = worldPos;//-vec4(0, 0, 1, 0)*vMatrix*drawSettings.atomScale;
     pos = mvpMatrix * pos;
     output.depth = position.z;

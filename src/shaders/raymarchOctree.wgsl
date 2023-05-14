@@ -4,7 +4,7 @@
 
 struct Atom {
     position: vec3<f32>,
-    number: f32, //todo: make atom number also contain info about which chain the atom is part of
+    number: f32,
 }
 
 struct Atoms {
@@ -129,7 +129,6 @@ fn opSMin(d1: f32, d2: f32, k: f32) -> f32 {
 //#endif UseSmoothMinPoly2
 
 
-//todo: create alternative versions of this function for other smooth minimums too?
 fn opSMinColor(a: f32, b: f32, k: f32) -> vec2<f32> {
     let h: f32 = max(k-abs(a-b), 0.0)/k;
     let m: f32 = h*h*0.5;
@@ -237,7 +236,6 @@ fn dAtomsColor(p: vec3<f32>) -> SdfResult {
     return result;
 }
 
-//todo: add preprocessing that can replace these values
 override atomColorCr = 0.6;
 override atomColorCg = 0.9;
 override atomColorCb = 0.3;
@@ -370,7 +368,7 @@ const MAP_INDEXES_4 = array(4,0,5,6,1,2,7,3);
 const MAP_INDEXES_5 = array(5,7,4,1,3,6,0,2);
 const MAP_INDEXES_6 = array(6,7,2,4,0,5,3,1);
 const MAP_INDEXES_7 = array(7,3,6,5,1,2,4,0);
-//todo make this efficient not just if in corners but also when at centers of sides
+
 fn getFirstIndexUsingOrigin(origin: vec3<f32>, i: i32) -> i32 {
     if (origin.x < 0 && origin.y < 0 && origin.z < 0) {
         return MAP_INDEXES_0[i];
@@ -621,8 +619,6 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
             t = end;
         }
         
-        //todo: increase tolarance on !fullrender
-		//if (d < 0.005+0.05*(1-drawSettings.isFullRender)) {
         if (d < 0.05) {
             resultColor = vec4(-0.25, 0.05, 0.25, 1.0)+dAtomsColor(pos).color/2;
             break;
@@ -660,10 +656,6 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
             start = initStart.xyz+rayDirection*stackT[stackPos];
             let intersectionEnd = aabbIntersection(initStart.xyz, rayDirection, 1.0/rayDirection, bins.bins[intersecting].min, bins.bins[intersecting].max);
             end = intersectionEnd.y-stackT[stackPos];
-            //todo: clean up code.
-            //todo: preprocessor macros? shader variations?
-            //let binSize = bins.bins[intersecting].max-bins.bins[intersecting].min;
-            //end = max(binSize.x, max(binSize.y, binSize.z));
             raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
             //#endifnot DontAllowResetRaymarch
             //#if DontAllowResetRaymarch
@@ -733,8 +725,6 @@ fn raymarch(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f32> {
     } else if (drawSettings.debugMode == DM_TransparentFake1) {
         return debugModeFakeTransparency(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
     } else if (drawSettings.debugMode == DM_TransparentFake2) {
-        //todo fake transparency with const color but somehow scale it according to the result color? (justt grayscale it?)
-        //todo: transparency with const color but somehow also scaled by result color (or lighting?)
         return debugModeFakeTransparency2(resultColor, distanceFade, distance(initStart, pos), initStart, rayDirection);
     } else if (drawSettings.debugMode == DM_StackSteps) {
         return debugModeSteps(stackPos, stackSize);
@@ -785,7 +775,6 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
     var resultColor = startColor;
     var stackPos = 0;
     var insideStartT = -10000.0;
-    //todo: add limit iterations slider
 	for (iteration = 0; iteration < i32(f32(maxIterations)*iterationsMultiplier); iteration++) {
 		pos = start+t*rayDirection;
         if (distance(pos, cameraPos.xyz) > maxDistance) { maxDistance = distance(pos, cameraPos.xyz); }
@@ -904,10 +893,10 @@ fn fs_main(@builtin(position) position: vec4<f32>, @location(0) vPos: vec4<f32>)
     let initStart = start;
 
     var closestAABB: vec3<f32>;
-    //todo readd and benchmark
-    /*if (drawSettings.treeLayers == 4) {
+    //with 4 tree layers use a version of the octree traversal without the stack, it is quite a bit faster
+    if (drawSettings.treeLayers == 4) {
         closestAABB = findIntersectingCells(start, rayDirection);
-    } else*/ {
+    } else {
         closestAABB = findIntersectingCellsStack(start, rayDirection);
     }
     

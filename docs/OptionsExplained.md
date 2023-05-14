@@ -14,7 +14,7 @@ With this checkbox disabled, some optimizations are additionally used when rende
 
 #### Structure selection
 
-This select input allows changing between the two included predefined molecules `1cqw` and `1aon`. If a structure was loaded from a file, this option also allows reloading the previously loaded structure.
+This select input allows changing between the two included predefined molecules `1cqw` and `1aon`, and the currently loaded molecule if one was loaded from a file.
 
 Below this select input is a file input which allows loading molecular data from arbitrary .pdb files. The file needs to first be selected, and afterward the load file button must be pressed. Additionally, the application supports loading from plaintext .pcd (pointcloud) files, and loading the vertex positions from .obj files (this creates an atom at the position of every vertex in the .obj file).
 
@@ -88,7 +88,7 @@ When enabled, cartoon edges will be added to the renders.
 
 #### Color By Chain Number checkbox
 
-When enabled, cartoon edges will be added to the renders.
+When enabled, atoms will get colored based on the chain to which they belong.
 
 #### Center Distance Fade checkbox
 
@@ -104,11 +104,11 @@ Allows setting the exact distance from the center of the molecule during the ben
 
 #### Transparency/Debug A slider
 
-Controls small things in the final shader. The most important thing this controls is the brightness for the transparent modes. Otherwise, mostly used for debugging.
+Controls parts of the final shader. The most important thing this slider controls is the brightness for the transparent modes. Otherwise, mostly used for debugging.
 
 #### Debug B slider
 
-Controls small things in the final shader. Mostly used for debugging.
+Controls parts of the final shader. Mostly used for debugging.
 
 #### Use Fixed Canvas Size checkbox
 
@@ -131,11 +131,11 @@ Shows a colormap for some debug modes in the top left of the screen for values 0
 
 #### RGB for atom
 
-Can be used to change the base colors used for the different atom types.
+Can be used to change the base colors used for the different atom types. Requires a shader reload.
 
 #### RGB for background
 
-Can be used to set the background color.
+Can be used to set the background color. Requires a shader reload.
 
 #### Create URL
 
@@ -143,7 +143,7 @@ Creates a URL which can be used to share the website with the currently applied 
 
 ### Preprocessor Options
 
-This section contains the available preprocessor options, which do not have their own checkboxes, as they are not important enough.
+This section contains the available preprocessor options, which do not have their own checkboxes. To use these options, input the flag into the preprocessor flags input. Multiple flags can be inputted by separating them with spaces.
 
 #### DontUseSmoothColorBlending
 

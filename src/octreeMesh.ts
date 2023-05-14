@@ -28,7 +28,6 @@ export class OctreeMesh {
         for (let i = 0; i < octree.bins.length; i++) {
             const bin = octree.bins[i];
             if (!bin.isLeaf) {
-                //todo
                 positions.push(...CreateLineGeometry(vec3.fromValues(bin.min[0], bin.min[1], bin.min[2]), vec3.fromValues(bin.max[0], bin.min[1], bin.min[2]), GridScale, 1).positions);
                 positions.push(...CreateLineGeometry(vec3.fromValues(bin.min[0], bin.min[1], bin.min[2]), vec3.fromValues(bin.min[0], bin.max[1], bin.min[2]), GridScale, 1).positions);
                 positions.push(...CreateLineGeometry(vec3.fromValues(bin.min[0], bin.min[1], bin.min[2]), vec3.fromValues(bin.min[0], bin.min[1], bin.max[2]), GridScale, 1).positions);
