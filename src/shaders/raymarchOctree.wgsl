@@ -899,11 +899,11 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
             if (stackPos == stackSize || stackBins[stackPos] == -1) {
                 break;
             }
-            start = initStart.xyz+rayDirection*max(stackT[stackPos], t+0.05);
-            let binSize = bins.bins[stackBins[stackPos]].max-bins.bins[stackBins[stackPos]].min;
-            end = max(binSize.x, max(binSize.y, binSize.z));
-            t = 0.0;
             intersecting = stackBins[stackPos];
+            start = initStart.xyz+rayDirection*stackT[stackPos];
+            let intersectionEnd = aabbIntersection(initStart.xyz, rayDirection, 1.0/rayDirection, bins.bins[intersecting].min, bins.bins[intersecting].max);
+            end = intersectionEnd.y-stackT[stackPos];
+            t = 0.0;
             raymarchedAtoms += bins.bins[intersecting].end-bins.bins[intersecting].start;
 		}
 	}
