@@ -858,17 +858,17 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
 		let d = dAtoms(pos);
 		if (d < 0.05) {
             if (drawSettings.debugMode == DM_Transparent3) {
-                resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*mix(1, 0, clamp((d+0.75), 0, 1));
+                resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 0.6, drawSettings.debugA)*mix(1, 0, clamp((d+0.75), 0, 1));
             } else if (drawSettings.debugMode == DM_Transparent2) {
-                resultColor += (dAtomsColor(pos).color/50)*mix(0.1, 3, drawSettings.debugA);
+                resultColor += (dAtomsColor(pos).color/50)*mix(0.1, 1, drawSettings.debugA);
             } else if (drawSettings.debugMode == DM_TransparentDistance) {
                 if (insideStartT == -10000.0) {
                     insideStartT = t;
                 }
             } else if (drawSettings.debugMode == DM_TransparentConst) {
-                resultColor += vec4(0.005, 0.005, 0.005, 0.0)*mix(0.1, 3, drawSettings.debugA);
+                resultColor += vec4(0.005, 0.005, 0.005, 0.0)*mix(0.1, 0.6, drawSettings.debugA);
             } else {
-                resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA);
+                resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 0.6, drawSettings.debugA);
             }
             if (drawSettings.debugMode == DM_TransparentConst) {
                 t = t+mix(0.025, 0.15, drawSettings.debugB);
@@ -878,7 +878,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
 		} else {
             if (drawSettings.debugMode == DM_TransparentDistance) {
                 if (insideStartT != -10000.0) {
-                    resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*(t-insideStartT)*5;
+                    resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 0.6, drawSettings.debugA)*(t-insideStartT)*5;
                     insideStartT = -10000.0;
                 }
             }
@@ -891,7 +891,7 @@ fn raymarchTransparent(initStart: vec3<f32>, rayDirection: vec3<f32>) -> vec4<f3
 		if (t >= end) {
             if (drawSettings.debugMode == DM_TransparentDistance) {
                 if (insideStartT != -10000.0) {
-                    resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 3, drawSettings.debugA)*(t-insideStartT)*5;
+                    resultColor += vec4(0.01, 0.01, 0.01, 0.0)*mix(0.1, 0.6, drawSettings.debugA)*(t-insideStartT)*5;
                     insideStartT = -10000.0;
                 }
             }
